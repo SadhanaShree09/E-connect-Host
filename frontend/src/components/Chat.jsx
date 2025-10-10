@@ -59,7 +59,7 @@ const [currentGroupName, setCurrentGroupName] = useState("");
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
-  
+const isAdmin = LS.get("isAdmin")  
 
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
@@ -70,10 +70,11 @@ const [currentGroupName, setCurrentGroupName] = useState("");
         const res = await fetch(`${ipadr}/get_all_users`);
         const data = await res.json();
         const filtered = data.filter((user) => {
-          if (user.id === userid) return false;
-          if (isManager?.toLowerCase() === "manager") return true;
-          if (isDepart?.toLowerCase() === "hr") return user.position?.toLowerCase() === "manager";
-          return user.department?.toLowerCase() !== "hr";
+          if (user.id === userid) return true;
+          if (isManager?.toLowerCase() === "Manager") return true;
+          if (isDepart?.toLowerCase() === "HR") return true;
+          if (isAdmin?.toLowerCase() === "Admin") return true;
+          return user.department?.toLowerCase() !== "HR";
         });
         setContacts(filtered);
       } catch (err) {
@@ -81,7 +82,7 @@ const [currentGroupName, setCurrentGroupName] = useState("");
       }
     };
     fetchUsers();
-  }, [userid, isManager, isDepart]);
+  }, [userid, isManager, isDepart, isAdmin]);
 
   // Fetch groups
   useEffect(() => {
@@ -369,7 +370,7 @@ const [currentGroupName, setCurrentGroupName] = useState("");
       <FiMessageSquare className="text-2xl" />
       Messages
     </div>
-    {(isManager?.toLowerCase() === "manager" || isDepart?.toLowerCase() === "hr")&&(
+    {(isManager?.toLowerCase() === "manager" || isDepart?.toLowerCase() === "hr" && isAdmin?.toLowerCase() === "Admin" )&&(
       <button
         className="p-2 rounded-full hover:bg-gray-200 transition-all"
         onClick={() => setShowGroupModal(true)}
@@ -418,7 +419,7 @@ const [currentGroupName, setCurrentGroupName] = useState("");
         </span>
       </div>
     </div>
-    {isManager?.toLowerCase() === "manager" && (
+    {(isManager?.toLowerCase() === "Manager" || isDepart?.toLowerCase() === "HR" &&isAdmin?.toLowerCase() === "Admin" ) && (
       <div className="flex gap-2">
   
   {/* Edit Button */}

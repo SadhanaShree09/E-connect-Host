@@ -698,20 +698,20 @@ def get_employee_id_from_db(name: str):
         # Clean name (handle case differences and spaces)
         clean_name = name.strip().lower()
 
-        # 1️⃣ Search in Users collection
+        # 1️ Search in Users collection
         user = Users.find_one(
             {"name": {"$regex": f"^{clean_name}$", "$options": "i"}},
             {"_id": 1}
         )
 
-        # 2️⃣ If not found, search in Admin collection
+        # 2️ If not found, search in Admin collection
         if not user:
             user = admin.find_one(
                 {"name": {"$regex": f"^{clean_name}$", "$options": "i"}},
                 {"_id": 1}
             )
 
-        # 3️⃣ Return ID if found
+        # 3️ Return ID if found
         if user:
             return str(user["_id"])
         else:

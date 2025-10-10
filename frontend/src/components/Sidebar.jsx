@@ -1,6 +1,6 @@
 import Headlogo from "../assets/rbg2.png";
 import React, { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FiLogOut, FiUser } from "react-icons/fi";
@@ -37,6 +37,36 @@ const Modal = ({ show, onClose, onConfirm, message }) => {
 
 const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => {
   const navigate = useNavigate(); // Declare navigate only once
+  const location = useLocation();
+  /**
+   * Check whether the current pathname contains any exact segment match.
+   * Accepts a string or an array of candidate segments. Matching is
+   * case-insensitive and compares whole path segments (split by '/'),
+   * so 'addleave' won't match 'leave'.
+   */
+  const isActive = (segmentOrArray) => {
+    try {
+      const path = location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
+      const segments = path.split("/").filter(Boolean);
+      if (segments.length === 0) return false;
+      const lastSeg = segments[segments.length - 1];
+      const targets = Array.isArray(segmentOrArray)
+        ? segmentOrArray.map((s) => String(s).toLowerCase())
+        : [String(segmentOrArray).toLowerCase()];
+
+  // Match whole last segment, or match its first token when segments use
+  // separators (e.g. 'clockin_int' -> ['clockin','int']) so checking
+  // for 'clockin' will still succeed. This avoids collisions like
+  // 'addleave' matching 'leave' because the first token of 'addleave'
+  // is 'addleave', not 'leave'.
+  const normalize = (s) => String(s).toLowerCase();
+  if (targets.includes(lastSeg)) return true;
+  const firstToken = lastSeg.split(/[^a-z0-9]+/).filter(Boolean)[0] || lastSeg;
+  return targets.includes(firstToken);
+    } catch (e) {
+      return false;
+    }
+  };
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutConfirm = () => {
@@ -87,8 +117,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
       <div className="flex flex-col mt-6">
         {loggedIn && isAdmin ? (
           <>
-            <Link to="time" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+            <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -100,11 +129,10 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l3 3" />
                 </svg>
                 <span className="font-medium">Time Management</span>
-              </div>
-            </Link>
+            </NavLink>
 
             <Link to="leave" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -124,7 +152,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             <Link to="employee" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('employee') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -147,7 +175,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             <Link to="newUser" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('newuser') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -167,7 +195,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             <Link to="notifications" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('notifications') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -182,7 +210,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             <Link to="addLeave" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 
                 <svg xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 
@@ -203,8 +231,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           </>
         ) : loggedIn && !isAdmin && (
           <>
-            <Link to="Clockin_int" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+            <NavLink to="Clockin_int" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -216,11 +243,10 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l3 3" />
                 </svg>
                 <span className="font-medium">Time Management</span>
-              </div>
-            </Link>
+            </NavLink>
 
             <Link to="Leave" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -241,7 +267,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
 
             {isDepart !== "HR" && (
             <Link to="todo" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('todo') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -274,7 +300,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link> */}
 
             <Link to="notifications" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('notifications') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -295,7 +321,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
         
         {loggedIn && !isAdmin  && (
   <Link to="my-documents" className="sidebar-item">
-    <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+    <div className={`flex items-center p-4 ${isActive('my-documents') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
         viewBox="0 0 24 24" stroke="currentColor" 
         className="w-6 h-6 mr-3 text-white">
@@ -311,7 +337,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
 {/* HR/Admin - Review Documents */}
 {loggedIn && (isAdmin) && (
   <Link to="review-docs" className="sidebar-item">
-    <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+    <div className={`flex items-center p-4 ${isActive('review-docs') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
         viewBox="0 0 24 24" stroke="currentColor" 
         className="w-6 h-6 mr-3 text-white">
@@ -326,7 +352,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
 {loggedIn && !isAdmin && (
   (isDepart === 'HR' || isManager === 'Manager' || userid ) && (
     <Link to="chat" className="sidebar-item">
-      <div className='flex items-center p-4 hover:bg-blue-700 transition-colors'>
+      <div className={`flex items-center p-4 ${isActive('chat') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
         <svg
           xmlns="http://www.w3.org/2000/svg"
           fill="none"
@@ -352,7 +378,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           <>
 
                 <Link to="manager-employee" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('manager-employee') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor" className="w-6 h-6 mr-3 text-white">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -363,7 +389,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             <Link to="LeaveManage" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('leavemanage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -387,8 +413,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           ): loggedIn && isDepart=="HR" && (
            <>
 
-           <Link to="hr-manager" className="sidebar-item">
-        <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+        <Link to="hr-manager" className="sidebar-item">
+      <div className={`flex items-center p-4 ${isActive('hr-manager') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                stroke="currentColor" className="w-6 h-6 mr-3 text-white">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -398,8 +424,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
         </div>
       </Link>
       
-           <Link to="LeaveManage" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+        <Link to="LeaveManage" className="sidebar-item">
+          <div className={`flex items-center p-4 ${isActive('leavemanage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -418,7 +444,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
               </div>
             </Link>
             <Link to="newUser" className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+              <div className={`flex items-center p-4 ${isActive('newuser') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

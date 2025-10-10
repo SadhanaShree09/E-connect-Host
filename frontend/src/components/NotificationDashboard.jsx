@@ -31,6 +31,7 @@ const NotificationDashboard = () => {
     priority: 'all',
     status: 'all'
   });
+  const [confirmDeleteId, setConfirmDeleteId] = useState(null);
   const navigate = useNavigate();
   const userid = LS.get('userid');
   
@@ -812,7 +813,8 @@ const NotificationDashboard = () => {
               >
                 {/* Clickable indicator */}
                 {(notification.action_url || notification.type) && (
-                  <div className="absolute top-3 right-3 opacity-40 hover:opacity-100 transition-opacity duration-200">
+                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity duration-200">
+                    <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mr-1 select-none">Click to view</span>
                     <div className="bg-blue-400 text-white p-1 rounded-full text-xs">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
@@ -882,16 +884,39 @@ const NotificationDashboard = () => {
                             <FaCheck size={14} />
                           </button>
                           
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              deleteNotification(notification._id);
-                            }}
-                            className="p-2 rounded-lg transition-colors duration-200 text-red-600 hover:bg-red-50 border border-red-200"
-                            title="Delete notification"
-                          >
-                            <FaTrash size={14} />
-                          </button>
+                          {confirmDeleteId === notification._id ? (
+                            <div className="flex flex-col items-center bg-white border border-red-200 rounded-lg p-2 shadow-md z-10">
+                              <span className="text-sm text-gray-700 mb-2">Delete this notification?</span>
+                              <div className="flex gap-2">
+                                <button
+                                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    deleteNotification(notification._id);
+                                    setConfirmDeleteId(null);
+                                  }}
+                                >Yes</button>
+                                <button
+                                  className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
+                                  onClick={(e) => {
+                                    e.stopPropagation();
+                                    setConfirmDeleteId(null);
+                                  }}
+                                >No</button>
+                              </div>
+                            </div>
+                          ) : (
+                            <button
+                              onClick={(e) => {
+                                e.stopPropagation();
+                                setConfirmDeleteId(notification._id);
+                              }}
+                              className="p-2 rounded-lg transition-colors duration-200 text-red-600 hover:bg-red-50 border border-red-200"
+                              title="Delete notification"
+                            >
+                              <FaTrash size={14} />
+                            </button>
+                          )}
                         </div>
                       </div>
                     </div>

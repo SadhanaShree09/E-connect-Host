@@ -228,10 +228,20 @@ def serialize_mongo_doc(doc):
     return serialized
 
 app = FastAPI()
-origins = ["https://e-connect-host-frontend.vercel.app","https://econnect-frontend-wheat.vercel.app", "http://localhost:5173", "http://localhost:5174"]
-# [
-#     "*"    # Allow all origins for development
-# ]
+
+# Get CORS origins from environment or use defaults
+allowed_origins_env = os.environ.get("ALLOWED_ORIGINS", "")
+if allowed_origins_env:
+    origins = [origin.strip() for origin in allowed_origins_env.split(",")]
+else:
+    origins = [
+        "https://e-connect-host-frontend.vercel.app",
+        "https://econnect-frontend-wheat.vercel.app",
+        "http://localhost:5173",
+        "http://localhost:5174"
+    ]
+
+print(f"CORS Allowed Origins: {origins}")
 
 # Add CORS middleware FIRST (order matters!)
 app.add_middleware(
@@ -239,7 +249,7 @@ app.add_middleware(
     allow_origins=origins,
     allow_credentials=True,
     allow_methods=["*"],
-    allow_headers=["*", "authorization"],  # <-- add "authorization" here
+    allow_headers=["*"],
     expose_headers=["*"],
 )
 
@@ -250,10 +260,13 @@ async def add_security_headers(request: Request, call_next):
         # Handle preflight requests
         if request.method == "OPTIONS":
             response = JSONResponse(content={}, status_code=200)
-            response.headers["Access-Control-Allow-Origin"] = request.headers.get("origin", "*")
-            response.headers["Access-Control-Allow-Methods"] = "*"
-            response.headers["Access-Control-Allow-Headers"] = "*"
+            origin = request.headers.get("origin", "")
+            if origin in origins:
+                response.headers["Access-Control-Allow-Origin"] = origin
+            response.headers["Access-Control-Allow-Methods"] = "GET, POST, PUT, DELETE, OPTIONS, PATCH"
+            response.headers["Access-Control-Allow-Headers"] = "Content-Type, Authorization, Accept, Origin, X-Requested-With"
             response.headers["Access-Control-Allow-Credentials"] = "true"
+            response.headers["Access-Control-Max-Age"] = "3600"
             return response
             
         response = await call_next(request)
@@ -689,8 +702,14 @@ def Signup(item: Item2):
 async def Signup(item: Item5):
     try:
         jwt = Mongo.Gsignin(item.client_name, item.email)
-        print(jwt)
-        return JSONResponse(content=jwt, status_code=200)
+        print("Google Signin Response:", jwt)
+        
+        # Ensure the response is JSON serializable
+        # Convert to JSON string using bson json_util, then parse back
+        json_str = json_util.dumps(jwt)
+        json_data = json.loads(json_str)
+        
+        return JSONResponse(content=json_data, status_code=200)
     except HTTPException as http_exc:
         # Re-raise HTTPException to be handled by FastAPI
         raise http_exc
@@ -1574,10 +1593,22 @@ def admin_Signup(item: Item2):
 # Admin Signin
 @app.post("/admin_Gsignin")
 def admin_signup(item: Item5):
-    print(item.dict())
-    jwt=Mongo.admin_Gsignin(item.client_name,item.email)
-    print(jwt)
-    return jwt
+    try:
+        print(item.dict())
+        jwt = Mongo.admin_Gsignin(item.client_name, item.email)
+        print("Admin Google Signin Response:", jwt)
+        
+        # Ensure the response is JSON serializable
+        json_str = json_util.dumps(jwt)
+        json_data = json.loads(json_str)
+        
+        return JSONResponse(content=json_data, status_code=200)
+    except HTTPException as http_exc:
+        raise http_exc
+    except Exception as e:
+        print(f"Error in /admin_Gsignin: {str(e)}")
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 
@@ -3816,7 +3847,7 @@ async def test_admin_wfh_notifications():
 
 if __name__ == "__main__":
     # Get port from environment variable (Railway sets this)
-    port = int(os.environ.get("PORT", 8000))
+    port = int(os.environ.get("PORT", 8080))
     
     # Check if SSL certificates exist (for local development)
     key_file_path = os.path.join(os.path.dirname(__file__), '../certificates/key.pem')

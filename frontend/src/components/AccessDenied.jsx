@@ -13,9 +13,7 @@ const AccessDenied = () => {
 
   const handleGoHome = () => {
     // Navigate to appropriate dashboard based on user role
-    if (isAdmin) {
-      navigate("/admin/time");
-    } else {
+    {
       navigate("/User/Clockin_int");
     }
   };

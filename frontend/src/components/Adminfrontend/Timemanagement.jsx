@@ -255,14 +255,12 @@ import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faSearch, faDownload, faExclamationTriangle } from "@fortawesome/free-solid-svg-icons";
-import axios from "axios";
-import { ipadr } from "../../Utils/Resuse";
+import { Baseaxios, ipadr, LS } from "../../Utils/Resuse";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { DateRangePicker } from "react-date-range";
 import { format, isWithinInterval, parseISO, startOfDay, endOfDay } from 'date-fns';
 import * as XLSX from 'xlsx';
-import { LS } from "../../Utils/Resuse";
 
 const Timemanagement = () => {
   const [selectedDate, setSelectedDate] = useState(new Date());
@@ -277,6 +275,8 @@ const Timemanagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const itemsPerPage = 5;
   const Admin = LS.get('isadmin');
+  const Department = LS.get('department');
+  const isHR = Department === 'HR';
   const [dateRange, setDateRange] = useState([
     {
       startDate: null,
@@ -299,19 +299,30 @@ const Timemanagement = () => {
     try {
       setLoading(true);
       const formattedDate = formatDate(selectedDate);
-      const response = await axios.get(
-        `${ipadr}/attendance/?date=${formattedDate}`
+      console.log("Fetching attendance data for date:", formattedDate);
+      console.log("API URL:", `/attendance/?date=${formattedDate}`);
+      
+      const response = await Baseaxios.get(
+        `/attendance/?date=${formattedDate}`
       );
+      
+      console.log("API Response:", response.data);
+      
       const data = response.data && Array.isArray(response.data.attendance)
         ? response.data.attendance
         : [];
+      
+      console.log("Processed attendance data:", data);
       setAttendanceData(data);
       setLoading(false);
       setError(null);
     } catch (error) {
+      console.error("Error fetching attendance data:", error);
+      console.error("Error response:", error.response?.data);
+      console.error("Error status:", error.response?.status);
       setLoading(false);
       setAttendanceData([]);
-      setError("Error fetching data");
+      setError(`Error fetching data: ${error.response?.data?.detail || error.message}`);
     }
   };
 
@@ -383,11 +394,11 @@ const Timemanagement = () => {
   };
 
   return (
-    (Admin) ?
+    (isHR) ?
     <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full shadow-black rounded-xl justify-center items-center relative jsonback ml-10 rounded-md">
       <div className="">
         <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">
-          Clock In & Clock Out
+          Employee Attendance Records
         </h1>
         <div className="w-full bg-gradient-to-b from-white to-blue-50 shadow-lg rounded-xl border border-gray-200 my-2 mt-10">
           <header className="flex justify-between px-5 py-4 border-b border-gray-200">
@@ -539,7 +550,7 @@ const Timemanagement = () => {
           <div className="text-center">
             <FontAwesomeIcon icon={faExclamationTriangle} className="text-red-500 text-6xl mb-4" />
             <h2 className="text-2xl font-bold text-gray-800 mb-2">Access Denied</h2>
-            <p className="text-gray-600">You don't have permission to access this page. Only administrators can manage this page.</p>
+            <p className="text-gray-600">You don't have permission to access this page. Only HR department can view employee attendance records.</p>
           </div>
         </div>
       </div>

@@ -117,20 +117,6 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
       <div className="flex flex-col mt-6">
         {loggedIn && isAdmin ? (
           <>
-            <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6 mr-3 text-white"
-                >
-                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l3 3" />
-                </svg>
-                <span className="font-medium">Time Management</span>
-            </NavLink>
-
             <Link to="leave" className="sidebar-item">
               <div className={`flex items-center p-4 ${isActive('leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
@@ -413,6 +399,20 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           </>
           ): loggedIn && isDepart=="HR" && (
            <>
+
+        <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-6 h-6 mr-3 text-white"
+                >
+                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l3 3" />
+                </svg>
+                <span className="font-medium">Employee Attendance</span>
+            </NavLink>
 
         <Link to="hr-manager" className="sidebar-item">
       <div className={`flex items-center p-4 ${isActive('hr-manager') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>

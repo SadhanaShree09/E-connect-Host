@@ -696,11 +696,10 @@ def get_attendance_by_date():
 def get_employee_id_from_db(name: str):
     try:
         user = Users.find_one({'name': name}, {'_id': 1})
-        admin = admin.find_one({'name': name}, {'_id': 1})
+        
         if user:
             return str(user["_id"])
-        elif admin:
-            return str(admin["_id"])
+       
         else:
             return None
     except Exception as e:

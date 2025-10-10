@@ -395,77 +395,81 @@ const isAdmin = LS.get("isAdmin")
     </div>
   </div>
 
+ 
   {/* Groups */}
-  <div className="flex-1 overflow-y-auto px-3 space-y-2">
-    <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
-      Groups
-    </div>
-    {filteredGroups.map((group) => (
-  <div
-    key={group._id}
-    className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between transition-all ${
-      activeChat.chatId === group._id ? "bg-gray-200 shadow" : "hover:bg-gray-150"
-    }`}
-    onClick={() => handleGroupClick(group)}
-  >
-    <div className="flex items-center gap-3 flex-1 min-w-0">
-      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-gray-400 text-white flex-shrink-0">
-        {getInitials(group.name)}
-      </div>
-      <div className="flex flex-col min-w-0 flex-1">
-        <span className="truncate font-medium text-gray-800">{group.name}</span>
-        <span className="text-xs text-gray-500 truncate">
-          {group.members?.filter((m) => m !== userid).length} members
-        </span>
-      </div>
-    </div>
-    {(isManager?.toLowerCase() === "Manager" || isDepart?.toLowerCase() === "HR" &&isAdmin?.toLowerCase() === "Admin" ) && (
-      <div className="flex gap-2">
-  
-  {/* Edit Button */}
-        <button
-          className="p-2 rounded-full hover:bg-gray-200 transition-all"
-          onClick={(e) => {
-            e.stopPropagation();
-            setEditingGroup(group); // set the group being edited
-            setGroupName(group.name);
-            setSelectedUsers(group.members || []);
-            setShowGroupModal(true);
-          }}
-          title="Edit Group"
-        >
-          <FiEdit2 size={16} />
-        </button>
-
-        {/* Delete Button */}
-        <button
-          className="p-2 rounded-full hover:bg-gray-200 transition-all"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleRemoveGroup(group);
-          }}
-          title="Delete Group"
-        >
-          <FiTrash2 size={16} />
-        </button>
-
-        
-      </div>
-
-      
-    )}
-     <button
-    className="p-2 rounded-full hover:bg-gray-200 transition-all"
-    onClick={(e) => {
-      e.stopPropagation();
-      handleViewMembers(group);
-    }}
-    title="View Members"
-  >
-    <FiUsers size={16}/>
-  </button>
+<div className="flex-1 overflow-y-auto px-3 space-y-2">
+  <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
+    Groups
   </div>
-))}
+
+  {filteredGroups.map((group) => (
+    <div
+      key={group._id}
+      className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between transition-all ${
+        activeChat.chatId === group._id ? "bg-gray-200 shadow" : "hover:bg-gray-150"
+      }`}
+      onClick={() => handleGroupClick(group)}
+    >
+      <div className="flex items-center gap-3 flex-1 min-w-0">
+        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-gray-400 text-white flex-shrink-0">
+          {getInitials(group.name)}
+        </div>
+        <div className="flex flex-col min-w-0 flex-1">
+          <span className="truncate font-medium text-gray-800">{group.name}</span>
+          <span className="text-xs text-gray-500 truncate">
+            {group.members?.filter((m) => m !== userid).length} members
+          </span>
+        </div>
+      </div>
+
+      {/*  Show Edit/Delete only for Admin, Manager, HR */}
+      {(isManager?.toLowerCase() === "manager" ||
+        isDepart?.toLowerCase() === "hr" ||
+        isAdmin?.toLowerCase() === "admin") && (
+        <div className="flex gap-2">
+          {/* Edit Button */}
+          <button
+            className="p-2 rounded-full hover:bg-gray-200 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              setEditingGroup(group);
+              setGroupName(group.name);
+              setSelectedUsers(group.members || []);
+              setShowGroupModal(true);
+            }}
+            title="Edit Group"
+          >
+            <FiEdit2 size={16} />
+          </button>
+
+          {/* Delete Button */}
+          <button
+            className="p-2 rounded-full hover:bg-gray-200 transition-all"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleRemoveGroup(group);
+            }}
+            title="Delete Group"
+          >
+            <FiTrash2 size={16} />
+          </button>
+        </div>
+      )}
+
+      {/*  View Members visible to everyone */}
+      <button
+        className="p-2 rounded-full hover:bg-gray-200 transition-all"
+        onClick={(e) => {
+          e.stopPropagation();
+          handleViewMembers(group);
+        }}
+        title="View Members"
+      >
+        <FiUsers size={16} />
+      </button>
+    </div>
+  ))}
+
     {/* Contacts */}
     <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
       Contacts

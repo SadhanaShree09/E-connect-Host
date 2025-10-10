@@ -102,7 +102,7 @@ const handleGoogleLogin = async (credentialResponse) => {
 
     if (loggedIn && isAdmin) {
       toast.success("Welcome Admin!");
-      navigate("/admin/Leave", {
+      navigate("/admin/time", {
         state: { userid: res._id || res.id, token: res.access_token },
       });
     } else if (loggedIn && !isAdmin) {

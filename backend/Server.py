@@ -4146,7 +4146,7 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
                 if msg.get("chatId") and msg.get("chatId").startswith("group_"):
                     # Send to group channel
-                    await group_chat_manager.send_message(msg["chatId"], msg)
+                    await group_ws_manager.send_message(msg["chatId"], msg)
                 else:
                     # Direct chat
                     await direct_chat_manager.send_message(msg["to_user"], msg)

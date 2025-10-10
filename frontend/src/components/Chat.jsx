@@ -55,6 +55,7 @@ const [activeMenu, setActiveMenu] = useState(null);
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
+   const isAdmin = LS.get("isadmin");
 
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
@@ -65,9 +66,11 @@ const [activeMenu, setActiveMenu] = useState(null);
         const res = await fetch(`${ipadr}/get_all_users`);
         const data = await res.json();
         const filtered = data.filter((user) => {
-          if (user.id === userid) return false;
+          if (user.id === userid) return true;
           if (isManager?.toLowerCase() === "manager") return true;
-          if (isDepart?.toLowerCase() === "hr") return user.position?.toLowerCase() === "manager";
+          if(isAdmin?.toLowerCase() === "Admin") return true
+          if (isDepart?.toLowerCase() === "hr") return true;
+          
           return user.department?.toLowerCase() !== "hr";
         });
         setContacts(filtered);
@@ -364,7 +367,7 @@ const [activeMenu, setActiveMenu] = useState(null);
       <FiMessageSquare className="text-2xl" />
       Messages
     </div>
-    {isManager?.toLowerCase() === "manager" && (
+    {isManager?.toLowerCase() === "manager" && isAdmin?.toLowerCase() === "Admin" && isDepart?.toLowerCase() === "hr"(
       <button
         className="p-2 rounded-full hover:bg-gray-200 transition-all"
         onClick={() => setShowGroupModal(true)}
@@ -420,7 +423,7 @@ const [activeMenu, setActiveMenu] = useState(null);
             className="p-2 rounded-full hover:bg-gray-200 transition-all"
             onClick={(e) => {
               e.stopPropagation();
-              setActiveMenu(isActiveMenu ? null : group._id); // toggle menu
+              setActiveMenu(isActiveMenu ? null : group._id); 
             }}
             title="More Options"
           >
@@ -430,7 +433,7 @@ const [activeMenu, setActiveMenu] = useState(null);
           {/* Dropdown Menu */}
           {isActiveMenu && (
             <div className="absolute right-0 top-10 bg-white border shadow-md rounded-md flex flex-col w-36 z-10">
-              {isManager?.toLowerCase() === "manager" && (
+              {isManager?.toLowerCase() === "manager" && isAdmin?.toLowerCase() === "Admin" && isDepart?.toLowerCase() === "hr"   && (
                 <>
                   <button
                     className="px-4 py-2 text-left hover:bg-gray-100"
@@ -440,7 +443,7 @@ const [activeMenu, setActiveMenu] = useState(null);
                       setGroupName(group.name);
                       setSelectedUsers(group.members || []);
                       setShowGroupModal(true);
-                      setActiveMenu(null); // close menu
+                      setActiveMenu(null); 
                     }}
                   >
                     ✏️ 

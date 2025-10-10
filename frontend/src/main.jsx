@@ -604,6 +604,10 @@ const router = createBrowserRouter([
   element:<ProgressDetail role="manager" dashboardRoute="/User/manager-employee" commentLabel="Manager" fileUploadLabel="Manager" />, 
 },
 {
+        path: "timemanage",
+        element: <Timemanagement />,
+      },
+{
   path: "hr-manager",
   element: <TaskProgress/>,
 },

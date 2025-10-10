@@ -117,6 +117,20 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
       <div className="flex flex-col mt-6">
         {loggedIn && isAdmin ? (
           <>
+            <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-6 h-6 mr-3 text-white"
+                >
+                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l3 3" />
+                </svg>
+                <span className="font-medium">Time Management</span>
+            </NavLink>
+
             <Link to="leave" className="sidebar-item">
               <div className={`flex items-center p-4 ${isActive('leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
@@ -336,7 +350,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   </Link>
 )}
 
-{loggedIn && !isAdmin && (
+{loggedIn && isAdmin && (
   (isDepart === 'HR' || isManager === 'Manager' || userid ) && (
     <Link to="chat" className="sidebar-item">
       <div className={`flex items-center p-4 ${isActive('chat') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
@@ -400,20 +414,6 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           ): loggedIn && isDepart=="HR" && (
            <>
 
-        <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6 mr-3 text-white"
-                >
-                  <circle cx="12" cy="12" r="10" strokeWidth="2" />
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 6v6l3 3" />
-                </svg>
-                <span className="font-medium">Employee Attendance</span>
-            </NavLink>
-
         <Link to="hr-manager" className="sidebar-item">
       <div className={`flex items-center p-4 ${isActive('hr-manager') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
@@ -442,6 +442,25 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
                   />
                 </svg>
                 <span className="font-medium">Employee Leave Management</span>
+              </div>
+            </Link>
+            <Link to="timemanage" className="sidebar-item">
+          <div className={`flex items-center p-4 ${isActive('Timemanage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+                <svg
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                  stroke="currentColor"
+                  className="w-6 h-6 mr-3 text-white"
+                >
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth="2"
+                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
+                  />
+                </svg>
+                <span className="font-medium">Employee Time Management</span>
               </div>
             </Link>
             <Link to="newUser" className="sidebar-item">

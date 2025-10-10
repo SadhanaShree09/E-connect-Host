@@ -7,6 +7,8 @@ import {
   FiChevronLeft,
   FiTrash2,
   FiMessageSquare,
+  FiEdit2,
+  FiUsers,
 } from "react-icons/fi";
 import { LS,ipadr } from "../Utils/Resuse";
 import { toast, ToastContainer } from "react-toastify";
@@ -66,12 +68,11 @@ const [activeMenu, setActiveMenu] = useState(null);
         const res = await fetch(`${ipadr}/get_all_users`);
         const data = await res.json();
         const filtered = data.filter((user) => {
-          if (user.id === userid) return true;
-          if (isManager?.toLowerCase() === "manager") return true;
-          if(isAdmin?.toLowerCase() === "Admin") return true
-          if (isDepart?.toLowerCase() === "hr") return true;
+          if (user.id === userid) return true; 
+  if (isManager?.toLowerCase() === "manager") return true;
+  if (isAdmin?.toLowerCase() === "admin") return true;
+  if (isDepart?.toLowerCase() === "hr") return true;
           
-          return user.department?.toLowerCase() !== "hr";
         });
         setContacts(filtered);
       } catch (err) {
@@ -367,7 +368,9 @@ const [activeMenu, setActiveMenu] = useState(null);
       <FiMessageSquare className="text-2xl" />
       Messages
     </div>
-    {isManager?.toLowerCase() === "manager" && isAdmin?.toLowerCase() === "Admin" && isDepart?.toLowerCase() === "hr"(
+    {(isManager?.toLowerCase() === "manager" ||
+  isDepart?.toLowerCase() === "hr" ||
+  isAdmin?.toLowerCase() === "admin") &&(
       <button
         className="p-2 rounded-full hover:bg-gray-200 transition-all"
         onClick={() => setShowGroupModal(true)}
@@ -433,7 +436,9 @@ const [activeMenu, setActiveMenu] = useState(null);
           {/* Dropdown Menu */}
           {isActiveMenu && (
             <div className="absolute right-0 top-10 bg-white border shadow-md rounded-md flex flex-col w-36 z-10">
-              {isManager?.toLowerCase() === "manager" && isAdmin?.toLowerCase() === "Admin" && isDepart?.toLowerCase() === "hr"   && (
+              {(isManager?.toLowerCase() === "manager" ||
+  isDepart?.toLowerCase() === "hr" ||
+  isAdmin?.toLowerCase() === "admin") && (
                 <>
                   <button
                     className="px-4 py-2 text-left hover:bg-gray-100"
@@ -446,7 +451,7 @@ const [activeMenu, setActiveMenu] = useState(null);
                       setActiveMenu(null); 
                     }}
                   >
-                    ✏️ 
+                    <FiEdit2 size={16} />
                   </button>
                   <button
                     className="px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
@@ -468,7 +473,7 @@ const [activeMenu, setActiveMenu] = useState(null);
                   setActiveMenu(null); 
                 }}
               >
-                👥
+                <FiUsers size={16} />
               </button>
             </div>
           )}

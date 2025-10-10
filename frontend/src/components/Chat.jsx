@@ -1,3 +1,4 @@
+
 import { useState, useEffect, useRef } from "react";
 import {
   FiSend,
@@ -8,14 +9,15 @@ import {
   FiTrash2,
   FiMessageSquare,
   FiEdit2,
+  
   FiUsers,
 } from "react-icons/fi";
-import { LS,ipadr } from "../Utils/Resuse";
+import { LS } from "../Utils/Resuse";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import Picker from "emoji-picker-react";
 
-
+const ipadr = import.meta.env.VITE_API_BASE_URL ;
 
 const formatTime = (isoString, withDate = false) => {
   if (!isoString) return "";
@@ -48,7 +50,7 @@ const [editingGroup, setEditingGroup] = useState(null);
 const [showGroupMembers, setShowGroupMembers] = useState(false);
 const [currentGroupMembers, setCurrentGroupMembers] = useState([]);
 const [currentGroupName, setCurrentGroupName] = useState("");
-const [activeMenu, setActiveMenu] = useState(null);
+
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
   const ws = useRef(null);
@@ -57,6 +59,7 @@ const [activeMenu, setActiveMenu] = useState(null);
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
+  
 
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
@@ -67,11 +70,10 @@ const [activeMenu, setActiveMenu] = useState(null);
         const res = await fetch(`${ipadr}/get_all_users`);
         const data = await res.json();
         const filtered = data.filter((user) => {
-          if (user.id === userid) return true; 
-  if (isManager?.toLowerCase() === "manager") return true;
-  
-  if (isDepart?.toLowerCase() === "hr") return true;
-          
+          if (user.id === userid) return false;
+          if (isManager?.toLowerCase() === "manager") return true;
+          if (isDepart?.toLowerCase() === "hr") return user.position?.toLowerCase() === "manager";
+          return user.department?.toLowerCase() !== "hr";
         });
         setContacts(filtered);
       } catch (err) {
@@ -121,55 +123,50 @@ const [activeMenu, setActiveMenu] = useState(null);
     };
 
     ws.current.onmessage = (event) => {
-      try {
-        const payload = JSON.parse(event.data);
+  try {
+    const payload = JSON.parse(event.data);
 
-       
-
-        // Thread messages
-       if (payload.type === "thread") {
-  const threadKey = `thread:${payload.rootId}`;
-  setMessages((prev) => {
-    const arr = prev[threadKey] || [];
-    // Replace if tempId or id exists, else add
-    const idx = arr.findIndex((m) => m.tempId === payload.tempId || m.id === payload.id);
-    if (idx > -1) {
-      arr[idx] = payload; // replace the temp message
-      return { ...prev, [threadKey]: [...arr] };
-    }
-    return { ...prev, [threadKey]: [...arr, payload] };
-  });
-  return;
-}
-
-
-
-        // Main chat messages
-        const msgChatId =
-          payload.chatId ||
-          (payload.type === "user"
-            ? buildChatId(payload.from_user || payload.from, payload.to_user || payload.to)
-            : payload.chatId);
-
-        setMessages((prev) => {
-          const chatMessages = prev[msgChatId] || [];
-          const filtered = chatMessages.filter((m) => m.id !== payload.id && m.id !== payload.tempId);
-          return { ...prev, [msgChatId]: [...filtered, payload] };
-        });
-
-        if (msgChatId !== activeChat.chatId) {
-          setUnread((prev) => ({ ...prev, [msgChatId]: (prev[msgChatId] || 0) + 1 }));
-          toast.info(
-            `New message from ${payload.from_user || payload.from}: ${payload.text ? payload.text.slice(0, 60) : "File"}`,
-            { position: "top-right", autoClose: 4000 }
-          );
+    //  THREAD messages
+    if (payload.type === "thread") {
+      const threadKey = `thread:${payload.rootId}`;
+      setMessages((prev) => {
+        const arr = prev[threadKey] || [];
+        const idx = arr.findIndex((m) => m.tempId === payload.tempId || m.id === payload.id);
+        if (idx > -1) {
+          arr[idx] = payload; 
+          return { ...prev, [threadKey]: [...arr] };
         }
-      } catch (err) {
-        console.error("Invalid WS payload:", event.data, err);
-      }
-    };
-  };
+        return { ...prev, [threadKey]: [...arr, payload] };
+      });
+      return; 
+    }
 
+    // MAIN chat messages
+    const msgChatId =
+      payload.chatId ||
+      (payload.type === "user"
+        ? buildChatId(payload.from_user || payload.from, payload.to_user || payload.to)
+        : payload.chatId);
+
+    setMessages((prev) => {
+      const chatMessages = prev[msgChatId] || [];
+      const filtered = chatMessages.filter((m) => m.id !== payload.id && m.id !== payload.tempId);
+      return { ...prev, [msgChatId]: [...filtered, payload] };
+    });
+
+    if (msgChatId !== activeChat.chatId) {
+      setUnread((prev) => ({ ...prev, [msgChatId]: (prev[msgChatId] || 0) + 1 }));
+      toast.info(
+        `New message from ${payload.from_user || payload.from}: ${payload.text ? payload.text.slice(0, 60) : "File"}`,
+        { position: "top-right", autoClose: 4000 }
+      );
+    }
+
+  } catch (err) {
+    console.error("Invalid WS payload:", event.data, err);
+  }
+};
+  };
   // Fetch thread messages
   useEffect(() => {
     if (!selectedThread) return;
@@ -187,8 +184,6 @@ const [activeMenu, setActiveMenu] = useState(null);
     try {
       const res = await fetch(`${ipadr}/get_EmployeeId/${encodeURIComponent(contact.name)}`);
       const data = await res.json();
-     
-      
       const employeeId = data.Employee_ID || data.employee_id || data.EmployeeId;
 
       if (!employeeId) {
@@ -213,21 +208,28 @@ const [activeMenu, setActiveMenu] = useState(null);
   };
 
   // Group click
-  const handleGroupClick = async (group) => {
-    setActiveChat({ id: group._id, name: group.name, chatId: group._id, type: "group" });
-    setUnread((prev) => ({ ...prev, [group._id]: 0 }));
-    openWebSocket("group", group._id);
-
-    try {
-      const res = await fetch(`${ipadr}/group_history/${group._id}`);
-      if (res.ok) {
-        const history = await res.json();
-        setMessages((prev) => ({ ...prev, [group._id]: history }));
-      }
-    } catch (err) {
-      console.error(err);
+ const handleGroupClick = async (group) => {
+  setActiveChat({ 
+    id: group._id, 
+    name: group.name, 
+    chatId: `group_${group._id}`, // <-- Add this prefix
+    type: "group" 
+  });
+  setUnread((prev) => ({ ...prev, [group._id]: 0 }));
+  openWebSocket("group", group._id);
+  
+  try {
+    
+    const res = await fetch(`${ipadr}/group_history/${group._id}`);
+    if (res.ok) {
+      const history = await res.json();
+      setMessages((prev) => ({ ...prev, [group._id]: history }));
     }
-  };
+  } catch (err) {
+    console.error(err);
+  }
+};
+
 
   const handleRemoveGroup = async (group) => {
     if (!confirm(`Are you sure you want to delete group "${group.name}"?`)) return;
@@ -290,7 +292,7 @@ const [activeMenu, setActiveMenu] = useState(null);
     }
 
     const tempId = `temp-${Date.now()}`;
-  
+    
 
     const payload = {
       type: "thread",
@@ -306,6 +308,7 @@ const [activeMenu, setActiveMenu] = useState(null);
       text: threadInput.trim(),
       rootId: selectedThread.id,
       chatId: activeChat.chatId,
+      isThread: true,
       timestamp: new Date().toISOString(),
     };
 
@@ -316,9 +319,6 @@ const [activeMenu, setActiveMenu] = useState(null);
     });
 
     ws.current.send(JSON.stringify(payload));
-
-   
-
     setThreadInput("");
   };
 
@@ -369,9 +369,7 @@ const [activeMenu, setActiveMenu] = useState(null);
       <FiMessageSquare className="text-2xl" />
       Messages
     </div>
-    {isManager?.toLowerCase() === "manager" ||
-  isDepart?.toLowerCase() === "hr" 
-   &&(
+    {(isManager?.toLowerCase() === "manager" || isDepart?.toLowerCase() === "hr")&&(
       <button
         className="p-2 rounded-full hover:bg-gray-200 transition-all"
         onClick={() => setShowGroupModal(true)}
@@ -397,97 +395,81 @@ const [activeMenu, setActiveMenu] = useState(null);
   </div>
 
   {/* Groups */}
-<div className="flex-1 overflow-y-auto px-3 space-y-2">
-  {filteredGroups.map((group) => {
-    const isActiveMenu = activeMenu === group._id;
-
-    return (
-      <div
-        key={group._id}
-        className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between transition-all ${
-          activeChat.chatId === group._id ? "bg-gray-200 shadow" : "hover:bg-gray-150"
-        }`}
-        onClick={() => handleGroupClick(group)}
-      >
-        <div className="flex items-center gap-3 flex-1 min-w-0">
-          <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-gray-400 text-white flex-shrink-0">
-            {getInitials(group.name)}
-          </div>
-          <div className="flex flex-col min-w-0 flex-1">
-            <span className="truncate font-medium text-gray-800">{group.name}</span>
-            <span className="text-xs text-gray-500 truncate">
-              {group.members?.filter((m) => m !== userid).length} members
-            </span>
-          </div>
-        </div>
-
-        {/* More Options Dot Button */}
-        <div className="relative">
-          <button
-            className="p-2 rounded-full hover:bg-gray-200 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              setActiveMenu(isActiveMenu ? null : group._id); 
-            }}
-            title="More Options"
-          >
-            ⋮
-          </button>
-
-          {/* Dropdown Menu */}
-          {isActiveMenu && (
-            <div className="absolute right-0 top-10 bg-white border shadow-md rounded-md flex flex-col w-36 z-10">
-              {isManager?.toLowerCase() === "manager" ||
-  isDepart?.toLowerCase() === "hr"  && (
-                <>
-                  <button
-                    className="px-4 py-2 text-left hover:bg-gray-100"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      setEditingGroup(group);
-                      setGroupName(group.name);
-                      setSelectedUsers(group.members || []);
-                      setShowGroupModal(true);
-                      setActiveMenu(null); 
-                    }}
-                  >
-                    <FiEdit2 size={16} />
-                  </button>
-                  <button
-                    className="px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
-                    onClick={(e) => {
-                      e.stopPropagation();
-                      handleRemoveGroup(group);
-                      setActiveMenu(null); // close menu
-                    }}
-                  >
-                    <FiTrash2 size={16} /> 
-                  </button>
-                </>
-              )}
-              <button
-                className="px-4 py-2 text-left hover:bg-gray-100"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  handleViewMembers(group);
-                  setActiveMenu(null); 
-                }}
-              >
-                <FiUsers size={16} />
-              </button>
-            </div>
-          )}
-        </div>
+  <div className="flex-1 overflow-y-auto px-3 space-y-2">
+    <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
+      Groups
+    </div>
+    {filteredGroups.map((group) => (
+  <div
+    key={group._id}
+    className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between transition-all ${
+      activeChat.chatId === group._id ? "bg-gray-200 shadow" : "hover:bg-gray-150"
+    }`}
+    onClick={() => handleGroupClick(group)}
+  >
+    <div className="flex items-center gap-3 flex-1 min-w-0">
+      <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-gray-400 text-white flex-shrink-0">
+        {getInitials(group.name)}
       </div>
-    );
-  })}
+      <div className="flex flex-col min-w-0 flex-1">
+        <span className="truncate font-medium text-gray-800">{group.name}</span>
+        <span className="text-xs text-gray-500 truncate">
+          {group.members?.filter((m) => m !== userid).length} members
+        </span>
+      </div>
+    </div>
+    {isManager?.toLowerCase() === "manager" && (
+      <div className="flex gap-2">
+  
+  {/* Edit Button */}
+        <button
+          className="p-2 rounded-full hover:bg-gray-200 transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            setEditingGroup(group); // set the group being edited
+            setGroupName(group.name);
+            setSelectedUsers(group.members || []);
+            setShowGroupModal(true);
+          }}
+          title="Edit Group"
+        >
+          <FiEdit2 size={16} />
+        </button>
 
+        {/* Delete Button */}
+        <button
+          className="p-2 rounded-full hover:bg-gray-200 transition-all"
+          onClick={(e) => {
+            e.stopPropagation();
+            handleRemoveGroup(group);
+          }}
+          title="Delete Group"
+        >
+          <FiTrash2 size={16} />
+        </button>
 
+        
+      </div>
+
+      
+    )}
+     <button
+    className="p-2 rounded-full hover:bg-gray-200 transition-all"
+    onClick={(e) => {
+      e.stopPropagation();
+      handleViewMembers(group);
+    }}
+    title="View Members"
+  >
+    <FiUsers size={16}/>
+  </button>
+  </div>
+))}
     {/* Contacts */}
     <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
       Contacts
     </div>
-    {filteredContacts.map((contact) => {
+    {filteredContacts .filter((contact) => contact.id !== userid) .map((contact) => {
       const chatId = buildChatId(userid, contact.id);
       const isOnline = onlineUsers.includes(contact.id);
       return (

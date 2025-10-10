@@ -350,7 +350,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   </Link>
 )}
 
-{loggedIn && !isAdmin && (
+{loggedIn && isAdmin && (
   (isDepart === 'HR' || isManager === 'Manager' || userid ) && (
     <Link to="chat" className="sidebar-item">
       <div className={`flex items-center p-4 ${isActive('chat') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>

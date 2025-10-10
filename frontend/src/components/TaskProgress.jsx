@@ -551,8 +551,8 @@ const TaskProgress = () => {
       <div ref={headerRef} className="bg-white shadow-sm border-b border-gray-200 p-4 shrink-0">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">{(LS.get("position") === "HR") ? "Manager Task Progress" : "Employee Task Progress"}</h2>
-            <p className="text-gray-600 mt-1">Monitor and manage all {(LS.get("position") === "HR")  ? "manager" : "employee"} task progress</p>
+            <h2 className="text-3xl font-bold text-gray-800">{(LS.get("position") === "HR") ? "TeamLead Task Progress" : "Employee Task Progress"}</h2>
+            <p className="text-gray-600 mt-1">Monitor and manage all {(LS.get("position") === "HR")  ? "TeamLead" : "employee"} task progress</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -607,7 +607,7 @@ const TaskProgress = () => {
           {overallStats.totalEmployees}
         </div>
         <div className="text-[11px] font-medium text-blue-600">
-          {(LS.get("position") === "HR") ? "Managers" : "Employees"}
+          {(LS.get("position") === "HR") ? "TeamLeads" : "Employees"}
         </div>
       </div>
       <div className="bg-gray-50 p-2 rounded-lg border border-gray-200">
@@ -851,7 +851,7 @@ const TaskProgress = () => {
                       {selected.tasks.length === 0 ? (
                         <div className="text-center py-6 text-gray-500">
                           <FaClipboardList className="text-3xl mx-auto mb-2 opacity-50" />
-                          <p>No tasks for this {(LS.get("position") === "Manager")  ? "manager" : "employee"} matching current filters</p>
+                          <p>No tasks for this {(LS.get("position") === "Manager")  ? "TeamLead" : "employee"} matching current filters</p>
                         </div>
                       ) : (
                         <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - var(--tp-header-height) - 80px)' }}>

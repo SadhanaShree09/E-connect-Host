@@ -286,7 +286,7 @@ const Attendance = () => {
         <div className="bg-white rounded-lg p-4 shadow border">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
             <FontAwesomeIcon icon={faUserTie} className="mr-2 text-blue-600" />
-            Manager Dashboard - {user_info?.name}
+            TeamLead Dashboard - {user_info?.name}
           </h2>
           
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">

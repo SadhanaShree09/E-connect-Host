@@ -296,7 +296,7 @@ const TaskPage = () => {
           })),
           comments: t.comments || [],
           files: t.files || [],
-          assignedBy: t.assigned_by || t.assignedBy || "Manager",
+          assignedBy: t.assigned_by || t.assignedBy || "TeamLead",
           priority: t.priority || "medium",
           verified: t.verified || false,
           createdDate: t.created_date || t.date

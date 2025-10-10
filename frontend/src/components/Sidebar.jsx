@@ -421,7 +421,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
                   d="M6 3h12M6 7h12M6 11h12M6 15h12M6 19h12"/>
           </svg>
-          <span className="font-medium">Manager Task Progress</span>
+          <span className="font-medium">TeamLead Task Progress</span>
         </div>
       </Link>
       

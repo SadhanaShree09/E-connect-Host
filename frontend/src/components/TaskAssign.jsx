@@ -363,7 +363,7 @@ const handlePageChange = (direction) => {
   const handleonSubmit = async () => {
     if (!modeldata.task.some(task => task.trim() !== "")) return toast.error("Task title is required");
     if (!modeldata.due_date) return toast.error("Due date is required");
-    if ((isManager || isHR) && selectedUsers.length === 0) return toast.error(isManager ? "Please select an employee" : "Please select a manager");
+    if ((isManager || isHR) && selectedUsers.length === 0) return toast.error(isManager ? "Please select an employee" : "Please select a TeamLead");
     let taskArr = [];
   // Always format due_date as yyyy-mm-dd for the input
     const formatDate = (dateStr) => {
@@ -395,7 +395,7 @@ const handlePageChange = (direction) => {
       }
       const response = await axios({ method: "post", url: `${ipadr}/task_assign_to_multiple_members`, data: { Task_details: taskArr }, headers: { "Content-Type": "application/json" } });
       if (response.status === 200) {
-        toast.success(isManager ? "Task assigned to employee(s)" : "Task assigned to manager(s)");
+        toast.success(isManager ? "Task assigned to employee(s)" : "Task assigned to TeamLead(s)");
         setModelData({ task: [""], userid: "", date: "", due_date: "", priority: "Medium", subtasks: [] });
         setSelectedUsers([]);
         setModalOpen(false);
@@ -483,7 +483,7 @@ const handleoneditSubmit = async () => {
           </div>
           <div className="flex-1 flex items-center justify-center space-x-3">
             <select className="w-40 p-1 text-sm border border-gray-300 rounded-md" value={ValueSelected} onChange={e => SetValueSelected(e.target.value)}>
-              <option value="" disabled hidden>--select {isManager ? 'Employee' : 'Manager'}--</option>
+              <option value="" disabled hidden>--select {isManager ? 'Employee' : 'TeamLead'}--</option>
               {options.map(item => (
                 <option key={item.id || item.userid} value={item.userid}>{item.name}</option>
               ))}
@@ -564,7 +564,7 @@ const handleoneditSubmit = async () => {
               <button onClick={() => setModelData({ ...modeldata, subtasks: [...(modeldata.subtasks || []), { title: "", done: false }] })} className="text-blue-500 mt-2">➕ Add Subtask</button>
             </div>
             <div className="mt-4">
-              <label className="block text-lg font-semibold text-gray-700 mb-2">Select {isManager ? 'Employee(s)' : 'Manager(s)'}</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Select {isManager ? 'Employee(s)' : 'TeamLead(s)'}</label>
               <div className="w-full max-w-sm bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm">
                 <Multiselect options={options} selectedValues={selectedUsers} onSelect={setSelectedUsers} onRemove={setSelectedUsers} displayValue="name" className="text-gray-700" avoidHighlightFirstOption={true} />
               </div>

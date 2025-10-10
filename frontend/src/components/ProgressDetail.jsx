@@ -672,7 +672,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                     }`}>
                       {comment.user}
                       {comment.user?.toLowerCase().includes("manager") ? (
-                        <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">Manager</span>
+                        <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">TeamLead</span>
                       ) : comment.user?.toLowerCase().includes("hr") ? (
                         <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">HR</span>
                       ) : (
@@ -734,7 +734,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                         {file.name}
                         {file.uploadedBy === "Manager" && (
                           <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">
-                            Manager
+                            TeamLead
                           </span>
                         )}
                         {file.uploadedBy === "HR" && (

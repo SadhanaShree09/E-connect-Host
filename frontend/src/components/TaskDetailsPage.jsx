@@ -186,7 +186,7 @@ const mapStatusToColumn = (status) => {
         })),
         comments: foundTask.comments || [],
         files: foundTask.files || [],
-        assignedBy: foundTask.assigned_by || foundTask.assignedBy || "Manager",
+        assignedBy: foundTask.assigned_by || foundTask.assignedBy || "TeamLead",
         priority: foundTask.priority || "medium",
         verified: foundTask.verified || false,
         createdDate: foundTask.created_date || foundTask.date

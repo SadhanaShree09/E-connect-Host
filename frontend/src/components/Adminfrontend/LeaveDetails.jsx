@@ -271,7 +271,7 @@ const LeaveDetails = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
           <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
-          <p>Only Admin, Manager and HR can access this page.</p>
+          <p>Only Admin, TeamLead and HR can access this page.</p>
         </div>
       </div>
     );
@@ -473,7 +473,7 @@ const LeaveDetails = () => {
             )}
             {userRole === 'manager' && leaveData.manager_info && (
               <span className="ml-4 text-gray-800">
-                Manager: <strong>{leaveData.manager_info.manager_name}</strong>
+                TeamLead: <strong>{leaveData.manager_info.manager_name}</strong>
               </span>
             )}
           </div>

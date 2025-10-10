@@ -350,29 +350,30 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   </Link>
 )}
 
-{loggedIn && isAdmin && (
-  (isDepart === 'HR' || isManager === 'Manager' || userid ) && (
-    <Link to="chat" className="sidebar-item">
-      <div className={`flex items-center p-4 ${isActive('chat') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
-        <svg
-          xmlns="http://www.w3.org/2000/svg"
-          fill="none"
-          viewBox="0 0 24 24"
-          stroke="currentColor"
-          className="w-6 h-6 mr-3 text-white"
-        >
-          <path
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            strokeWidth="2"
-            d="M7 8h10M7 12h4m1 8a9 9 0 110-18 9 9 0 010 18z"
-          />
-        </svg>
-        <span className="font-medium">Chat</span>
-      </div>
-    </Link>
-  )
+{loggedIn && (isAdmin || isManager || isDepart === "hr") && (
+  <Link to="chat" className="sidebar-item">
+    <div
+      className={`flex items-center p-4 ${isActive('chat') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}
+    >
+      <svg
+        xmlns="http://www.w3.org/2000/svg"
+        fill="none"
+        viewBox="0 0 24 24"
+        stroke="currentColor"
+        className="w-6 h-6 mr-3 text-white"
+      >
+        <path
+          strokeLinecap="round"
+          strokeLinejoin="round"
+          strokeWidth="2"
+          d="M7 8h10M7 12h4m1 8a9 9 0 110-18 9 9 0 010 18z"
+        />
+      </svg>
+      <span className="font-medium">Chat</span>
+    </div>
+  </Link>
 )}
+
 
         {
           loggedIn && isManager=="Manager" ?(

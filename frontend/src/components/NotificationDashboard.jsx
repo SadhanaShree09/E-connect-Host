@@ -424,9 +424,7 @@ const NotificationDashboard = () => {
 
         // Attendance-related notifications
         case 'attendance':
-          if (isAdminLevel) {
-            targetUrl = '/admin/time';
-          } else {
+          {
             targetUrl = '/User/Clockin_int/Clockdashboard';
           }
           break;

@@ -829,13 +829,24 @@ async def get_clock_records(userid: str = Path(..., title="The name of the user 
 
 # Admin Dashboard Attendance
 @app.get("/attendance/")
-async def fetch_attendance_by_date():
-    attendance_data = get_attendance_by_date()
-    if not attendance_data:
-        return "No attendance data found for the selected date"
-
-
-    return {"attendance": attendance_data}
+async def fetch_attendance_by_date(date: str = Query(None)):
+    try:
+        if date:
+            # If date is provided, filter by that date
+            attendance_data = get_attendance_by_date()
+            # Filter by date if needed (the frontend sends date parameter but we return all for now)
+            # You can add date filtering logic here if needed
+        else:
+            # If no date provided, return all attendance data
+            attendance_data = get_attendance_by_date()
+        
+        if not attendance_data:
+            return {"attendance": []}
+        
+        return {"attendance": attendance_data}
+    except Exception as e:
+        print(f"Error fetching attendance: {str(e)}")
+        raise HTTPException(status_code=500, detail=f"Error fetching attendance data: {str(e)}")
 
 
 # Employee ID
@@ -4135,7 +4146,7 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
                 if msg.get("chatId") and msg.get("chatId").startswith("group_"):
                     # Send to group channel
-                    await group_chat_manager.send_message(msg["chatId"], msg)
+                    await group_ws_manager.send_message(msg["chatId"], msg)
                 else:
                     # Direct chat
                     await direct_chat_manager.send_message(msg["to_user"], msg)

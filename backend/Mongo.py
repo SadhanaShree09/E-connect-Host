@@ -3881,7 +3881,7 @@ def get_role_based_action_url(userid, notification_type, base_path=None):
             
             # Attendance-related notifications
             'attendance': {
-                'admin': '/admin/time',
+                
                 'user': '/User/Clockin_int/Clockdashboard'
             },
             

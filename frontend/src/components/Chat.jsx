@@ -7,6 +7,7 @@ import {
   FiChevronLeft,
   FiTrash2,
   FiMessageSquare,
+  FiEdit2,
 } from "react-icons/fi";
 import { LS,ipadr } from "../Utils/Resuse";
 import { toast, ToastContainer } from "react-toastify";
@@ -433,7 +434,10 @@ const [activeMenu, setActiveMenu] = useState(null);
           {/* Dropdown Menu */}
           {isActiveMenu && (
             <div className="absolute right-0 top-10 bg-white border shadow-md rounded-md flex flex-col w-36 z-10">
-              {isManager?.toLowerCase() === "manager" && isAdmin?.toLowerCase() === "Admin" && isDepart?.toLowerCase() === "hr"   && (
+              {isManager?.toLowerCase() === "manager" ||
+               isDepart?.toLowerCase() === "hr"||
+ isAdmin?.toLowerCase() === "admin" 
+   && (
                 <>
                   <button
                     className="px-4 py-2 text-left hover:bg-gray-100"
@@ -446,7 +450,7 @@ const [activeMenu, setActiveMenu] = useState(null);
                       setActiveMenu(null); 
                     }}
                   >
-                    ✏️ 
+                    <FiEdit2 size={16} />
                   </button>
                   <button
                     className="px-4 py-2 text-left hover:bg-gray-100 flex items-center gap-2"
@@ -468,7 +472,7 @@ const [activeMenu, setActiveMenu] = useState(null);
                   setActiveMenu(null); 
                 }}
               >
-                👥
+                <FiMembers size={16} />
               </button>
             </div>
           )}

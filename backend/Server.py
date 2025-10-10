@@ -4115,7 +4115,7 @@ active_users: dict[str, WebSocket] = {}
 
 @app.websocket("/ws/{userid}")
 async def websocket_endpoint(websocket: WebSocket, userid: str):
-    # connect socket
+    # Connect socket
     await direct_chat_manager.connect(userid, websocket)
     try:
         while True:
@@ -4127,12 +4127,18 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
             msg_type = msg.get("type", "chat")
 
             if msg_type == "thread":
+                temp_id = msg.get("tempId")
                 msg["id"] = msg.get("id") or str(ObjectId())
                 threads_collection.insert_one(msg.copy())
+                msg["_tempId"] = temp_id
                 msg.pop("_id", None)
 
-                # send to both sender and recipient
-                await direct_chat_manager.send_message(msg["to_user"], msg)
+                if msg.get("chatId") and msg.get("chatId").startswith("group_"):
+                    # Send to group channel
+                    await group_chat_manager.send_message(msg["chatId"], msg)
+                else:
+                    # Direct chat
+                    await direct_chat_manager.send_message(msg["to_user"], msg)
 
             else:  # normal chat
                 msg["chatId"] = msg.get("chatId") or "_".join(sorted([userid, msg["to_user"]]))
@@ -4141,27 +4147,10 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
                 # send to both sender and recipient
                 await direct_chat_manager.send_message(msg["to_user"], msg)
-                
-                # Create chat notification for receiver
-                try:
-                    sender = Users.find_one({"userid": userid})
-                    sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
-                    message_text = msg.get("text", "")
-                    
-                    # Only send notification for text messages (not for reactions, etc.)
-                    if message_text:
-                        await Mongo.create_chat_message_notification(
-                            sender_id=userid,
-                            receiver_id=msg["to_user"],
-                            sender_name=sender_name,
-                            message_preview=message_text,
-                            chat_type="direct"
-                        )
-                except Exception as e:
-                    print(f"Error creating chat notification: {e}")
 
     except WebSocketDisconnect:
         direct_chat_manager.disconnect(userid, websocket)
+
 
 
 
@@ -4181,7 +4170,7 @@ async def history(chatId: str):
             "file": doc.get("file"),
             "timestamp": doc["timestamp"].isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
             "chatId": doc.get("chatId"),
-            "reply_count": reply_count,   # ✅ so frontend can show "💬 3 replies"
+            "reply_count": reply_count,  
         })
     return messages
 

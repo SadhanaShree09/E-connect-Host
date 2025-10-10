@@ -57,7 +57,7 @@ const [activeMenu, setActiveMenu] = useState(null);
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
- 
+ const isAdmin = LS.get("isAdmin")
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
   // Fetch contacts
@@ -79,7 +79,7 @@ const [activeMenu, setActiveMenu] = useState(null);
       }
     };
     fetchUsers();
-  }, [userid, isManager, isDepart]);
+  }, [userid, isManager, isDepart, isAdmin]);
 
   // Fetch groups
   useEffect(() => {
@@ -187,6 +187,8 @@ const [activeMenu, setActiveMenu] = useState(null);
     try {
       const res = await fetch(`${ipadr}/get_EmployeeId/${encodeURIComponent(contact.name)}`);
       const data = await res.json();
+      console.log("dfgdf:",data.Employee_ID);
+      
       const employeeId = data.Employee_ID || data.employee_id || data.EmployeeId;
 
       if (!employeeId) {

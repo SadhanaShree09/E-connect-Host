@@ -696,8 +696,11 @@ def get_attendance_by_date():
 def get_employee_id_from_db(name: str):
     try:
         user = Users.find_one({'name': name}, {'_id': 1})
+        admin = admin.find_one({'name': name}, {'_id': 1})
         if user:
             return str(user["_id"])
+        elif admin:
+            return str(admin["_id"])
         else:
             return None
     except Exception as e:
@@ -887,8 +890,12 @@ def store_leave_request(userid, employee_name, time, leave_type, selected_date, 
     if leave_count and leave_count[0]["count"] >= 1:
         return f"You have already taken a {leave_type} this month."
 
-    user_info = Users.find_one({"_id": ObjectId(userid)}, {"position": 1})
+    user_info = Users.find_one({"_id": ObjectId(userid)}, {"position": 1}) 
     user_position = user_info.get("position", "User") if user_info else "User"
+
+    
+
+
 
     employee_id = get_employee_id_from_db(employee_name)
     new_leave = {

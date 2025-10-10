@@ -17,8 +17,8 @@ import { toast, Toaster } from "react-hot-toast";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import axios from "axios";
-import { LS } from "../Utils/Resuse";
-import Fileuploader from "./Fileuploader"; // <-- import the modal uploader
+import { LS,ipadr } from "../Utils/Resuse";
+import Fileuploader from "./Fileuploader"; 
 
 export default function EmployeeDashboard() {
   const userid = LS.get("userid");
@@ -32,11 +32,12 @@ export default function EmployeeDashboard() {
   const navigate = useNavigate();
   const location = useLocation();
   const { docName } = location.state || {}; 
-  
+  const [statusFilter, setStatusFilter] = useState("all");
+
   
 
 
-  const pageSize = 5;
+  const pageSize = 4;
 
   /** Fetch assigned documents */
   const fetchAssignedDocs = useCallback(async () => {
@@ -44,7 +45,7 @@ export default function EmployeeDashboard() {
     setLoading(true);
     try {
       const res = await axios.get(
-  `https://econnectbackend-production.up.railway.app/documents/assigned/${encodeURIComponent(userid)}`
+        `${ipadr}/documents/assigned/${encodeURIComponent(userid)}`
       );
 
       const docsArray = Array.isArray(res.data.assigned_docs)
@@ -82,12 +83,32 @@ export default function EmployeeDashboard() {
   }, [fetchAssignedDocs]);
 
   /** Filter documents by search */
-  const filteredDocs = useMemo(() => {
-    if (!searchTerm) return assignedDocs;
-    return assignedDocs.filter((doc) =>
+ /** Filter documents by search + status */
+const filteredDocs = useMemo(() => {
+  let docs = assignedDocs;
+
+  // Apply search filter
+  if (searchTerm) {
+    docs = docs.filter((doc) =>
       doc.docName.toLowerCase().includes(searchTerm.toLowerCase())
     );
-  }, [assignedDocs, searchTerm]);
+  }
+
+  // Apply status filter
+  if (statusFilter !== "all") {
+    docs = docs.filter((doc) => {
+      if (statusFilter === "pending")
+        return !doc.fileUrl && doc.status !== "verified";
+      if (statusFilter === "uploaded")
+        return doc.fileUrl && doc.status !== "verified";
+      if (statusFilter === "verified") return doc.status === "verified";
+      return true;
+    });
+  }
+
+  return docs;
+}, [assignedDocs, searchTerm, statusFilter]);
+
 
   /** Pagination */
   const totalPages = Math.ceil(filteredDocs.length / pageSize);
@@ -136,7 +157,7 @@ export default function EmployeeDashboard() {
     return (
       <div className="flex items-center gap-3 text-sm">
         <a
-          href={`https://econnectbackend-production.up.railway.app${doc.fileUrl}`}
+          href={`${ipadr}${doc.fileUrl}`}
           target="_blank"
           rel="noreferrer"
           className="flex items-center gap-1 text-blue-600 hover:underline"
@@ -145,27 +166,51 @@ export default function EmployeeDashboard() {
         </a>
         
         <button
-          onClick={async () => {
-            try {
-              await axios.delete(
-                `https://econnectbackend-production.up.railway.app/documents/delete/${doc.fileId}`
-              );
-              setAssignedDocs((prev) =>
-                prev.map((d) =>
-                  d.docName === doc.docName
-                    ? { ...d, fileUrl: null, fileId: null, status: "pending" }
-                    : d
-                )
-              );
-              toast.success("File deleted successfully");
-            } catch {
-              toast.error("Failed to delete file");
-            }
-          }}
-          className="flex items-center gap-1 text-red-600 hover:underline"
-        >
-          <Trash2 size={16} /> Delete
-        </button>
+  onClick={() => {
+    toast(
+      (t) => (
+        <div className="flex flex-col gap-2">
+          <span>Are you sure you want to delete <strong>{doc.docName}</strong>?</span>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={async () => {
+                toast.dismiss(t.id); // close confirmation toast
+                try {
+                  await axios.delete(`${ipadr}/documents/delete/${doc.fileId}`);
+                  setAssignedDocs((prev) =>
+                    prev.map((d) =>
+                      d.docName === doc.docName
+                        ? { ...d, fileUrl: null, fileId: null, status: "pending" }
+                        : d
+                    )
+                  );
+                  toast.success("File deleted successfully!");
+                } catch (err) {
+                  console.error(err);
+                  toast.error("Failed to delete file");
+                }
+              }}
+              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => toast.dismiss(t.id)}
+              className="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-xs"
+            >
+              No
+            </button>
+          </div>
+        </div>
+      ),
+      { duration: Infinity, position: "top-center" }
+    );
+  }}
+  className="flex items-center gap-1 text-red-600 hover:underline"
+>
+  <Trash2 size={16} /> Delete
+</button>
+
       </div>
     );
   }
@@ -184,16 +229,16 @@ export default function EmployeeDashboard() {
 };
 
   return (
-    <div className="p-6 min-h-screen w-screen bg-gray-50 flex flex-col">
+    <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full  shadow-black rounded-xl justify-center items-center relative jsonback  ml-10 rounded-md">
       <Toaster position="top-right" />
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-3xl font-bold text-gray-800">📄 My Documentation</h1>
+        <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">  My Documentation</h1>
         <button
           onClick={fetchAssignedDocs}
           disabled={loading || !userid}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
+          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 my-2 mt-10"
         >
           <RefreshCcw size={18} />
           {loading ? "Refreshing..." : "Refresh"}
@@ -201,7 +246,7 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Status Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 my-2 mt-10">
         <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
           <FileClock className="text-yellow-500 mb-2" size={28} />
           <p className="text-yellow-600 font-bold text-xl">{statusCounts.pending}</p>
@@ -220,18 +265,35 @@ export default function EmployeeDashboard() {
       </div>
 
       {/* Search */}
-      <div className="sticky top-0 z-10 bg-gray-50 pb-4">
-        <input
-          type="text"
-          placeholder="🔍 Search documents..."
-          value={searchTerm}
-          onChange={(e) => {
-            setSearchTerm(e.target.value);
-            setCurrentPage(1);
-          }}
-          className="w-full max-w-md px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200 shadow-sm"
-        />
-      </div>
+      <div className="sticky top-0 z-10 bg-gray-50 pb-4 flex flex-col sm:flex-row gap-3 my-2 mt-10">
+  {/* Search Input */}
+  <input
+    type="text"
+    placeholder=" Search documents..."
+    value={searchTerm}
+    onChange={(e) => {
+      setSearchTerm(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="flex-1 px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200 shadow-sm"
+  />
+
+  {/* Status Filter Dropdown */}
+  <select
+    value={statusFilter}
+    onChange={(e) => {
+      setStatusFilter(e.target.value);
+      setCurrentPage(1);
+    }}
+    className="px-3 py-2 border rounded-lg bg-white shadow-sm"
+  >
+    <option value="all">All</option>
+    <option value="pending">Pending</option>
+    <option value="uploaded">Uploaded</option>
+    <option value="verified">Verified</option>
+  </select>
+</div>
+
 
       {/* Documents Table */}
       <div className="overflow-hidden flex-1 flex flex-col">

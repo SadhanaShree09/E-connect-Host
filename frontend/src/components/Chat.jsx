@@ -57,8 +57,7 @@ const [activeMenu, setActiveMenu] = useState(null);
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
-   const isAdmin = LS.get("isadmin");
-
+ 
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
   // Fetch contacts

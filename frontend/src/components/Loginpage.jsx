@@ -1,5 +1,3 @@
-
-
 import React from "react";
 import logo from "../assets/logo.png";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";

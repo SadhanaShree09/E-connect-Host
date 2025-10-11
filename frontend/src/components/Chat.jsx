@@ -59,12 +59,13 @@ const [currentGroupName, setCurrentGroupName] = useState("");
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
-const isAdmin = LS.get("isAdmin")  
+const isAdmin = LS.get("isadmin")  
 
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
   // Fetch contacts
   useEffect(() => {
+
     const fetchUsers = async () => {
       try {
         const res = await fetch(`${ipadr}/get_all_users`);
@@ -73,7 +74,7 @@ const isAdmin = LS.get("isAdmin")
           if (user.id === userid) return true;
           if (isManager?.toLowerCase() === "Manager") return true;
           if (isDepart?.toLowerCase() === "HR") return true;
-          if (isAdmin?.toLowerCase() === "Admin") return true;
+          if (isAdmin) return true;
           return user.department?.toLowerCase() !== "HR";
         });
         setContacts(filtered);
@@ -270,6 +271,7 @@ const isAdmin = LS.get("isAdmin")
         timestamp: new Date().toISOString(),
         chatId: activeChat.chatId,
       };
+      
 
       setMessages((prev) => {
         const chatMessages = prev[activeChat.chatId] || [];
@@ -373,7 +375,7 @@ const isAdmin = LS.get("isAdmin")
     {(
   isManager?.toLowerCase() === "manager" ||
   isDepart?.toLowerCase() === "hr" ||
-  isAdmin?.toLowerCase() === "admin"
+  isAdmin
 )&&(
       <button
         className="p-2 rounded-full hover:bg-gray-200 transition-all"
@@ -426,10 +428,12 @@ const isAdmin = LS.get("isAdmin")
         </div>
       </div>
 
-      {/*  Show Edit/Delete only for Admin, Manager, HR */}
-      {(isManager?.toLowerCase() === "Manager" ||
-        isDepart?.toLowerCase() === "HR" ||
-        isAdmin?.toLowerCase() === "ADMIN") && (
+     
+     {(
+  isManager?.toLowerCase() === "manager" ||
+  isDepart?.toLowerCase() === "hr" ||
+  isAdmin
+) && (
         <div className="flex gap-2">
           {/* Edit Button */}
           <button

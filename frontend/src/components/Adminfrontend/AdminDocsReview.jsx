@@ -1,4 +1,4 @@
-
+// src/components/HRDocsReview.jsx
 import { useState, useEffect } from "react";
 import {
   Check,
@@ -29,40 +29,25 @@ export default function HRDocsReview() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-  fetchUsers();
-}, []);
+    fetchUsers();
+  }, []);
 
-const fetchUsers = async () => {
-  try {
-    setLoadingUsers(true);
-
-    // Get current HR user ID (if you want to exclude self)
-    const currentUserId = localStorage.getItem("userid"); 
-
-    const res = await axios.get(`${ipadr}/get_all_users`);
-
-    const normalizedUsers = res.data.map((u) => ({
-      ...u,
-      userId: u.id || u._id || u.userId,
-    }));
-
-    // Filter out admins and optionally self
-    const filteredUsers = normalizedUsers.filter(
-      (u) => !u.isAdmin && u.userId !== currentUserId
-    );
-
-    setUsers(filteredUsers);
-
-    // Fetch assigned docs only for filtered users
-    await Promise.all(filteredUsers.map((user) => fetchAssignedDocs(user.userId)));
-
-  } catch (err) {
-    console.error("Error fetching users:", err);
-  } finally {
-    setLoadingUsers(false);
-  }
-};
-
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const res = await axios.get(`${ipadr}/get_all_users`);
+      const normalizedUsers = res.data.map((u) => ({
+        ...u,
+        userId: u.id || u._id || u.userId,
+      }));
+      setUsers(normalizedUsers);
+      await Promise.all(normalizedUsers.map((user) => fetchAssignedDocs(user.userId)));
+    } catch (err) {
+      console.error(" Error fetching users:", err);
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
   const fetchAssignedDocs = async (userId) => {
     try {

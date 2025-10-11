@@ -29,25 +29,38 @@ export default function HRDocsReview() {
   const [statusFilter, setStatusFilter] = useState("all");
 
   useEffect(() => {
-    fetchUsers();
-  }, []);
+  fetchUsers();
+}, []);
 
-  const fetchUsers = async () => {
-    try {
-      setLoadingUsers(true);
-      const res = await axios.get(`${ipadr}/get_all_users`);
-      const normalizedUsers = res.data.map((u) => ({
-        ...u,
-        userId: u.id || u._id || u.userId,
-      }));
-      setUsers(normalizedUsers);
-      await Promise.all(normalizedUsers.map((user) => fetchAssignedDocs(user.userId)));
-    } catch (err) {
-      console.error(" Error fetching users:", err);
-    } finally {
-      setLoadingUsers(false);
-    }
-  };
+const fetchUsers = async () => {
+  try {
+    setLoadingUsers(true);
+
+    // Get current HR user ID (replace with your actual source)
+    const currentUserId = localStorage.getItem("userid"); 
+
+    const res = await axios.get(`${ipadr}/get_all_users`);
+
+    const normalizedUsers = res.data.map((u) => ({
+      ...u,
+      userId: u.id || u._id || u.userId,
+    }));
+
+    // Exclude self
+    const filteredUsers = normalizedUsers.filter((u) => u.userId !== currentUserId);
+
+    setUsers(filteredUsers);
+
+    // Fetch docs for each user (excluding self)
+    await Promise.all(filteredUsers.map((user) => fetchAssignedDocs(user.userId)));
+
+  } catch (err) {
+    console.error("Error fetching users:", err);
+  } finally {
+    setLoadingUsers(false);
+  }
+};
+
 
   const fetchAssignedDocs = async (userId) => {
     try {

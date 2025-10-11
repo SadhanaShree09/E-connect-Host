@@ -214,7 +214,7 @@ const isAdmin = LS.get("isadmin");
   setActiveChat({ 
     id: group._id, 
     name: group.name, 
-    chatId: `group_${group._id}`, // <-- Add this prefix
+    chatId: `group_${group._id}`, 
     type: "group" 
   });
   setUnread((prev) => ({ ...prev, [group._id]: 0 }));
@@ -225,7 +225,7 @@ const isAdmin = LS.get("isadmin");
     const res = await fetch(`${ipadr}/group_history/${group._id}`);
     if (res.ok) {
       const history = await res.json();
-      setMessages((prev) => ({ ...prev, [group._id]: history }));
+      setMessages((prev) => ({ ...prev, [`group_${group._id}`]: history }));
     }
   } catch (err) {
     console.error(err);

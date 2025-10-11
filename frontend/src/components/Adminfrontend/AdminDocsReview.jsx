@@ -36,7 +36,7 @@ const fetchUsers = async () => {
   try {
     setLoadingUsers(true);
 
-    // Get current HR user ID (replace with your actual source)
+    // Get current HR user ID (if you want to exclude self)
     const currentUserId = localStorage.getItem("userid"); 
 
     const res = await axios.get(`${ipadr}/get_all_users`);
@@ -46,12 +46,14 @@ const fetchUsers = async () => {
       userId: u.id || u._id || u.userId,
     }));
 
-    // Exclude self
-    const filteredUsers = normalizedUsers.filter((u) => u.userId !== currentUserId);
+    // Filter out admins and optionally self
+    const filteredUsers = normalizedUsers.filter(
+      (u) => !u.isAdmin && u.userId !== currentUserId
+    );
 
     setUsers(filteredUsers);
 
-    // Fetch docs for each user (excluding self)
+    // Fetch assigned docs only for filtered users
     await Promise.all(filteredUsers.map((user) => fetchAssignedDocs(user.userId)));
 
   } catch (err) {

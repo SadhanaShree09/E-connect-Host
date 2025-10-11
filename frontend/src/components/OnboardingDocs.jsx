@@ -171,6 +171,7 @@ const filteredDocs = useMemo(() => {
       (t) => (
         <div className="flex flex-col gap-2">
           <span>Are you sure you want to delete <strong>{doc.docName}</strong>?</span>
+          <ToastContainer position="top-right" autoClose={4000} />
           <div className="flex justify-end gap-2">
             <button
               onClick={async () => {

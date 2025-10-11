@@ -370,7 +370,11 @@ const isAdmin = LS.get("isAdmin")
       <FiMessageSquare className="text-2xl" />
       Messages
     </div>
-    {(isManager?.toLowerCase() === "manager" || isDepart?.toLowerCase() === "hr" && isAdmin?.toLowerCase() === "Admin" )&&(
+    {(
+  isManager?.toLowerCase() === "manager" ||
+  isDepart?.toLowerCase() === "hr" ||
+  isAdmin?.toLowerCase() === "admin"
+)&&(
       <button
         className="p-2 rounded-full hover:bg-gray-200 transition-all"
         onClick={() => setShowGroupModal(true)}
@@ -423,9 +427,9 @@ const isAdmin = LS.get("isAdmin")
       </div>
 
       {/*  Show Edit/Delete only for Admin, Manager, HR */}
-      {(isManager?.toLowerCase() === "manager" ||
-        isDepart?.toLowerCase() === "hr" ||
-        isAdmin?.toLowerCase() === "admin") && (
+      {(isManager?.toLowerCase() === "Manager" ||
+        isDepart?.toLowerCase() === "HR" ||
+        isAdmin?.toLowerCase() === "ADMIN") && (
         <div className="flex gap-2">
           {/* Edit Button */}
           <button

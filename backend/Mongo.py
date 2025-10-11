@@ -679,13 +679,28 @@ def get_attendance_by_date():
 # Employee ID
 def get_employee_id_from_db(name: str):
     try:
-        user = Users.find_one({'name': name}, {'_id': 1})
-        
+        # Clean name (handle case differences and spaces)
+        clean_name = name.strip().lower()
+
+        # 1️ Search in Users collection
+        user = Users.find_one(
+            {"name": {"$regex": f"^{clean_name}$", "$options": "i"}},
+            {"_id": 1}
+        )
+
+        # 2️ If not found, search in Admin collection
+        if not user:
+            user = admin.find_one(
+                {"name": {"$regex": f"^{clean_name}$", "$options": "i"}},
+                {"_id": 1}
+            )
+
+        # 3️ Return ID if found
         if user:
             return str(user["_id"])
-       
         else:
             return None
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

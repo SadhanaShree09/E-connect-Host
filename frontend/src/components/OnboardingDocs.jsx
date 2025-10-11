@@ -13,7 +13,8 @@ import {
    Clock, 
    
 } from "lucide-react";
-import { toast, Toaster } from "react-hot-toast";
+import { toast, ToastContainer } from "react-toastify";
+import "react-toastify/dist/ReactToastify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import axios from "axios";
@@ -168,13 +169,15 @@ const filteredDocs = useMemo(() => {
         <button
   onClick={() => {
     toast(
-      (t) => (
+      ({ closeToast }) => (
         <div className="flex flex-col gap-2">
-          <span>Are you sure you want to delete <strong>{doc.docName}</strong>?</span>
+          <span>
+            Are you sure you want to delete <strong>{doc.docName}</strong>?
+          </span>
           <div className="flex justify-end gap-2">
             <button
               onClick={async () => {
-                toast.dismiss(t.id); // close confirmation toast
+                closeToast(); // close confirmation toast
                 try {
                   await axios.delete(`${ipadr}/documents/delete/${doc.fileId}`);
                   setAssignedDocs((prev) =>
@@ -195,7 +198,7 @@ const filteredDocs = useMemo(() => {
               Yes
             </button>
             <button
-              onClick={() => toast.dismiss(t.id)}
+              onClick={closeToast}
               className="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-xs"
             >
               No
@@ -203,13 +206,14 @@ const filteredDocs = useMemo(() => {
           </div>
         </div>
       ),
-      { duration: Infinity, position: "top-center" }
+      { autoClose: false, closeOnClick: false }
     );
   }}
   className="flex items-center gap-1 text-red-600 hover:underline"
 >
   <Trash2 size={16} /> Delete
 </button>
+
 
       </div>
     );
@@ -230,7 +234,10 @@ const filteredDocs = useMemo(() => {
 
   return (
     <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full  shadow-black rounded-xl justify-center items-center relative jsonback  ml-10 rounded-md">
-      <Toaster position="top-right" />
+      <div className="mr-8 p-10 bg-white ...">
+  <ToastContainer position="top-right" autoClose={4000} />
+  {/* rest of your dashboard */}
+</div>
 
       {/* Header */}
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">

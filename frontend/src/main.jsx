@@ -329,6 +329,10 @@ const router = createBrowserRouter([
         path: 'review-docs',
         element: <HRDocsReview />,
       },
+      {
+  path: 'chat',
+  element: <Chat />, 
+},
       
       
       { index: true, element: <DashboardHome /> }, // default admin page

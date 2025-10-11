@@ -266,6 +266,10 @@ const router = createBrowserRouter([
         element: <Leavemanagement />,
       },
       {
+        path: 'chat',
+        element: <Chat />, // your Slack-like chat component
+      },
+      {
         path: "time",
         element: <Timemanagement />,
       },

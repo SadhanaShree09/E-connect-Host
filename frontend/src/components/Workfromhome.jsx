@@ -4,7 +4,7 @@ import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Baseaxios, LS ,ipadr} from "../Utils/Resuse";
+import { Baseaxios, LS, ipadr } from "../Utils/Resuse";
 import moment from "moment";
 
 const WorkFromHome = () => {
@@ -16,6 +16,7 @@ const WorkFromHome = () => {
   const [ipAddresses, setIpAddresses] = useState(null);
   const [selectedIp, setSelectedIp] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [key, setKey] = useState(0);
 
   useEffect(() => {
     fetchIpAddresses();
@@ -38,71 +39,112 @@ const WorkFromHome = () => {
   };
 
   const handleFromDateChange = (date) => {
-    setFromDate(date);
+    if (moment.isMoment(date)) {
+      setFromDate(date);
+    }
   };
 
   const handleToDateChange = (date) => {
-    setToDate(date);
+    if (moment.isMoment(date)) {
+      setToDate(date);
+    }
   };
 
   const handleIpChange = (e) => {
     setSelectedIp(e.target.value);
   };
 
-const remoteworkrequestapi = (newRequest) => {
-  setIsApplying(true);
-  const userid = LS.get("userid");
-  const employeeName = LS.get("name");
-
-  const payload = {
-    userid,
-    employeeName,
-    ...newRequest,
-  };
-
-  console.log("✅ Final Payload to API:", payload);
-
-  Baseaxios.post("/remote-work-request", payload)
-  .then((response) => {
-    const { status, message } = response.data;
-    console.log("API Response:", response.data);
-    if (status === "success") {
-      toast.success(message || "Request submitted successfully!");
-    } else {
-      toast.warning(message || "Something went wrong!");
-    }
-  })
-  .catch((err) => {
-    console.error("API Error:", err);
-    toast.error("Failed to submit request. Try again.");
-  });
-
-
-};
-
-const handleApplyButtonClick = () => {
-  if (fromDate && toDate && reason && ip) {
-    const newRequest = {
-      fromDate: moment(fromDate).format("YYYY-MM-DD"),
-      toDate: moment(toDate).format("YYYY-MM-DD"),
-      requestDate: moment().format("YYYY-MM-DD"),  // ✅ normalized to YYYY-MM-DD
-      reason: reason.trim(),                       // ✅ ensured always included
-      ip: ip.trim(),                               // ✅ ensured always included
-    };                                        
-    remoteworkrequestapi(newRequest);
-  } else {
-    toast.error("Please fill in all fields including IP selection.", {
-      position: "top-right",
-    });
-  }
-};
-
-
   const handleCancel = () => {
     setFromDate(null);
     setToDate(null);
     setReason("");
+    setip("");
     setSelectedIp("");
+    setKey(prev => prev + 1);
+  };
+
+  const remoteworkrequestapi = (newRequest) => {
+    const userid = LS.get("userid");
+    const employeeName = LS.get("name");
+
+    const payload = {
+      userid,
+      employeeName,
+      ...newRequest,
+    };
+
+    console.log("✅ Final Payload to API:", payload);
+
+    Baseaxios.post("/remote-work-request", payload)
+      .then((response) => {
+        const { success, status, message, details } = response.data;
+        console.log("API Response:", response.data);
+        
+        // ✅ FIX 1: Check for success (boolean) instead of status === "success"
+        if (success === true || status === "submitted") {
+          // ✅ FIX 2: Use toast.success for green color
+          toast.success(message || "Remote work request submitted successfully!", {
+            position: "top-right",
+            autoClose: 3000,
+          });
+          
+          // ✅ FIX 3: Reset form immediately after success
+          handleCancel();
+        } 
+        // Handle conflict case
+        else if (success === false && status === "conflict") {
+          toast.warning(message || "Scheduling conflict detected", {
+            position: "top-right",
+            autoClose: 4000,
+          });
+          if (details) {
+            console.log("Conflict details:", details);
+          }
+        }
+        // Handle validation errors
+        else if (success === false && status === "validation_error") {
+          toast.error(message || "Validation failed", {
+            position: "top-right",
+            autoClose: 4000,
+          });
+          if (details) {
+            console.log("Validation error details:", details);
+          }
+        }
+        // Fallback for any other response
+        else {
+          toast.warning(message || "Something went wrong!", {
+            position: "top-right",
+          });
+        }
+      })
+      .catch((err) => {
+        console.error("API Error:", err);
+        toast.error("Failed to submit request. Please try again.", {
+          position: "top-right",
+        });
+      })
+      .finally(() => {
+        setIsApplying(false);
+      });
+  };
+
+  const handleApplyButtonClick = () => {
+    if (fromDate && toDate && reason && ip) {
+      setIsApplying(true);
+      const newRequest = {
+        fromDate: moment(fromDate).format("YYYY-MM-DD"),
+        toDate: moment(toDate).format("YYYY-MM-DD"),
+        requestDate: moment().format("YYYY-MM-DD"),
+        reason: reason.trim(),
+        ip: ip.trim(),
+      };
+      remoteworkrequestapi(newRequest);
+    } else {
+      toast.error("Please fill in all fields including IP address.", {
+        position: "top-right",
+      });
+    }
   };
 
   const isWeekday = (date) => {
@@ -126,7 +168,7 @@ const handleApplyButtonClick = () => {
         </h3>
         <Link to="/User/Leave">
           <div className="">
-            <button className="px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black  active:bg-white active:text-white">
+            <button className="px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black active:bg-white active:text-white">
               Go Back
             </button>
           </div>
@@ -144,11 +186,13 @@ const handleApplyButtonClick = () => {
                   From Date
                 </label>
                 <Datetime
+                  key={`from-${key}`}
                   id="fromDate"
                   dateFormat="DD-MM-YYYY"
                   timeFormat={false}
                   value={fromDate}
                   onChange={handleFromDateChange}
+                  closeOnSelect={true}
                   isValidDate={(current) =>
                     isWeekday(current) && isValidDate(current)
                   }
@@ -167,24 +211,23 @@ const handleApplyButtonClick = () => {
                   To Date
                 </label>
                 <Datetime
+                  key={`to-${key}`}
                   id="toDate"
                   dateFormat="DD-MM-YYYY"
                   timeFormat={false}
                   value={toDate}
                   onChange={handleToDateChange}
+                  closeOnSelect={true}
                   isValidDate={(current) =>
-                    isWeekday(current) && isValidDate(current)
+                    isWeekday(current) && 
+                    isValidDate(current) &&
+                    (fromDate ? current.isSameOrAfter(moment(fromDate)) : true)
                   }
                   inputProps={{
                     className:
                       "p-2 text-sm border border-gray-300 rounded-md block w-full",
                     placeholder: "Select to date",
                   }}
-                  minDate={
-                    fromDate
-                      ? moment(fromDate).add(1, "days").format("YYYY-MM-DD")
-                      : undefined
-                  }
                 />
               </div>
               <div className="mt-4">
@@ -192,27 +235,8 @@ const handleApplyButtonClick = () => {
                   htmlFor="ipSelect"
                   className="block text-base font-medium text-gray-700 mb-2"
                 >
-                  Select IP Address
+                  IP Address
                 </label>
-                {/* <select
-                  id="ipSelect"
-                  value={selectedIp}
-                  onChange={handleIpChange}
-                  className="p-2 text-sm border border-gray-300 rounded-md block w-full"
-                  disabled={isLoading}
-                >
-                  <option value="">Select an IP address</option>
-                  {ipAddresses && (
-                    <>
-                      <option value={ipAddresses.public}>
-                        Public IP: {ipAddresses.public}
-                      </option>
-                      <option value={ipAddresses.local}>
-                        Local IP: {ipAddresses.local}
-                      </option>
-                    </>
-                  )}
-                </select> */}
                 <textarea
                   id="ip"
                   value={ip}

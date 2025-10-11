@@ -173,7 +173,7 @@ console.log("filter data:",filteredData);
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
           <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
-          <p>Only Admin, TeamLead and HR can access this page.</p>
+          <p>Only Admin, Manager and HR can access this page.</p>
         </div>
       </div>
     ) : (
@@ -187,11 +187,11 @@ console.log("filter data:",filteredData);
             {
               isadmin ?(
                 <div>
-                  <Link to="/admin/wfh_details">
+                  {/* <Link to="/admin/wfh_details">
                     <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                       Details
                     </button>
-                  </Link>
+                  </Link> */}
                   <Link to="/admin/leave">
                     <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                       Back
@@ -200,11 +200,11 @@ console.log("filter data:",filteredData);
               </div>
               ) :(
                 <div>
-                  <Link to="/User/wfh_details">
+                  {/* <Link to="/User/wfh_details">
                     <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                       Details
                     </button>
-                  </Link>
+                  </Link> */}
                   <Link to="/User/leaveManage">
                     <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                       Back

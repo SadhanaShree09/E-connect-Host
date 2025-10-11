@@ -271,7 +271,7 @@ const LeaveDetails = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
           <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
-          <p>Only Admin, TeamLead and HR can access this page.</p>
+          <p>Only Admin, Manager and HR can access this page.</p>
         </div>
       </div>
     );
@@ -291,7 +291,12 @@ const LeaveDetails = () => {
             Leave Management Dashboard
           </h1>
           <div>
-            <Link to={isAdmin ? "/admin/leaveapproval" : "/User/leaveapproval"}>
+            <Link to={isAdmin ? "/admin/wfh_details" : "/User/wfh_details"}>
+                  <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
+                    Remote Details
+                  </button>
+            </Link>
+            <Link to={isAdmin ? "/admin/leave" : "/User/leaveManage"}>
               <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                 Back to Overview
               </button>
@@ -473,7 +478,7 @@ const LeaveDetails = () => {
             )}
             {userRole === 'manager' && leaveData.manager_info && (
               <span className="ml-4 text-gray-800">
-                TeamLead: <strong>{leaveData.manager_info.manager_name}</strong>
+                Manager: <strong>{leaveData.manager_info.manager_name}</strong>
               </span>
             )}
           </div>

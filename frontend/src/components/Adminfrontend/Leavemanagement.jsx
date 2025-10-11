@@ -28,8 +28,8 @@ const Leavemanagement = () => {
       desc: "Easy tracking of employee leave details",
       icon: <FontAwesomeIcon icon={faClipboardList} className="text-6xl mb-6 text-zinc-700" />,
       button: "View now",
-      link1: "/admin/history",
-      link2:"/User/history"
+      link1: "/admin/leave_details",
+      link2:"/User/leave_details"
     },
     {
       title: "Employees Attendance Percentage",

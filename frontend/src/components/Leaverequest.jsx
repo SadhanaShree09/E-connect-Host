@@ -2,7 +2,7 @@ import React, { useState } from "react";
 import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import { Link } from "react-router-dom";
-import { toast } from "react-toastify";
+import { ToastContainer, toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { Baseaxios, LS } from "../Utils/Resuse";
 import moment from 'moment';
@@ -23,11 +23,11 @@ const LeaveRequest = () => {
   const [otherFromDate, setOtherFromDate] = useState(null);
   const [otherToDate, setOtherToDate] = useState(null);
   const [otherReason, setOtherReason] = useState("");
-  
+ 
   // State for "Bonus Leave" fields
   const [bonusLeaveDate, setBonusLeaveDate] = useState(null);  // Initialize the bonus leave date
   const [bonusLeaveReason, setBonusLeaveReason] = useState("");
-  
+ 
 // function formatTimestamp(timestamp) {
 //   // Parse the timestamp using moment.js
 //   let parsedTimestamp = moment(timestamp);
@@ -105,7 +105,7 @@ const LeaveRequest = () => {
     setValidationMessage("");
     setIsApplying(false);
   };
-  
+ 
   const handleBonusLeaveDateChange = (date) => {
     // Ensure we only set valid dates
     if (date && moment.isMoment(date)) {
@@ -117,7 +117,7 @@ const LeaveRequest = () => {
     }
     setValidationMessage("");  // Clear validation message
   };
-  
+ 
   const handleBonusLeaveReasonChange = (e) => {
     setBonusLeaveReason(e.target.value);
   };
@@ -136,9 +136,9 @@ const LeaveRequest = () => {
     if (newLeave.leaveType === "Permission") {                                                                                                                                                                              
       endpoint = "/Permission-request";
     }
-    if (newLeave.leaveType === "Bonus Leave") {                                                                                                   
+    if (newLeave.leaveType === "Bonus Leave") {                                                                                                  
       endpoint = "/Bonus-leave-request";  
-      
+     
     }
     let status="";
     // if(LS.get('position')==="Manager")
@@ -157,10 +157,10 @@ const LeaveRequest = () => {
         console.log(response);
         console.log(newLeave)
         setIsApplying(false);
-        
+       
         // Handle new structured response format
         const responseData = response.data;
-        
+       
         // Check if it's the new structured response
         if (responseData.success !== undefined) {
           if (responseData.success) {
@@ -197,8 +197,8 @@ const LeaveRequest = () => {
         } else {
           // Handle legacy response format
           const resultMessage = responseData.result || responseData.message;
-          
-          if (resultMessage === "Leave request stored successfully" || 
+         
+          if (resultMessage === "Leave request stored successfully" ||
               resultMessage === "Leave request processed" ||
               resultMessage === "Bonus leave request processed" ||
               resultMessage === "Permission request processed" ||
@@ -211,17 +211,17 @@ const LeaveRequest = () => {
             toast.warning(resultMessage || "Leave request processed with conditions");
           }
         }
-        
+       
         console.log("Leave request response:", response);
       })
       .catch((err) => {
         setIsApplying(false);
         console.error("Error:", err);
-        
+       
         // Handle different types of errors
         if (err.response && err.response.data) {
           const errorMessage = err.response.data.detail || err.response.data.result || err.response.data.message;
-          
+         
           if (errorMessage && typeof errorMessage === 'string') {
             // Check if it's a conflict error
             if (errorMessage.includes('Conflict') || errorMessage.includes('already has')) {
@@ -261,91 +261,89 @@ const LeaveRequest = () => {
 const handleApplyButtonClick = () => {
   if (!leaveType) {
     setValidationMessage("Select a leave type");
-  } else if (leaveType === "Other Leave" && (!otherFromDate || !otherToDate || !otherReason.trim())) {
+    return;
+  }
+
+  if (leaveType === "Other Leave" && (!otherFromDate || !otherToDate || !otherReason.trim())) {
     setValidationMessage("Complete all fields for Other Leave");
-  } else if (!selectedDate && (leaveType === "Sick Leave" || leaveType === "Casual Leave" || leaveType === "Bonus Leave" )) {
+    return;
+  }
+
+  if (!selectedDate && ["Sick Leave", "Casual Leave", "Bonus Leave"].includes(leaveType)) {
     setValidationMessage("Select a valid date");
-  } else if (!reason.trim() && (leaveType === "Sick Leave" || leaveType === "Casual Leave" || leaveType === "Bonus Leave")) {
+    return;
+  }
+
+  if (!reason.trim() && ["Sick Leave", "Casual Leave", "Bonus Leave"].includes(leaveType)) {
     setValidationMessage("Enter a valid reason");
-  } else if (leaveType === "Permission" && (!selectedDate || !timeSlot || !reason.trim())) {
+    return;
+  }
+
+  if (leaveType === "Permission" && (!selectedDate || !timeSlot || !reason.trim())) {
     setValidationMessage("Complete all fields for Permission");
-  } else {
-    let newLeave;
+    return;
+  }
 
-    if (leaveType === "Sick Leave" || leaveType === "Casual Leave" || leaveType === "Bonus Leave") {
-      let formattedSelectedDate;
-      
-      // Handle moment objects or Date objects
-      if (moment.isMoment(selectedDate)) {
-        formattedSelectedDate = selectedDate.format("YYYY-MM-DD");
-      } else if (selectedDate instanceof Date) {
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-        const day = String(selectedDate.getDate()).padStart(2, "0");
-        formattedSelectedDate = `${year}-${month}-${day}`;
-      } else {
-        setValidationMessage("Invalid date selected");
-        return;
-      }
+  let newLeave;
 
-  // Already formatted as YYYY-MM-DD above, no need to reformat
+  // Helper: format any date-like object into YYYY-MM-DD
+  const formatDate = (date) => {
+    if (moment.isMoment(date)) return date.format("YYYY-MM-DD");
+    if (date instanceof Date) return moment(date).format("YYYY-MM-DD");
+    if (typeof date === "string") return date; // assume already formatted
+    return null;
+  };
 
-      newLeave = {
-        leaveType,
-        selectedDate: formattedSelectedDate,
-        reason,
-        requestDate: new Date().toISOString().split('T')[0],
-      };
-    } else if (leaveType === "Other Leave") {
-      let formattedFromDate, formattedToDate;
-
-      // Convert otherFromDate to a Date object if it's not already
-      if (!(otherFromDate instanceof Date)) {
-        formattedFromDate = moment(formattedFromDate).format("YYYY-MM-DD");
-      }
-
-      // Convert otherToDate to a Date object if it's not already
-      if (!(otherToDate instanceof Date)) {
-        formattedToDate = moment(formattedToDate).format("YYYY-MM-DD");
-      }
-
-      newLeave = {
-        leaveType,
-        selectedDate: formattedFromDate,
-        ToDate: formattedToDate,
-        reason: otherReason,
-        requestDate: new Date().toISOString().split('T')[0],
-      };
-    } else if (leaveType === "Permission") {
-      let formattedSelectedDate;
-      
-      // Handle moment objects or Date objects
-      if (moment.isMoment(selectedDate)) {
-        formattedSelectedDate = selectedDate.format("YYYY-MM-DD");
-      } else if (selectedDate instanceof Date) {
-        const year = selectedDate.getFullYear();
-        const month = String(selectedDate.getMonth() + 1).padStart(2, "0");
-        const day = String(selectedDate.getDate()).padStart(2, "0");
-        formattedSelectedDate = `${year}-${month}-${day}`;
-      } else {
-        setValidationMessage("Invalid date selected");
-        return;
-      }
-
-  // Already formatted as YYYY-MM-DD above, no need to reformat
-
-      newLeave = {
-        leaveType,
-        selectedDate: formattedSelectedDate,
-        timeSlot,
-        reason,
-        requestDate: new Date().toISOString().split('T')[0],
-      };
+  if (["Sick Leave", "Casual Leave", "Bonus Leave"].includes(leaveType)) {
+    const formattedSelectedDate = formatDate(selectedDate);
+    if (!formattedSelectedDate) {
+      setValidationMessage("Invalid date selected");
+      return;
     }
 
-    leaverequestapi(newLeave);
+    newLeave = {
+      leaveType,
+      selectedDate: formattedSelectedDate,
+      reason,
+      requestDate: new Date().toISOString().split("T")[0],
+    };
   }
+  else if (leaveType === "Other Leave") {
+    const formattedFromDate = formatDate(otherFromDate);
+    const formattedToDate = formatDate(otherToDate);
+
+    if (!formattedFromDate || !formattedToDate) {
+      setValidationMessage("Invalid Other Leave dates");
+      return;
+    }
+
+    newLeave = {
+      leaveType,
+      selectedDate: formattedFromDate,
+      ToDate: formattedToDate,
+      reason: otherReason,
+      requestDate: new Date().toISOString().split("T")[0],
+    };
+  }
+  else if (leaveType === "Permission") {
+    const formattedSelectedDate = formatDate(selectedDate);
+    if (!formattedSelectedDate) {
+      setValidationMessage("Invalid date selected");
+      return;
+    }
+
+    newLeave = {
+      leaveType,
+      selectedDate: formattedSelectedDate,
+      timeSlot,
+      reason,
+      requestDate: new Date().toISOString().split("T")[0],
+    };
+  }
+
+  leaverequestapi(newLeave);
 };
+
 
 const isWeekday = (date) => {
   const day = date.getDay();
@@ -374,7 +372,7 @@ const isWeekday = (date) => {
 
 
 
-  
+ 
   // Default: Allow all other dates
 
   return (
@@ -574,7 +572,7 @@ const isWeekday = (date) => {
               </div>
               <div className="ml-3">
                 <p className="text-sm text-blue-700">
-                  <strong>Note:</strong> You cannot submit multiple leave requests for the same date. 
+                  <strong>Note:</strong> You cannot submit multiple leave requests for the same date.
                   If you see a conflict message, check your leave history to view existing requests.
                 </p>
               </div>
@@ -600,6 +598,17 @@ const isWeekday = (date) => {
           </div>
         </div>
       </div>
+      <ToastContainer
+        position="top-right"
+        autoClose={2000}
+        hideProgressBar={false}
+        newestOnTop={false}
+        closeOnClick
+        rtl={false}
+        pauseOnFocusLoss
+        draggable
+        pauseOnHover
+      />
     </div>
   );
 };

@@ -363,7 +363,7 @@ const Leaveapproval = () => {
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
           <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
-          <p>Only Admin, TeamLead and HR can access this page.</p>
+          <p>Only Admin, Manager and HR can access this page.</p>
         </div>
       </div>
       ) : (
@@ -375,11 +375,11 @@ const Leaveapproval = () => {
             </h1>
             {isAdmin ? (
               <div>
-                <Link to="/admin/leave_details">
+                {/* <Link to="/admin/leave_details">
                   <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Details
                   </button>
-                </Link>
+                </Link> */}
                 <Link to="/admin/leave">
                   <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Back
@@ -388,11 +388,11 @@ const Leaveapproval = () => {
               </div>
             ) : (
               <div>
-                <Link to="/User/leave_details">
+                {/* <Link to="/User/leave_details">
                   <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Details
                   </button>
-                </Link>
+                </Link> */}
                 <Link to="/User/LeaveManage">
                   <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Back
@@ -630,8 +630,9 @@ const Leaveapproval = () => {
                                       </div>
                                       <div className="h-8 rounded-full p-1" style={{ backgroundColor: "#EF4444" }}>
                                         <button onClick={() => onDisRecommand(row.id)} className="text-white">
-                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-fill-slash" viewBox="0 0 16 16">
-                                            <path d="M13.879 10.414a2.501 2.501 0 0 0-3.465 3.465zm.707.707-3.465 3.465a2.501 2.501 0 0 0 3.465-3.465m-4.56-1.096a3.5 3.5 0 1 1 4.949 4.95 3.5 3.5 0 0 1-4.95-4.95ZM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
+                                          <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" viewBox="0 0 16 16">
+                                            <path d="M11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0ZM8 7a2 2 0 1 0 0-4 2 2 0 0 0 0 4Zm.256 7a4.474 4.474 0 0 1-.229-1.004H3c.001-.246.154-.986.832-1.664C4.484 10.68 5.711 10 8 10c.26 0 .507.009.740.025.226-.341.496-.65.804-.918C9.077 9.038 8.564 9 8 9c-5 0-6 3-6 4s1 1 1 1h5.256Z"/>
+                                            <path d="M12.5 16a3.5 3.5 0 1 0 0-7 3.5 3.5 0 0 0 0 7Zm-.646-4.854l.646.647.646-.647a.5.5 0 0 1 .708.708l-.647.646.647.646a.5.5 0 0 1-.708.708l-.646-.647-.646.647a.5.5 0 0 1-.708-.708l.647-.646-.647-.646a.5.5 0 0 1 .708-.708Z"/>
                                           </svg>
                                         </button>
                                       </div>

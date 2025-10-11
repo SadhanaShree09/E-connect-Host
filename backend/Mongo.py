@@ -133,29 +133,13 @@ def Signup(email,password,name):
     )
 
 def cleanid(data):
-    """Clean MongoDB document for JSON serialization"""
-    if data is None:
-        return None
-    
-    # Convert ObjectId to string
-    if '_id' in data:
-        obid = data.get('_id')
+    obid=data.get('_id')
+    if obid:
         data['id'] = str(obid)
-        del data['_id']
-    
-    # Convert datetime objects to ISO format strings
-    for key, value in list(data.items()):
-        if isinstance(value, datetime):
-            data[key] = value.isoformat()
-        elif isinstance(value, date):
-            data[key] = value.isoformat()
-        elif isinstance(value, ObjectId):
-            data[key] = str(value)
-        elif isinstance(value, dict):
-            data[key] = cleanid(value)
-        elif isinstance(value, list):
-            data[key] = [cleanid(item) if isinstance(item, dict) else item for item in value]
-    
+    if 'userid' not in data:
+        data['userid'] = str(obid)
+    # data.update({'userid':str(obid)})
+    del data['_id']
     return data
   
 def signin(email,password):

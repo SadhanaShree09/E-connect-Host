@@ -35,7 +35,6 @@ import TaskPage from "./components/Task/Taskpage";
 import TaskProgress from "./components/Task/TaskProgress";
 import ToDoList from "./components/Task/Todo";
 import NotificationDashboard from "./components/notifications/NotificationDashboard";
-import ApiTest from "./components/ApiTest";
 import AdminAuth from "./Utils/AdminAuth";
 
 
@@ -172,10 +171,10 @@ const router = createBrowserRouter([
       //   path: "enhanced-notifications",
       //   element: <EnhancedNotificationDashboard />,
       // },
-      {
-        path: "test",
-        element: <ApiTest />,
-},
+//       {
+//         path: "test",
+//         element: <ApiTest />,
+// },
 {
   path: "LeaveManage",
   element: <Leavemanagement />,

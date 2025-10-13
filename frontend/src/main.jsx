@@ -167,14 +167,7 @@ const router = createBrowserRouter([
         path: "notifications",
         element: <NotificationDashboard />,
       },
-      // {
-      //   path: "enhanced-notifications",
-      //   element: <EnhancedNotificationDashboard />,
-      // },
-//       {
-//         path: "test",
-//         element: <ApiTest />,
-// },
+      
 {
   path: "LeaveManage",
   element: <Leavemanagement />,

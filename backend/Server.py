@@ -1878,43 +1878,6 @@ async def get_Permission_history(userid: str = Path(..., title="The ID of the us
         # If an exception occurs, return a 500 Internal Server Error
         raise HTTPException(status_code=500, detail=str(e))
 
-# ============== LEAVE DETAILS ENDPOINTS ==============
-
-# @app.get("/leave_details/user/{userid}")
-# async def get_user_leave_details(
-#     userid: str,
-#     status_filter: str = Query("All", alias="statusFilter"),
-#     leave_type_filter: str = Query("All", alias="leaveTypeFilter")
-# ):
-#     """Get all leave details for a specific user"""
-#     try:
-#         match_conditions = {"userid": userid}
-        
-#         if status_filter and status_filter != "All":
-#             if status_filter == "Pending":
-#                 match_conditions["status"] = {"$exists": False}
-#             else:
-#                 match_conditions["status"] = status_filter
-        
-#         if leave_type_filter and leave_type_filter != "All":
-#             match_conditions["leaveType"] = leave_type_filter
-        
-#         leave_details = list(Leave.find(match_conditions))
-        
-#         # Convert ObjectId and format dates
-#         for leave in leave_details:
-#             leave["_id"] = str(leave["_id"])
-#             if "selectedDate" in leave and leave["selectedDate"]:
-#                 leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-#             if "requestDate" in leave and leave["requestDate"]:
-#                 leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-#             if "ToDate" in leave and leave["ToDate"]:
-#                 leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
-        
-#         return {"leave_details": leave_details}
-        
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/leave_details/user/{userid}")
@@ -2562,16 +2525,7 @@ async def get_all_users_route():
         else:
             raise HTTPException(status_code=404, detail="No users found")
 
-# @app.post("/add_task")
-# async def add_task(item:Tasklist):
-#     try:
-#         # Parse the date to ensure it's in the correct format
-#         parsed_date = datetime.strptime(item.date, "%Y-%m-%d").strftime("%d-%m-%Y")
-#         due_date = datetime.strptime(item.due_date, "%Y-%m-%d").strftime("%d-%m-%Y")
-#     except ValueError:
-#         raise HTTPException(status_code=400, detail="Invalid date format. Use dd-mm-yyyy.")
-#     result = add_task_list(item.task, item.userid, parsed_date, due_date )
-#     return result
+
 @app.post("/add_task")
 async def add_task(item: Tasklist):
     try:
@@ -2842,31 +2796,7 @@ async def upload_task_file(
     file: UploadFile = File(...),
     uploaded_by: str = Form(...)
 ):
-    # try:
-    #     file_id = str(uuid.uuid4())
-    #     file_ext = os.path.splitext(file.filename)[1]
-    #     stored_name = f"{file_id}{file_ext}"
-    #     file_path = os.path.join(UPLOAD_DIR, stored_name)
-
-    #     with open(file_path, "wb") as f:
-    #         f.write(await file.read())
-
-    #     file_meta = {
-    #         "id": file_id,
-    #         "name": file.filename,         # original name
-    #         "stored_name": stored_name, 
-    #         "path": file_path,   # internal safe name
-    #         "size": os.path.getsize(file_path),
-    #         "type": file.content_type,
-    #         "uploadedAt": datetime.now().isoformat(),
-    #         "uploadedBy": uploaded_by,
-    #     }
-
-    #     ok = Mongo.add_file_to_task(taskid, file_meta)
-    #     if not ok:
-    #         os.remove(file_path)
-    #         raise HTTPException(status_code=404, detail="Task not found")
-
+   
     try:
         file_bytes = await file.read()
         
@@ -2959,23 +2889,7 @@ async def get_task_file(taskid: str, fileid: str):
     if not file_meta:
         raise HTTPException(status_code=404, detail="File not found")
 
-    # # Prefer new stored_name, fallback to old path
-    # stored_name = file_meta.get("stored_name")
-    # if stored_name:
-    #     file_path = os.path.join(UPLOAD_DIR, stored_name)
-    # else:
-    #     file_path = file_meta.get("path")  # old records
-    #     if not file_path:
-    #         raise HTTPException(status_code=404, detail="Missing stored filename")
-
-    # if not os.path.exists(file_path):
-    #     raise HTTPException(status_code=404, detail="File not found on disk")
-
-    # return FileResponse(
-    #     file_path,
-    #     filename=file_meta.get("name", os.path.basename(file_path)),
-    #     media_type=file_meta.get("type", "application/octet-stream"),
-    # )
+    
     gridfs_id = file_meta.get("gridfs_id")
     if not gridfs_id:
         raise HTTPException(status_code=404, detail="File not stored in GridFS")
@@ -3033,10 +2947,7 @@ def get_user(userid: str):
         )
 
 
-# @app.put("/edit_employee")
-# def add_employee(item:EditEmployee):
-#  result = edit_an_employee(item.dict())
-#  return result
+
 
 @app.put("/edit_employee")
 def edit_employee(item: EditEmployee):

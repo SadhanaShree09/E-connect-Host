@@ -70,16 +70,6 @@ function JEdit({ edit, data, filename, id, toggle }) {
             err: true,
           });
           let ec = err.response.status;
-          // if (ec == 401) {
-          //   toast.error("Login Session has been expired.......");
-          //   const timerId = setTimeout(() => {
-          //     LS.clear();
-          //     navigate("/", { replace: true });
-          //   }, 3000);
-          // }
-          // globaltoast.success("Something has occured please try again later", {
-          //   id: globaltoast,
-          // });
         });
     }
   };
@@ -180,20 +170,6 @@ function JEdit({ edit, data, filename, id, toggle }) {
         </div>
       </div>
       <div className="flex items-center flex-col justify-center  h-[90%] lg:flex-row">
-        {/* <div>
-          <ReactEditor
-            height={600}
-            width={500}
-            placeholder={Jsondata.data}
-            onChange={(e) => {
-              Setjsondata({ ...Jsondata, error: true });
-
-              if (!e.error) {
-                Setjsondata({ ...Jsondata, data: e.jsObject, error: false });
-              }
-            }}
-          />
-        </div> */}
         <div style={{ width: "100%", maxWidth: "800px", marginTop: "1rem" }}>
           <ReactEditor
             height="60vh" // 60% of the viewport height

@@ -125,31 +125,6 @@ const handleGoogleLogin = async (credentialResponse) => {
   }
 };
 
-  // return (
-  //   <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">
-  //     <div className="bg-white shadow-lg rounded-lg overflow-hidden w-full max-w-lg">
-  //       <div className="flex flex-col items-center justify-center p-8">
-  //         <div className="text-center mb-6">
-  //           <img src={logo} alt="Company Logo" className="h-32 mx-auto" />
-  //           <h1 className="text-2xl font-bold text-gray-700 mt-4">
-  //             Welcome to E-Connect
-  //           </h1>
-  //         </div>
-  //         <div className="w-full">
-  //           <h2 className="text-xl font-semibold text-gray-600 mb-4 text-center">
-  //             Sign in with Google
-  //           </h2>
-  //           <div className="flex justify-center">
-  //             <GoogleOAuthProvider clientId="152946581457-15hbl22a667fe0le1mkt5e6d14kisrtd.apps.googleusercontent.com">
-  //               <GoogleLogin
-  //                 onSuccess={handleGoogleLogin}
-  //                 useOneTap
-  //               />
-  //             </GoogleOAuthProvider>
-  //           </div>
-  //         </div>
-  //       </div>
-  //     </div>
 
   return (
     <div className="min-h-screen bg-gray-100 flex items-center justify-center px-4">

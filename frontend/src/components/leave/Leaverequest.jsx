@@ -27,17 +27,6 @@ const LeaveRequest = () => {
   // State for "Bonus Leave" fields
   const [bonusLeaveDate, setBonusLeaveDate] = useState(null);  // Initialize the bonus leave date
   const [bonusLeaveReason, setBonusLeaveReason] = useState("");
- 
-// function formatTimestamp(timestamp) {
-//   // Parse the timestamp using moment.js
-//   let parsedTimestamp = moment(timestamp);
-
-//   // Convert to Asia/Kolkata timezone
-//   parsedTimestamp = parsedTimestamp.tz("Asia/Kolkata");
-
-//   // Format the timestamp as "DD-MM-YYYY"
-//   let formattedTimestamp = parsedTimestamp.format("DD-MM-YYYY");
-// }
 
   const handleLeaveTypeChange = (event) => {
     setLeaveType(event.target.value);

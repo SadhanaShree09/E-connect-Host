@@ -297,7 +297,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             {isDepart !== "HR" && (
-            <Link to="todo" className="sidebar-item">
+            <Link to="Task/Todo" className="sidebar-item">
               <div className={`flex items-center p-4 ${isActive('todo') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -410,7 +410,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           loggedIn && isManager=="Manager" ?(
           <>
 
-                <Link to="manager-employee" className="sidebar-item">
+                <Link to="Task/TaskProgress" className="sidebar-item">
               <div className={`flex items-center p-4 ${isActive('manager-employee') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor" className="w-6 h-6 mr-3 text-white">
@@ -446,7 +446,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           ): loggedIn && isDepart=="HR" && (
            <>
 
-        <Link to="hr-manager" className="sidebar-item">
+        <Link to="Task/TaskProgress" className="sidebar-item">
       <div className={`flex items-center p-4 ${isActive('hr-manager') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                stroke="currentColor" className="w-6 h-6 mr-3 text-white">

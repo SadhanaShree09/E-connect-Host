@@ -6,7 +6,7 @@ import {
   FaComments, FaTasks, FaSearch, FaFilter, FaChevronDown, FaChevronUp,
   FaCalendarAlt, FaUserTie, FaClipboardList, FaChartLine, FaPlus
 } from "react-icons/fa";
-import { LS, ipadr } from "../Utils/Resuse";
+import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import moment from "moment";
@@ -368,24 +368,18 @@ const TaskProgress = () => {
 
   // Navigation logic based on role
   const openTaskDetail = (task) => {
-    // Prevent opening edit/detail if task is verified and the user would attempt edits
     if (task.verified) {
-      // allow viewing details but block edit actions within those pages; still navigate to show the badge
     }
     if (LS.get("position") === "Manager") {
-      navigate(`/User/manager-task-detail/${task.taskid}`, { state: { task } });
+      navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
     } else {
-       navigate(`/User/hr-task-detail/${task.taskid}`, { state: { task } });
+       navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
     }
   };
 
-  const handleAssignTask = () => {
-    if (LS.get("position") === "Manager") {
-       navigate(`/User/employee-task-assign`);
-    } else {
-     navigate(`/User/manager-task-assign`);
-    }
-  };
+const handleAssignTask = () => {
+  navigate(`/User/Task/TaskProgress/TaskAssign`);
+};
 
   // Make expansion single-selection: selecting an employee opens its detail in the right pane
   const toggleEmployeeExpansion = (employeeId) => {

@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
-import { ipadr, LS } from "../Utils/Resuse";
-import { Modal } from "./Modal";
+import { ipadr, LS } from "../../Utils/Resuse";
+import { Modal } from "../Modal";
 import { createPortal } from "react-dom";
 import Multiselect from 'multiselect-react-dropdown';
 import { RotateCw } from "lucide-react";
@@ -201,8 +201,8 @@ const TaskAssign = ({ assignType }) => {
 
 
   // Determine role and API endpoints
-  const isManager = assignType === 'manager-to-employee';
-  const isHR = assignType === 'hr-to-manager';
+  const isManager = assignType === 'TL-to-employee';
+  const isHR = assignType === 'hr-to-TL';
   // Filter tasks by dropdown selection
   useEffect(() => {
     if (!ValueSelected) {
@@ -474,7 +474,7 @@ const handleoneditSubmit = async () => {
     <div className="mr-8 p-4 bg-white min-h-screen w-full shadow-black rounded-xl relative jsonback ml-10 rounded-md h-screen flex flex-col overflow-hidden">
       <div className="flex items-center justify-between mb-1 px-2 py-2">
         <h1 className="text-2xl md:text-3xl font-semibold">Task Assign</h1>
-        <button onClick={() => navigate(isManager ? '/User/manager-employee' : '/User/hr-manager')} className="px-3 py-1 bg-blue-700 text-white rounded-md text-sm">← Back To Dashboard</button>
+        <button onClick={() => navigate('/User/Task/TaskProgress')} className="px-3 py-1 bg-blue-700 text-white rounded-md text-sm">← Back To Dashboard</button>
       </div>
       <header className="sticky top-0 z-40 bg-white border-b border-gray-200 px-3 py-2">
         <div className="flex items-center justify-between">

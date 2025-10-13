@@ -1,7 +1,7 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaChartLine, FaChevronDown, FaChevronUp } from "react-icons/fa";
-import { LS, ipadr } from "../Utils/Resuse";
+import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
@@ -502,7 +502,7 @@ const TaskPage = () => {
 
 
   const openTaskDetails = (task) => {
-    navigate(`/User/task/${task.id}`, {
+    navigate(`/User/Task/Todo/TaskPage/TaskDetailsPage/${task.id}`, {
       state: {
         task,
         userId,
@@ -645,7 +645,7 @@ const TaskPage = () => {
             Tasks - {date || "Date not available"}
           </h2>
           <button
-            onClick={() => navigate("/User/todo")}
+            onClick={() => navigate("/User/Task/Todo")}
             className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
           >
             ← Back to Calendar

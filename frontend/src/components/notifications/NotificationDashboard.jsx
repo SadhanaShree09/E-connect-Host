@@ -16,9 +16,9 @@ import {
   FaTimesCircle
 } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { LS, ipadr } from '../Utils/Resuse';
+import { LS, ipadr } from '../../Utils/Resuse';
 import { toast } from 'react-hot-toast';
-import { useNotificationWebSocket } from '../hooks/useNotificationWebSocket';
+import { useNotificationWebSocket } from '../../hooks/useNotificationWebSocket';
 import WebSocketTest from './WebSocketTest';
 
 const NotificationDashboard = () => {
@@ -352,23 +352,23 @@ const NotificationDashboard = () => {
         case 'task_completed':
           // Navigate to task page with specific task ID if available
           if (notification.related_id) {
-            // For task completion notifications, navigate to view assigned tasks
+            // For task completion notifications, navigate to task progress/view
             if (notification.type === 'task_completed') {
-              targetUrl = isAdminLevel ? '/admin/viewtask' : '/User/viewtask';
+              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
             } else {
               // For other task notifications, navigate to main task page
-              targetUrl = isAdminLevel ? '/admin/task' : '/user/todo';
+              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/Todo';
             }
           } else {
             // Fallback to main task page
-            targetUrl = isAdminLevel ? '/admin/task' : '/user/todo';
+            targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/Todo';
           }
           break;
 
         // Employee task overdue notifications (for managers/admins)
         case 'employee_task_overdue':
           // This is for managers/admins to see overdue tasks of their employees
-          targetUrl = isAdminLevel ? '/admin/viewtask' : '/User/viewtask';
+          targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
           break;
 
         // Leave-related notifications
@@ -455,23 +455,35 @@ const NotificationDashboard = () => {
               // Map user URLs to admin equivalents for admin/HR users
               if (actionUrl.includes('LeaveHistory')) {
                 actionUrl = '/admin/leaveapproval';
+              } else if (actionUrl.includes('Leave')) {
+                actionUrl = '/admin/leave';
               } else if (actionUrl.includes('Remote_details')) {
+                actionUrl = '/admin/wfh_details';
+              } else if (actionUrl.includes('Workfromhome')) {
                 actionUrl = '/admin/wfh';
-              } else if (actionUrl.includes('task') || actionUrl.includes('Task')) {
+              } else if (actionUrl.includes('Task/TaskProgress')) {
                 actionUrl = '/admin/task';
-              } else if (actionUrl.includes('viewtask')) {
+              } else if (actionUrl.includes('Task/Todo/TaskPage')) {
+                actionUrl = '/admin/task';
+              } else if (actionUrl.includes('Task/Todo')) {
+                actionUrl = '/admin/task';
+              } else if (actionUrl.includes('task') || actionUrl.includes('Task')) {
                 actionUrl = '/admin/task';
               } else if (actionUrl.includes('Clockdashboard')) {
                 actionUrl = '/admin/time';
               }
             } else if ((actionUrl.startsWith('/Admin/') || actionUrl.startsWith('/HR/')) && !isAdminLevel) {
               // Map admin/HR URLs to user equivalents for regular users
-              if (actionUrl.includes('leave')) {
+              if (actionUrl.includes('leaveapproval') || actionUrl.includes('leave_details')) {
                 actionUrl = '/User/LeaveHistory';
-              } else if (actionUrl.includes('wfh')) {
+              } else if (actionUrl.includes('leave')) {
+                actionUrl = '/User/Leave';
+              } else if (actionUrl.includes('wfh_details')) {
                 actionUrl = '/User/Remote_details';
+              } else if (actionUrl.includes('wfh')) {
+                actionUrl = '/User/Workfromhome';
               } else if (actionUrl.includes('task') || actionUrl.includes('Task')) {
-                actionUrl = '/User/todo';
+                actionUrl = '/User/Task/Todo';
               }
             } else if (actionUrl.startsWith('/HR/') && isAdminLevel) {
               // Map old HR URLs to admin equivalents

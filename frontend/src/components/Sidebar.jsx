@@ -5,7 +5,7 @@ import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FiLogOut, FiUser } from "react-icons/fi";
 import { LS } from "../Utils/Resuse";
-import NotificationBell from "./NotificationBell";
+import NotificationBell from "./notifications/NotificationBell";
 
 // Modal component
 const Modal = ({ show, onClose, onConfirm, message }) => {

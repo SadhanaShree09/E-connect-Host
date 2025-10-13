@@ -34,7 +34,7 @@ import TaskDetailsPage from "./components/Task/TaskDetailsPage";
 import TaskPage from "./components/Task/Taskpage";
 import TaskProgress from "./components/Task/TaskProgress";
 import ToDoList from "./components/Task/Todo";
-import NotificationDashboard from "./components/NotificationDashboard";
+import NotificationDashboard from "./components/notifications/NotificationDashboard";
 import ApiTest from "./components/ApiTest";
 import AdminAuth from "./Utils/AdminAuth";
 
@@ -49,7 +49,7 @@ import OnboardingDocs from './components/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
 
 import Fileuploader from './components/Fileuploader';
-import GlobalNotificationToast from './components/GlobalNotificationToast';
+import GlobalNotificationToast from './components/notifications/GlobalNotificationToast';
 
 
 
@@ -103,10 +103,6 @@ const router = createBrowserRouter([
   {
     path: "/Login",
     element: <LoginPage />,
-  },
-  {
-    path: "/websocket-test",
-    element: <NotificationDashboard />,
   },
   // {path:"Login",
   // element:<LoginPage />

@@ -19,7 +19,7 @@ import { useNavigate } from 'react-router-dom';
 import { LS, ipadr } from '../../Utils/Resuse';
 import { toast } from 'react-hot-toast';
 import { useNotificationWebSocket } from '../../hooks/useNotificationWebSocket';
-import WebSocketTest from './WebSocketTest';
+
 
 const NotificationDashboard = () => {
   const [notifications, setNotifications] = useState([]);
@@ -689,8 +689,6 @@ const NotificationDashboard = () => {
       {/* Fixed Header Section */}
       <div className="flex-shrink-0">
         <div className="max-w-7xl mx-auto p-6 pb-0">
-          {/* WebSocket Test Component */}
-          <WebSocketTest />
           
           {/* Header */}
           <div className="bg-white rounded-xl shadow-md p-6 mb-4">

@@ -67,35 +67,70 @@ const Modal = ({ show, onClose, onConfirm, message }) => {
 const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => {
   const navigate = useNavigate(); // Declare navigate only once
   const location = useLocation();
+  
   /**
-   * Check whether the current pathname contains any exact segment match.
-   * Accepts a string or an array of candidate segments. Matching is
-   * case-insensitive and compares whole path segments (split by '/'),
-   * so 'addleave' won't match 'leave'.
+   * Enhanced isActive function that checks if the current route matches or contains the target route.
+   * This handles nested routes properly (e.g., Task/Todo/TaskPage will highlight Task/Todo in sidebar)
    */
   const isActive = (segmentOrArray) => {
     try {
-      const path = location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-      const segments = path.split("/").filter(Boolean);
-      if (segments.length === 0) return false;
-      const lastSeg = segments[segments.length - 1];
+      const currentPath = location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
+      
+      // Handle array of possible paths
       const targets = Array.isArray(segmentOrArray)
         ? segmentOrArray.map((s) => String(s).toLowerCase())
         : [String(segmentOrArray).toLowerCase()];
 
-  // Match whole last segment, or match its first token when segments use
-  // separators (e.g. 'clockin_int' -> ['clockin','int']) so checking
-  // for 'clockin' will still succeed. This avoids collisions like
-  // 'addleave' matching 'leave' because the first token of 'addleave'
-  // is 'addleave', not 'leave'.
-  const normalize = (s) => String(s).toLowerCase();
-  if (targets.includes(lastSeg)) return true;
-  const firstToken = lastSeg.split(/[^a-z0-9]+/).filter(Boolean)[0] || lastSeg;
-  return targets.includes(firstToken);
+      // Check each target path
+      for (const target of targets) {
+        const targetPath = target.replace(/^\/|\/$/g, "");
+        
+        // Exact match
+        if (currentPath === targetPath) {
+          return true;
+        }
+        
+        // Check if current path starts with the target (for nested routes)
+        // e.g., "user/task/todo/taskpage" should match "task/todo"
+        const currentSegments = currentPath.split("/").filter(Boolean);
+        const targetSegments = targetPath.split("/").filter(Boolean);
+        
+        // Check if all target segments appear consecutively in current path
+        for (let i = 0; i <= currentSegments.length - targetSegments.length; i++) {
+          let match = true;
+          for (let j = 0; j < targetSegments.length; j++) {
+            if (currentSegments[i + j] !== targetSegments[j]) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            return true;
+          }
+        }
+        
+        // Fallback: Check if the last segment matches (for single-word routes)
+        if (targetSegments.length === 1) {
+          const lastSegment = currentSegments[currentSegments.length - 1];
+          if (lastSegment === targetSegments[0]) {
+            return true;
+          }
+          
+          // Check first token for routes with separators (e.g., 'clockin_int' -> 'clockin')
+          const firstToken = lastSegment.split(/[^a-z0-9]+/).filter(Boolean)[0] || lastSegment;
+          if (firstToken === targetSegments[0]) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
     } catch (e) {
+      console.error('isActive error:', e);
       return false;
     }
   };
+  
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutConfirm = () => {
@@ -148,7 +183,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
       <div className="flex flex-col mt-6">
         {loggedIn && isAdmin ? (
           <>
-            <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <NavLink to="time" className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -262,7 +297,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           </>
         ) : loggedIn && !isAdmin && (
           <>
-            <NavLink to="Clockin_int" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <NavLink to="Clockin_int" className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

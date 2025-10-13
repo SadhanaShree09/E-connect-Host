@@ -17,7 +17,6 @@ import Leaverequest from "./components/leave/Leaverequest";
 import Holidaylist from "./components/Holidayslist";
 import Workfromhome from "./components/leave/Workfromhome";
 import Remote_details from "./components/leave/Remote_details";
-import ToDoList from "./components/Task/Todo";
 import UserProfile from "./components/UserProfile";
 import Timemanagement from "./components/Adminfrontend/Timemanagement";
 import Employeelist from "./components/Adminfrontend/Employeelist";

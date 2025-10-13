@@ -221,11 +221,11 @@ const router = createBrowserRouter([
       element:<ProgressDetail role="hr" dashboardRoute="/User/Task/TaskProgress" commentLabel="HR" fileUploadLabel="HR" />, 
     },
     {
-      path: "Task/TaskProgress/TaskAssign",
+      path: "Task/TaskProgress/TaskAssign/tl-employee",
       element: <TaskAssign assignType="TL-to-employee" />
     },
     {
-      path: "Task/TaskProgress/TaskAssign",
+      path: "Task/TaskProgress/TaskAssign/hr-tl",
       element: <TaskAssign assignType="hr-to-TL" />
     },
  {

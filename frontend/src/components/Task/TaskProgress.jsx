@@ -378,8 +378,12 @@ const TaskProgress = () => {
   };
 
 const handleAssignTask = () => {
-  navigate(`/User/Task/TaskProgress/TaskAssign`);
-};
+    if (LS.get("position") === "Manager") {
+       navigate(`/User/Task/TaskProgress/TaskAssign/tl-employee`);
+    } else {
+     navigate(`/User/Task/TaskProgress/TaskAssign/hr-tl`);
+    }
+  };
 
   // Make expansion single-selection: selecting an employee opens its detail in the right pane
   const toggleEmployeeExpansion = (employeeId) => {

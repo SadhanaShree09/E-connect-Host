@@ -204,7 +204,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     if (task.verified) return toast.error('This task is verified and cannot be commented on.');
     const newEntry = {
       id: Date.now(),
-      user: `${LS.get("name")} (${commentLabel || role})`,
+      user: `${LS.get("name")}`,
       text: newComment,
       timestamp: new Date().toISOString(),
       isManager: role === 'manager' || role === 'hr'

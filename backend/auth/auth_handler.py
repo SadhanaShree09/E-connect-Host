@@ -31,14 +31,17 @@ def token_response(token: str):
         "access_token": token
     }
 
-def signJWT(client_id: str) -> Dict[str, str]:
+def signJWT(client_id: str, role: str = None) -> Dict[str, str]:
     try:
         payload = {
             "client_id": client_id,
             "expires": time.time() + 10000
         }
+        if role is not None:
+            payload["role"] = role
+            
         token = jwt.encode(payload, JWT_SECRET, algorithm=JWT_ALGORITHM)
-        
+
         return token_response(token)
     except Exception as e:
         print(f"JWT Encode Error: {str(e)}")

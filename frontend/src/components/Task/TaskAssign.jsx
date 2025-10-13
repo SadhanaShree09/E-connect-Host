@@ -10,7 +10,6 @@ import { toast } from "react-toastify";
 import { parseISO, isWithinInterval } from 'date-fns';
 import { AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai';
 
-// ConfirmModal: a self-contained modal (does not use the existing Modal component)
 function ConfirmModal({ open, title, message, onConfirm, onClose, confirmLabel = 'Delete', cancelLabel = 'Cancel' }) {
   useEffect(() => {
     if (!open) return;
@@ -178,7 +177,7 @@ const TaskAssign = ({ assignType }) => {
     document.head.appendChild(style);
   }, []);
 
-  const [deleteTarget, setDeleteTarget] = useState(null); // { id, title }
+  const [deleteTarget, setDeleteTarget] = useState(null); 
   const navigate = useNavigate();
   const params = useParams();
   const [searchParams] = useSearchParams();
@@ -199,25 +198,22 @@ const TaskAssign = ({ assignType }) => {
   const [itemsToShow, setItemsToShow] = useState(8); 
   const [searchTerm, setSearchTerm] = useState('');
 
-
-  // Determine role and API endpoints
   const isManager = assignType === 'TL-to-employee';
   const isHR = assignType === 'hr-to-TL';
-  // Filter tasks by dropdown selection
+
   useEffect(() => {
     if (!ValueSelected) {
       setFilteredData(employeeData);
       return;
     }
-    // Find the selected user object
+
     const selectedUser = options.find(opt => String(opt.userid) === String(ValueSelected));
     if (!selectedUser) {
       setFilteredData(employeeData);
       return;
     }
-    // Filter tasks where assigned_to, assigned_to_name, or userid matches
+
     const filtered = employeeData.filter((task) => {
-      // Some APIs may use assigned_to, assigned_to_name, or userid
       if (Array.isArray(task.assigned_to)) {
         if (task.assigned_to.includes(selectedUser.name) || task.assigned_to.includes(selectedUser.userid)) return true;
       }
@@ -229,23 +225,18 @@ const TaskAssign = ({ assignType }) => {
     setFilteredData(filtered);
   }, [ValueSelected, employeeData, options]);
 
-const sortedData = [...filteredData].reverse(); // newest first
+const sortedData = [...filteredData].reverse(); 
 
-// Apply search filter
 const searchedData = sortedData.filter(task => {
   let title = task.task;
 
-  // If task.task is an array, take the first element
   if (Array.isArray(title)) title = title[0];
 
-  // Ensure it's a string
   if (typeof title !== 'string') return false;
 
   return title.toLowerCase().includes(searchTerm.toLowerCase());
 });
 
-
-// Slice for pagination / load more
 const currentItems = searchedData.slice(0, itemsToShow);
 
 const handlePageChange = (direction) => {
@@ -256,10 +247,6 @@ const handlePageChange = (direction) => {
   }
 };
 
-
-
-
-  // Fetch options for dropdown (employees for manager, managers for HR)
   useEffect(() => {
     const fetchOptions = async () => {
       try {
@@ -277,7 +264,6 @@ const handlePageChange = (direction) => {
     fetchOptions();
   }, [isManager, isHR]);
 
-  // Fetch tasks for the current view
   useEffect(() => {
     fetchTasks();
   }, [assignType]);
@@ -290,7 +276,6 @@ const handlePageChange = (direction) => {
       if (isManager) {
         url = `${ipadr}/get_assigned_task?TL=${LS.get('name')}&manager_id=${LS.get('id')}`;
       } else if (isHR) {
-        // HR should fetch all managers and their tasks
         url = `${ipadr}/get_manager`;
         const res = await axios.get(url);
         const managers = Array.isArray(res.data) ? res.data : [res.data];
@@ -320,7 +305,6 @@ const handlePageChange = (direction) => {
     }
   };
 
-  // Handle Add/Edit/Delete
   const handleDelete = async (taskId) => {
     if (!taskId) return toast.error("Invalid task ID");
     try {
@@ -339,11 +323,9 @@ const handlePageChange = (direction) => {
       const response = await axios.get(`${ipadr}/get_single_task/${id}`);
       const taskdetails = response.data;
       let actualTaskData = Array.isArray(taskdetails) ? taskdetails[0] : (taskdetails.task || taskdetails);
-      // If the task is verified, prevent editing from AssignTask UI
       if (actualTaskData.verified) {
         return toast.error('This task is verified and cannot be edited.');
       }
-      // Ensure comments and files are present for later preservation
       SetEditmodel([{ 
         ...actualTaskData, 
         subtasks: normalizeSubtasks(actualTaskData.subtasks || []),
@@ -356,16 +338,13 @@ const handlePageChange = (direction) => {
     }
   };
 
-  // Normalize subtasks
   const normalizeSubtasks = (subtasks) => (Array.isArray(subtasks) ? subtasks.map((s, idx) => ({ id: s.id || `subtask_${Date.now()}_${idx}_${Math.random()}`, title: s.title || s.text || "", text: s.text || s.title || "", completed: s.completed ?? s.done ?? false, done: s.done ?? s.completed ?? false })) : []);
 
-  // Add/Edit Task
   const handleonSubmit = async () => {
     if (!modeldata.task.some(task => task.trim() !== "")) return toast.error("Task title is required");
     if (!modeldata.due_date) return toast.error("Due date is required");
     if ((isManager || isHR) && selectedUsers.length === 0) return toast.error(isManager ? "Please select an employee" : "Please select a TeamLead");
     let taskArr = [];
-  // Always format due_date as yyyy-mm-dd for the input
     const formatDate = (dateStr) => {
       if (!dateStr) return "";
       // If already yyyy-mm-dd, return as is
@@ -379,7 +358,6 @@ const handlePageChange = (direction) => {
       return dateStr;
     };
     try {
-      // Defensive: don't allow creating/updating if modeldata indicates a verified flag
       if (modeldata.verified) return toast.error('This task is verified and cannot be edited.');
       for (let i = 0; i < selectedUsers.length; i++) {
         const taskdetails = {
@@ -513,7 +491,7 @@ const handleoneditSubmit = async () => {
   <div className="flex justify-center gap-4 mt-8">
     {itemsToShow < sortedData.length && (
       <button
-        onClick={() => setItemsToShow(prev => prev + 8)} // load 8 more tasks
+        onClick={() => setItemsToShow(prev => prev + 8)} 
         className="px-6 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition"
       >
         Load More
@@ -521,7 +499,7 @@ const handleoneditSubmit = async () => {
     )}
     {itemsToShow > 8 && (
       <button
-        onClick={() => setItemsToShow(8)} // reset to initial view
+        onClick={() => setItemsToShow(8)}
         className="px-6 py-2 bg-gray-300 text-gray-700 rounded-lg hover:bg-gray-400 transition"
       >
         Show Less
@@ -535,11 +513,10 @@ const handleoneditSubmit = async () => {
           <div className="max-h-[50vh] overflow-y-auto">
             {modeldata.task.map((task, index) => (
               <div key={index} className="mb-4">
-                <label className="block text-lg font-semibold text-gray-700 mb-2">Task {index + 1}</label>
+                <label className="block text-lg font-semibold text-gray-700 mb-2">Task</label>
                 <textarea name={`task-${index}`} value={task} onChange={e => { const newTasks = [...modeldata.task]; newTasks[index] = e.target.value; setModelData({ ...modeldata, task: newTasks }); }} className="w-full border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition placeholder-gray-500" placeholder="Enter task description..." />
               </div>
             ))}
-            <button type="button" onClick={() => setModelData({ ...modeldata, task: [...modeldata.task, ""] })} className="bg-gradient-to-r from-blue-500 to-purple-500 text-white font-medium px-4 py-2 rounded-lg shadow-md hover:scale-105 transition transform mb-4">➕ Add Another Task</button>
             <div className="mt-4">
               <label className="block text-lg font-semibold text-gray-700 mb-2">Due date</label>
               <input type="date" name="due_date" value={modeldata.due_date ? String(modeldata.due_date).slice(0, 10) : ''} onChange={e => setModelData({ ...modeldata, due_date: e.target.value })} min={new Date().toISOString().split("T")[0]} className="w-full border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition cursor-pointer" />
@@ -557,7 +534,6 @@ const handleoneditSubmit = async () => {
               <label className="block text-lg font-semibold text-gray-700 mb-2">Subtasks</label>
               {modeldata.subtasks?.map((subtask, idx) => (
                 <div key={idx} className="flex items-center mb-2">
-                  <input type="checkbox" checked={subtask.done} onChange={() => { const updated = [...modeldata.subtasks]; updated[idx].done = !updated[idx].done; setModelData({ ...modeldata, subtasks: updated }); }} className="mr-2" />
                   <input type="text" value={subtask.title} onChange={e => { const updated = [...modeldata.subtasks]; updated[idx].title = e.target.value; setModelData({ ...modeldata, subtasks: updated }); }} className="w-full border border-gray-300 rounded px-2 py-1" />
                 </div>
               ))}
@@ -575,7 +551,6 @@ const handleoneditSubmit = async () => {
         <Modal closeModal={() => { setModalOpen(false); SetEditmodel([]); }} onSubmit={handleoneditSubmit} onCancel={() => { setModalOpen(false); SetEditmodel([]); }}>
           {editModel.map((item, index) => {
             const isVerifiedEdit = item?.verified === true;
-            // Always format due_date as yyyy-mm-dd for the input
             const formatDate = (dateStr) => {
               if (!dateStr) return "";
               if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
@@ -631,7 +606,7 @@ const handleoneditSubmit = async () => {
             );
           })}
         </Modal>, document.body)}
-      {/* Use new ConfirmModal (independent from existing Modal) */}
+
       <ConfirmModal
         open={!!deleteTarget}
         title="Delete task"

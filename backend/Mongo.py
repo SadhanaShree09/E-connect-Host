@@ -37,13 +37,14 @@ from pymongo import MongoClient
 from typing import List, Dict
 from pymongo import MongoClient
 
-
+from dotenv import load_dotenv
+load_dotenv() 
 
 
 
   # For storing yearly working days
 
-mongo_url = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+mongo_url = os.environ.get("MONGODB_URI")
 client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,
@@ -51,6 +52,9 @@ client = MongoClient(
     socketTimeoutMS=30000
 )
 db = client["RBG_AI"]
+print(f"DEBUG: MONGODB_URI={mongo_url}")
+print(f"DEBUG: Selected DB name={db.name}")
+print(f"DEBUG: client object before any reassignment: {type(client)}")
 client=client.RBG_AI
 Users=client.Users
 Add=client.Dataset
@@ -171,14 +175,19 @@ def admin_Signup(email,password,name,phone,position,date_of_joining):
         return signJWT(email, "admin")
     
 def admin_signin(checkuser, password, email):
-    if (checkuser):
-        checkpass=CheckPassword(password,checkuser.get('password'))
-        if (checkpass):
-            a=signJWT(email, "admin")
-            b=checkuser
-            checkuser=cleanid(checkuser)
+    if checkuser:
+        checkpass = CheckPassword(password, checkuser.get('password'))
+        if checkpass:
+            a = signJWT(email, "admin")
+            b = checkuser
+            checkuser = cleanid(checkuser)
             checkuser.update(a)
-            return {"jwt":a, "Details":b, "isadmin":True}
+            # Ensure 'email' key is present in the returned dictionary
+            return {"jwt": a, "Details": b, "isadmin": True, "email": checkuser.get("email", email)}
+        else:
+            raise HTTPException(status_code=300, detail="Given Password is Incorrect")
+    else:
+        raise HTTPException(status_code=300, detail="Given Email does not exist")
      
 # # Google Signin      
 # def Gsignin(client_name,email):
@@ -266,6 +275,31 @@ def admin_Gsignin(checkuser, client_name):
         return checkuser
     else:
         raise HTTPException(status_code=404, detail="User not found")
+    
+# def admin_Gsignin(client_name, email):
+#     try:
+#         # Use the correct collection name — change 'Admin' if yours is different
+#         collection = db["admin"]
+
+#         # Find admin user by client_name and email
+#         checkuser = collection.find_one({"name": client_name, "email": email})
+        
+#         if checkuser:
+#             # Generate JWT and clean ID
+#             a = signJWT(str(checkuser["_id"]))
+#             checkuser = cleanid(checkuser)
+
+#             # Add JWT and status info
+#             checkuser.update(a)
+#             checkuser.update({"isloggedin": True, "isadmin": True})
+
+#             return checkuser
+#         else:
+#             raise HTTPException(status_code=404, detail="Admin not found")
+
+#     except Exception as e:
+#         print(f"Error in admin_Gsignin: {str(e)}")
+#         raise HTTPException(status_code=500, detail=str(e))
     
 # Manager Google Signin
 def manager_Gsignin(checkuser, client_name):

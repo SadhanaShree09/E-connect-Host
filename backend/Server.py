@@ -36,7 +36,7 @@ BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # GridFS setup
 from pymongo import MongoClient
 import gridfs
-mongo_url = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+mongo_url = os.environ.get("MONGODB_URI")
 client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,
@@ -1594,11 +1594,19 @@ def adminid_Signup(item: Item):
 
 @app.post("/admin_signin")
 def admin_Signup(item: Item2):
-    jwt=Mongo.admin_signin(item.email,item.password)
+    checkuser = admin.find_one({'email': item.email})
+    jwt = Mongo.admin_signin(checkuser, item.password, item.email)
     email = jwt.get('email')
-    admin = get_admin_info(email)
+    admin_info = get_admin_info(email)
     print(jwt)
-    return { "jwt": jwt, "Name": admin.get('name'), "Email": admin.get('email'), "Phone no": admin.get('phone'), "Position": admin.get('position'), "Date of joining": admin.get('date_of_joining')}
+    return {
+        "jwt": jwt,
+        "Name": admin_info.get('name'),
+        "Email": admin_info.get('email'),
+        "Phone no": admin_info.get('phone'),
+        "Position": admin_info.get('position'),
+        "Date of joining": admin_info.get('date_of_joining')
+    }
 
 
 # Admin Signin

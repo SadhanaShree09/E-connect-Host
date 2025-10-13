@@ -3,7 +3,7 @@ import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
 import { faCalendarPlus, faTrash, faSave, faPlus, faCalendarAlt, faExclamationTriangle, faTimes, faCheck } from '@fortawesome/free-solid-svg-icons';
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { LS, ipadr } from '../../Utils/Resuse';
+import { LS, ipadr } from '../../../Utils/Resuse';
 
 const AddLeave = () => {
   const [selectedYear, setSelectedYear] = useState(new Date().getFullYear());
@@ -264,7 +264,7 @@ const AddLeave = () => {
               setShowAddForm(!showAddForm);
               setShowDeleteMode(false);
             }}
-            className="px-4 py-2 text-base bg-green-500 rounded-md text-white hover:bg-green-600 focus:outline-none focus:ring-2 focus:ring-green-500 flex items-center gap-2"
+            className="px-4 py-2 text-base bg-green-400 rounded-md text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
           >
             <FontAwesomeIcon icon={faPlus} />
             Add
@@ -292,7 +292,7 @@ const AddLeave = () => {
             <button
               onClick={deleteSelectedHolidays}
               disabled={saving}
-              className="px-4 py-2 text-base bg-red-600 hover:bg-red-700 disabled:bg-red-400 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center gap-2"
+              className="px-4 py-2 text-base bg-red-400 hover:bg-red-500 disabled:bg-red-300 text-white rounded-md focus:outline-none focus:ring-2 focus:ring-red-500 flex items-center gap-2"
             >
               <FontAwesomeIcon icon={faTrash} />
               Delete Selected ({selectedHolidays.length})

@@ -2,7 +2,7 @@ import React from "react";
 import { Link } from "react-router-dom";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
 import { faUserClock, faHome, faClipboardList, faCalendarDay } from "@fortawesome/free-solid-svg-icons";
-import { LS } from "../../Utils/Resuse";
+import { LS } from "../../../Utils/Resuse";
 
 const Leavemanagement = () => {
   const isAdmin= LS.get('isAdmin');

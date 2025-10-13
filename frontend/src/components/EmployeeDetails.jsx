@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "axios";
-import { Link, useParams } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const EmployeeDetails = () => {
@@ -25,6 +25,7 @@ const EmployeeDetails = () => {
     });
     const [options, setOptions] = useState([]);
     const { id } = useParams();
+    const navigate = useNavigate();
 
     const ip = import.meta.env.VITE_HOST_IP;
 
@@ -108,8 +109,6 @@ const EmployeeDetails = () => {
     const handleSubmit = async (e) => {
         e.preventDefault();
 
-        //const clientIP = "127.0.0.1"; 
-
         const payload = {
             userid: employeeData.userid,
             name: employeeData.name,
@@ -124,15 +123,14 @@ const EmployeeDetails = () => {
             date_of_joining: employeeData.date_of_joining, 
             education: employeeData.education.filter(edu =>
                 edu.degree || edu.institution || edu.year
-            ), // Filter out empty education entries
+            ),
             skills: employeeData.skills
                 .filter(skill => skill.name && skill.level)
                 .map((skill) => ({
                     name: skill.name,
                     level: parseInt(skill.level) || 0,
                 })),
-            status: employeeData.status, // Added status field
-            //ip: clientIP, // Added required IP field
+            status: employeeData.status,
         };
 
         console.log("Payload:", payload);
@@ -149,13 +147,21 @@ const EmployeeDetails = () => {
             const data = await response.json();
 
             if (response.ok) {
-                toast.success(data.message || "Employee Updated successfully!");
+                toast.success(data.message || "Employee Updated successfully!", {
+                    autoClose: 2000,
+                    onClose: () => {
+                    }
+                });
             } else {
-                toast.error(data.detail || "Error occurred while updating employee.");
+                toast.error(data.detail || "Error occurred while updating employee.", {
+                    autoClose: 3000
+                });
             }
         } catch (error) {
             console.error("Error:", error);
-            toast.error("An error occurred while updating the employee.");
+            toast.error("An error occurred while updating the employee.", {
+                autoClose: 3000
+            });
         }
     };
 

@@ -240,8 +240,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
               </div>
             </Link>
 
-            <Link to="addLeave" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <Link to="leave/addLeave" className="sidebar-item">
+              <div className={`flex items-center p-4 ${isActive('leave/addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 
                 <svg xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 

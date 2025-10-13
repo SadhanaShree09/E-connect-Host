@@ -167,7 +167,7 @@ const EnhancedNotificationDashboard = () => {
           task: isAdmin ? '/admin/task' : '/user/todo',
           task_overdue: isAdmin ? '/admin/task' : '/user/todo',
           task_due_soon: isAdmin ? '/admin/task' : '/user/todo',
-          leave: isAdmin ? '/admin/leaveapproval' : '/User/LeaveHistory',
+          leave: isAdmin ? '/admin/leaveleaveapproval' : '/User/LeaveHistory',
           wfh: isAdmin ? '/admin/wfh' : '/User/Workfromhome',
           attendance: isAdmin ? '/admin/time' : '/User/Clockin_int',
           system: isAdmin ? '/admin' : '/User'

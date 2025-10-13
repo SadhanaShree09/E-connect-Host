@@ -11,21 +11,20 @@ import Checkauth from "./Utils/Checkauth";
 import Setting from "./components/Setting";
 import Clockdashboard from "./components/Clockdashboard";
 import Clockin_int from "./components/Clockin_int";
-import Leave from "./components/Leave";
-import LeaveHistory from "./components/LeaveHistory";
-import Leaverequest from "./components/Leaverequest";
+import Leave from "./components/leave/Leave";
+import LeaveHistory from "./components/leave/LeaveHistory";
+import Leaverequest from "./components/leave/Leaverequest";
 import Holidaylist from "./components/Holidayslist";
-import Workfromhome from "./components/Workfromhome";
-import Remote_details from "./components/Remote_details";
+import Workfromhome from "./components/leave/Workfromhome";
+import Remote_details from "./components/leave/Remote_details";
 import ToDoList from "./components/todo";
 import UserProfile from "./components/UserProfile";
 import Timemanagement from "./components/Adminfrontend/Timemanagement";
 import Employeelist from "./components/Adminfrontend/Employeelist";
-import Leavemanagement from "./components/Adminfrontend/Leavemanagement";
-import Leaveapproval from "./components/Adminfrontend/Leave_approval";
-import Wfh from "./components/Adminfrontend/Wfh_approval";
+import Leavemanagement from "./components/Adminfrontend/leave/Leavemanagement";
+import Leaveapproval from "./components/Adminfrontend/leave/Leave_approval";
+import Wfh from "./components/Adminfrontend/leave/Wfh_approval";
 import AdminProfile from "./components/Adminfrontend/Adminprofile";
-import Leavehistory from "./components/Adminfrontend/Leave_History";
 import AddUser from "./components/Adminfrontend/new_employee";
 import EmployeeDetails from "./components/EmployeeDetails";
 import ViewAssignedTask from "./components/ViewAssignedTask";
@@ -43,10 +42,10 @@ import AdminAuth from "./Utils/AdminAuth";
 
 
 import Attendance from "./components/Adminfrontend/Attendance";
-import AddLeave from "./components/Adminfrontend/AddLeave";
+import AddLeave from "./components/Adminfrontend/leave/AddLeave";
 import AttendanceStats from "./components/AttendanceStats";
-import LeaveDetails from "./components/Adminfrontend/LeaveDetails";
-import RemoteDetails from "./components/Adminfrontend/RemoteDetails";
+import LeaveDetails from "./components/Adminfrontend/leave/LeaveDetails";
+import RemoteDetails from "./components/Adminfrontend/leave/RemoteDetails";
 import Chat from './components/Chat';
 import OnboardingDocs from './components/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
@@ -200,10 +199,6 @@ const router = createBrowserRouter([
   element: <Wfh />,
 },
 {
-  path: "history",
-  element: <Leavehistory />,
-},
-{
   path: 'chat',
   element: <Chat />, // your Slack-like chat component
 },
@@ -294,10 +289,6 @@ const router = createBrowserRouter([
         element: <AdminProfile />,
       },
       {
-        path: "history",
-        element: <Leavehistory />,
-      },
-      {
         path: "newUser",
         element: <AddUser />,
       },
@@ -345,10 +336,9 @@ const router = createBrowserRouter([
       { path: "wfh", element: <Wfh /> },
       { path: "wfh_details", element: <RemoteDetails />},
       { path: "profile", element: <AdminProfile /> },
-      { path: "history", element: <Leavehistory /> },
       { path: "attendance", element: <Attendance />},
       { path: "newUser", element: <AddUser /> },
-      { path: "addLeave", element: <AddLeave /> },
+      { path: "leave/addLeave", element: <AddLeave /> },
     ],
   }, // Fixed: Added missing comma here
 ]);

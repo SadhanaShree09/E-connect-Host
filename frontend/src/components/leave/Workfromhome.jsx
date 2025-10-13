@@ -4,7 +4,7 @@ import Datetime from "react-datetime";
 import "react-datetime/css/react-datetime.css";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Baseaxios, LS, ipadr } from "../Utils/Resuse";
+import { Baseaxios, LS, ipadr } from "../../Utils/Resuse";
 import moment from "moment";
 
 const WorkFromHome = () => {

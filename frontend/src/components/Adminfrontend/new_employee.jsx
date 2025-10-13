@@ -24,6 +24,7 @@ const AddUser = () => {
   const [selectedValue, setSelectedValue] = useState("");
   const [options, setOptions] = useState([]);
   const [error, setError] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const Admin = LS.get('isadmin');
   const Position = LS.get('position');
 
@@ -56,7 +57,7 @@ const AddUser = () => {
 
   const handleSelectChange = (event) => {
     setSelectedValue(event.target.value);
-    setFormData({ ...formData, TL: event.target.value }); // keep TL synced
+    setFormData({ ...formData, TL: event.target.value });
   };
 
   const addEducation = () => {
@@ -74,66 +75,94 @@ const AddUser = () => {
   };
 
   const handleSubmit = async (e) => {
-  e.preventDefault();
+    e.preventDefault();
+    
+    // Prevent multiple submissions
+    if (isSubmitting) return;
+    setIsSubmitting(true);
 
-  let payload = {
-    name: formData.name,
-    email: formData.email,
-    personal_email: formData.personal_email,
-    resume_link: formData.resume_link,
-    TL: formData.TL,
-    phone: formData.phone,
-    position: formData.position,
-    department: formData.department,
-    address: formData.address,
-    status: formData.status,
-    date_of_joining: formData.dateOfJoining, // snake_case for backend
-    education: formData.education,
-    skills: formData.skills.map((skill) => ({
-      name: skill.name,
-      level: parseInt(skill.level) || 0,
-    })),
-    ip: "127.0.0.1", // ✅ added ip so backend validation passes
-  };
+    let payload = {
+      name: formData.name,
+      email: formData.email,
+      personal_email: formData.personal_email,
+      resume_link: formData.resume_link,
+      TL: formData.TL,
+      phone: formData.phone,
+      position: formData.position,
+      department: formData.department,
+      address: formData.address,
+      status: formData.status,
+      date_of_joining: formData.dateOfJoining,
+      education: formData.education,
+      skills: formData.skills.map((skill) => ({
+        name: skill.name,
+        level: parseInt(skill.level) || 0,
+      })),
+      ip: "127.0.0.1",
+    };
 
-  try {
-    const response = await fetch(`${ipadr}/add_employee`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(payload),
-    });
+    console.log("Payload:", payload);
 
-    const data = await response.json();
-
-    if (response.ok) {
-      toast.success(data.message || "Employee added successfully!");
-      setFormData({
-        name: "",
-        email: "",
-        personal_email: "",
-        resume_link: "",
-        TL: "",
-        phone: "",
-        address: "",
-        position: "",
-        department: "",
-        status: "",
-        dateOfJoining: "",
-        education: [{ degree: "", institution: "", year: "" }],
-        skills: [{ name: "", level: "" }],
+    try {
+      const response = await fetch(`${ipadr}/add_employee`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(payload),
       });
-      setSelectedValue("");
-    } else {
-      toast.error(data.detail || "Error occurred while adding employee.");
+
+      const data = await response.json();
+
+      if (response.ok) {
+        toast.success(data.message || "Employee added successfully!", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+        
+        // Reset form after successful submission
+        setFormData({
+          name: "",
+          email: "",
+          personal_email: "",
+          resume_link: "",
+          TL: "",
+          phone: "",
+          address: "",
+          position: "",
+          department: "",
+          status: "",
+          dateOfJoining: "",
+          education: [{ degree: "", institution: "", year: "" }],
+          skills: [{ name: "", level: "" }],
+        });
+        setSelectedValue("");
+      } else {
+        toast.error(data.detail || "Error occurred while adding employee.", {
+          position: "top-right",
+          autoClose: 3000,
+          hideProgressBar: false,
+          closeOnClick: true,
+          pauseOnHover: true,
+          draggable: true,
+        });
+      }
+    } catch (error) {
+      console.error("Error:", error);
+      toast.error("An error occurred while adding the employee.", {
+        position: "top-right",
+        autoClose: 3000,
+        hideProgressBar: false,
+        closeOnClick: true,
+        pauseOnHover: true,
+        draggable: true,
+      });
+    } finally {
+      setIsSubmitting(false);
     }
-  } catch (error) {
-    console.error("Error:", error);
-    toast.error("An error occurred while adding the employee.");
-  }
-
-  console.log("Payload:", payload);
-};
-
+  };
 
   return (
     (Admin || Position === "HR") ?
@@ -349,9 +378,14 @@ const AddUser = () => {
 
         <button
           type="submit"
-          className="w-full bg-blue-500 text-white py-2 rounded mt-6 hover:bg-blue-600 transition"
+          disabled={isSubmitting}
+          className={`w-full text-white py-2 rounded mt-6 transition ${
+            isSubmitting 
+              ? 'bg-gray-400 cursor-not-allowed' 
+              : 'bg-blue-500 hover:bg-blue-600'
+          }`}
         >
-          Add
+          {isSubmitting ? "Adding..." : "Add"}
         </button>
       </form>
     </div> : (

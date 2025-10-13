@@ -26,7 +26,7 @@
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaArrowLeft, FaPlus } from "react-icons/fa";
-import { LS, ipadr } from "../Utils/Resuse";
+import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

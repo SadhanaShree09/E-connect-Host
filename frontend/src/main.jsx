@@ -17,7 +17,7 @@ import Leaverequest from "./components/leave/Leaverequest";
 import Holidaylist from "./components/Holidayslist";
 import Workfromhome from "./components/leave/Workfromhome";
 import Remote_details from "./components/leave/Remote_details";
-import ToDoList from "./components/todo";
+import ToDoList from "./components/Task/Todo";
 import UserProfile from "./components/UserProfile";
 import Timemanagement from "./components/Adminfrontend/Timemanagement";
 import Employeelist from "./components/Adminfrontend/Employeelist";
@@ -27,14 +27,14 @@ import Wfh from "./components/Adminfrontend/leave/Wfh_approval";
 import AdminProfile from "./components/Adminfrontend/Adminprofile";
 import AddUser from "./components/Adminfrontend/new_employee";
 import EmployeeDetails from "./components/EmployeeDetails";
-import ViewAssignedTask from "./components/ViewAssignedTask";
 import LoginPage from "./components/Loginpage";
 import Navbar from "./components/Navbar";
-import TaskPage from "./components/Taskpage";
-import TaskDetailsPage from "./components/TaskDetailsPage";
-import TaskProgress from "./components/TaskProgress";
-import TaskAssign from './components/TaskAssign';
-import ProgressDetail from './components/ProgressDetail';
+import ProgressDetail from './components/Task/ProgressDetail';
+import TaskAssign from './components/Task/TaskAssign';
+import TaskDetailsPage from "./components/Task/TaskDetailsPage";
+import TaskPage from "./components/Task/Taskpage";
+import TaskProgress from "./components/Task/TaskProgress";
+import ToDoList from "./components/Task/Todo";
 import NotificationDashboard from "./components/NotificationDashboard";
 import EnhancedNotificationDashboard from "./components/EnhancedNotificationDashboard";
 import ApiTest from "./components/ApiTest";
@@ -99,7 +99,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-     { index: true, element: <LoginPage /> }, // 👈 default for "/"
+     { index: true, element: <LoginPage /> }, 
   ],
   },
   {
@@ -134,18 +134,18 @@ const router = createBrowserRouter([
         path: "profile",
         element: <UserProfile />,
       },
-      {
-        path: "todo",
-        element: <ToDoList />
-      },
-      {
-        path: "task",
-        element: <TaskPage />,
-      },
-         {
-        path: "task/:taskId",
-        element: <TaskDetailsPage />,
-      },
+        {
+      path: "Task/Todo",
+      element: <ToDoList />,
+    },
+    {
+      path: "Task/Todo/TaskPage",
+      element: <TaskPage />,
+    },
+    {
+      path: "Task/Todo/TaskPage/TaskDetailsPage/:taskId",
+      element: <TaskDetailsPage />,
+    },
       {
         path: "Leave",
         element: <Leave />,
@@ -203,35 +203,27 @@ const router = createBrowserRouter([
   element: <Chat />, // your Slack-like chat component
 },
 {
-  path:"viewtask",
-  element:<ViewAssignedTask />
-},
-{
-  path: "manager-employee",
-  element: <TaskProgress/>,
-},
-{path:"/User/manager-task-detail/:taskId",
-  element:<ProgressDetail role="manager" dashboardRoute="/User/manager-employee" commentLabel="Manager" fileUploadLabel="Manager" />, 
-},
-{
         path: "timemanage",
         element: <Timemanagement />,
       },
-{
-  path: "hr-manager",
-  element: <TaskProgress/>,
-},
-{path:"/User/hr-task-detail/:taskId",
-  element:<ProgressDetail role="hr" dashboardRoute="/User/hr-manager" commentLabel="HR" fileUploadLabel="HR" />, 
-},
-{
-  path: "employee-task-assign",
-  element: <TaskAssign assignType="manager-to-employee" />
-},
-{
-  path: "manager-task-assign",
-  element: <TaskAssign assignType="hr-to-manager" />
-},
+    {
+      path: "Task/TaskProgress",
+      element: <TaskProgress/>,
+    },
+    {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
+      element:<ProgressDetail role="manager" dashboardRoute="/User/Task/TaskProgress" commentLabel="TeamLead" fileUploadLabel="TeamLead" />, 
+    },
+    {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
+      element:<ProgressDetail role="hr" dashboardRoute="/User/Task/TaskProgress" commentLabel="HR" fileUploadLabel="HR" />, 
+    },
+    {
+      path: "Task/TaskProgress/TaskAssign",
+      element: <TaskAssign assignType="TL-to-employee" />
+    },
+    {
+      path: "Task/TaskProgress/TaskAssign",
+      element: <TaskAssign assignType="hr-to-TL" />
+    },
  {
         path:'my-documents',
         element:<OnboardingDocs/>,
@@ -245,7 +237,6 @@ const router = createBrowserRouter([
 { path: "wfh_details", element: <RemoteDetails />},
 { path: "attendance", element: <Attendance />},
 { path: "individualStats", element: <AttendanceStats />},
-{ path: ":userid", element: <TaskAssign /> },
     ],
   },
   {
@@ -295,14 +286,6 @@ const router = createBrowserRouter([
       {
         path: "task",
         element: <TaskPage />,
-      },
-      {
-        path: "viewtask",
-        element: <ViewAssignedTask />,
-      },
-      {
-        path: ":userid",
-        element: <TaskAssign />,
       },
       {
         path: "notifications",

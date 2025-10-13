@@ -7,7 +7,7 @@ import {
   FaCalendarAlt, FaUserTie, FaClipboardList, FaChartLine, FaPlus, FaArrowLeft,
   FaSave, FaUpload
 } from "react-icons/fa";
-import { LS, ipadr } from "../Utils/Resuse";
+import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 

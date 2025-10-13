@@ -35,7 +35,6 @@ import TaskPage from "./components/Task/Taskpage";
 import TaskProgress from "./components/Task/TaskProgress";
 import ToDoList from "./components/Task/Todo";
 import NotificationDashboard from "./components/NotificationDashboard";
-import EnhancedNotificationDashboard from "./components/EnhancedNotificationDashboard";
 import ApiTest from "./components/ApiTest";
 import AdminAuth from "./Utils/AdminAuth";
 
@@ -173,10 +172,10 @@ const router = createBrowserRouter([
         path: "notifications",
         element: <NotificationDashboard />,
       },
-      {
-        path: "enhanced-notifications",
-        element: <EnhancedNotificationDashboard />,
-      },
+      // {
+      //   path: "enhanced-notifications",
+      //   element: <EnhancedNotificationDashboard />,
+      // },
       {
         path: "test",
         element: <ApiTest />,
@@ -290,10 +289,10 @@ const router = createBrowserRouter([
         path: "notifications",
         element: <NotificationDashboard />,
       },
-      {
-        path: "enhanced-notifications",
-        element: <EnhancedNotificationDashboard />,
-      },
+      // {
+      //   path: "enhanced-notifications",
+      //   element: <EnhancedNotificationDashboard />,
+      // },
       {
         path:':id',
         element:<EmployeeDetails/>

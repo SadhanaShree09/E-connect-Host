@@ -18,7 +18,8 @@ import json
 import traceback
 import os
 from gridfs import GridFS
-
+from dotenv import load_dotenv
+load_dotenv()
 # Helper function for timezone-aware timestamps
 def get_current_timestamp_iso():
     """Get current timestamp in IST timezone with proper ISO format"""
@@ -44,7 +45,7 @@ load_dotenv()
 
   # For storing yearly working days
 
-mongo_url = os.environ.get("MONGODB_URI")
+mongo_url = os.getenv("MONGODB_URI")
 client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,

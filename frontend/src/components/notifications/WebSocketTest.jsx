@@ -1,6 +1,6 @@
 import React from 'react';
-import { LS } from '../Utils/Resuse';
-import { useNotificationWebSocket } from '../hooks/useNotificationWebSocket';
+import { LS } from '../../Utils/Resuse';
+import { useNotificationWebSocket } from '../../hooks/useNotificationWebSocket';
 
 const WebSocketTest = () => {
   // const { isConnected, connectionError } = useNotificationWebSocket();

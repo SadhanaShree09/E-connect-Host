@@ -1,8 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { FaBell } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { LS, ipadr } from '../Utils/Resuse';
-import { useNotificationWebSocket } from '../hooks/useNotificationWebSocket';
+import { LS, ipadr } from '../../Utils/Resuse';
+import { useNotificationWebSocket } from '../../hooks/useNotificationWebSocket';
 
 const NotificationBell = ({ className = "" }) => {
   const [unreadCount, setUnreadCount] = useState(0);

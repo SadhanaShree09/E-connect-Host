@@ -12,7 +12,7 @@ import {
   FaHome,
   FaClock
 } from 'react-icons/fa';
-import desktopNotificationManager from '../services/DesktopNotificationManager';
+import desktopNotificationManager from '../../services/DesktopNotificationManager';
 
 /**
  * Global Toast Notifications

@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from "react";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
@@ -115,6 +116,34 @@ const Timemanagement = () => {
     }
   };
 
+  const formatDateOnly = (dateString) => {
+    if (!dateString) return 'N/A';
+    try {
+      const date = new Date(dateString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return dateString;
+      // Format as DD/MM/YYYY
+      return format(date, 'dd/MM/yyyy');
+    } catch (error) {
+      console.error('Error formatting date:', error);
+      return dateString;
+    }
+  };
+
+  const formatDateTime = (timeString) => {
+    if (!timeString) return 'N/A';
+    try {
+      const date = new Date(timeString);
+      // Check if date is valid
+      if (isNaN(date.getTime())) return timeString;
+      // Format as DD/MM/YYYY HH:MM:SS AM/PM
+      return format(date, 'dd/MM/yyyy hh:mm:ss a');
+    } catch (error) {
+      console.error('Error formatting datetime:', error);
+      return timeString;
+    }
+  };
+
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;
   const currentItems = filteredData.slice(indexOfFirstItem, indexOfLastItem);
@@ -186,13 +215,16 @@ const Timemanagement = () => {
                       <div className="font-semibold text-center">Name</div>
                     </th>
                     <th scope="col" className="p-2 whitespace-nowrap">
-                      <div className="font-semibold text-center">Clockin</div>
+                      <div className="font-semibold text-center">Date</div>
                     </th>
                     <th scope="col" className="p-2 whitespace-nowrap">
-                      <div className="font-semibold text-center">Clockout</div>
+                      <div className="font-semibold text-center">Login Time</div>
                     </th>
                     <th scope="col" className="p-2 whitespace-nowrap">
-                      <div className="font-semibold text-center">Hours of Working</div>
+                      <div className="font-semibold text-center">Logout Time</div>
+                    </th>
+                    <th scope="col" className="p-2 whitespace-nowrap">
+                      <div className="font-semibold text-center">Total Hours of Working</div>
                     </th>
                     <th scope="col" className="p-2 whitespace-nowrap">
                       <div className="font-semibold text-center">Status</div>
@@ -206,7 +238,7 @@ const Timemanagement = () => {
                 <tbody className="text-sm">
                   {loading ? (
                     <tr>
-                      <td colSpan="7" className="p-2 whitespace-nowrap font-inter text-center">
+                      <td colSpan="8" className="p-2 whitespace-nowrap font-inter text-center">
                         <div className="font-medium text-center">Loading...</div>
                       </td>
                     </tr>
@@ -220,6 +252,9 @@ const Timemanagement = () => {
                         </td>
                         <td scope="col" className="p-2 whitespace-nowrap">
                           <div className="font-medium text-center">{row.name}</div>
+                        </td>
+                        <td scope="col" className="p-2 whitespace-nowrap">
+                          <div className="font-medium text-center">{formatDateOnly(row.date)}</div>
                         </td>
                         <td scope="col" className="p-2 whitespace-nowrap">
                           <div className="font-medium text-center">{formatTime(row.clockin)}</div>
@@ -240,7 +275,7 @@ const Timemanagement = () => {
                     ))
                   ) : (
                     <tr>
-                      <td colSpan="7" className="p-2 whitespace-nowrap">
+                      <td colSpan="8" className="p-2 whitespace-nowrap">
                         <div className="font-medium text-center">No data available</div>
                       </td>
                     </tr>

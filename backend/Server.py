@@ -29,14 +29,16 @@ import uuid, os
 from datetime import datetime
 from bson import ObjectId
 import asyncio
-
+from dotenv import load_dotenv
+load_dotenv() 
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
 # UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
 # os.makedirs(UPLOAD_DIR, exist_ok=True)
 # GridFS setup
 from pymongo import MongoClient
 import gridfs
-mongo_url = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+mongo_url = os.environ.get("MONGODB_URI")
+print("MongoDB is connecting to:",mongo_url)
 client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,

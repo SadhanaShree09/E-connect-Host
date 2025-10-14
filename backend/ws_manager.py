@@ -130,5 +130,5 @@ class GroupChatManager:
             for ws in self.active_connections[group_id]:
                 await ws.send_json(message)
 
-
+    
 

@@ -100,7 +100,7 @@ const router = createBrowserRouter([
     path: "/",
     element: <App />,
     children: [
-     { index: true, element: <LoginPage /> }, // 👈 default for "/"
+     { index: true, element: <LoginPage /> }, 
   ],
   },
   {
@@ -205,7 +205,7 @@ const router = createBrowserRouter([
 },
 {
   path: 'chat',
-  element: <Chat />, // your Slack-like chat component
+  element: <Chat />, 
 },
 {
   path:"viewtask",

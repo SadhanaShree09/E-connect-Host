@@ -18,7 +18,8 @@ import json
 import traceback
 import os
 from gridfs import GridFS
-
+from dotenv import load_dotenv
+load_dotenv()
 # Helper function for timezone-aware timestamps
 def get_current_timestamp_iso():
     """Get current timestamp in IST timezone with proper ISO format"""
@@ -35,6 +36,7 @@ from pymongo import MongoClient
 
 
 from typing import List, Dict
+import os
 from pymongo import MongoClient
 
 
@@ -43,13 +45,16 @@ from pymongo import MongoClient
 
   # For storing yearly working days
 
-mongo_url = os.environ.get("MONGODB_URI", "mongodb://localhost:27017")
+mongo_url = os.environ.get("MONGODB_URI")
+print("MongoDB is connecting to:",mongo_url)
 client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,
     connectTimeoutMS=30000,
     socketTimeoutMS=30000
 )
+
+
 db = client["RBG_AI"]
 client=client.RBG_AI
 Users=client.Users
@@ -184,7 +189,7 @@ def admin_Signup(email,password,name,phone,position,date_of_joining):
     else:
         Haspass=Hashpassword(password)
         a=admin.insert_one({'email':email,'password':Haspass,'name':name, 'phone':phone, 'position':position, 'date_of_joining':date_of_joining})
-        return signJWT(email, "admin")
+        return signJWT(email)
     
 def admin_signin(checkuser, password, email):
     if (checkuser):

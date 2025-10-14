@@ -16,7 +16,7 @@ const envUrl = import.meta.env.VITE_HOST_IP;
 const defaultUrl = "https://e-connect-host-production.up.railway.app";
 
 // Ensure HTTPS protocol regardless of environment variable value
-export const ipadr = envUrl ? envUrl.replace(/^http:/, "http:") : defaultUrl;
+export const ipadr = envUrl ? envUrl.replace(/^http:/, "https:") : defaultUrl;
 
 console.log("API Base URL (Production Safe):", ipadr);
 console.log("Original Env Value:", envUrl);

@@ -3,10 +3,10 @@ import bot1 from "../assets/login.gif.gif";
 import { Toaster } from "react-hot-toast";
 import "react-toastify/dist/ReactToastify.css";
 import { toast } from "react-toastify"
-import { Apisignin, Apisignup } from "../Api/Loginauth";
+import { Apisignin, Apisignup } from "../../Api/Loginauth";
 import { useNavigate } from "react-router-dom";
-import { Authdata } from "../Utils/Authprovider";
-import { LS } from "../Utils/Resuse";
+import { Authdata } from "../../Utils/Authprovider";
+import { LS } from "../../Utils/Resuse";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { jwtDecode } from "jwt-decode";
 

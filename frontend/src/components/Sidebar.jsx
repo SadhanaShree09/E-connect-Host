@@ -197,8 +197,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
                 <span className="font-medium">Time Management</span>
             </NavLink>
 
-            <Link to="leave" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <Link to="LeaveManage" className="sidebar-item">
+              <div className={`flex items-center p-4 ${isActive('LeaveManage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -275,8 +275,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
               </div>
             </Link>
 
-            <Link to="leave/addLeave" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('leave/addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <Link to="addLeave" className="sidebar-item">
+              <div className={`flex items-center p-4 ${isActive('addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 
                 <svg xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 
@@ -312,7 +312,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </NavLink>
 
             <Link to="Leave" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+              <div className={`flex items-center p-4 ${isActive('Leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -368,9 +368,9 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
         ) 
         }
         
-       {loggedIn && !isAdmin  && (
+{loggedIn && !isAdmin  && (
   <Link to="my-documents" className="sidebar-item">
-    <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
+    <div className={`flex items-center p-4 ${isActive('my-documents') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
         viewBox="0 0 24 24" stroke="currentColor" 
         className="w-6 h-6 mr-3 text-white">
@@ -440,7 +440,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             <Link to="LeaveManage" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('leavemanage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+              <div className={`flex items-center p-4 ${isActive('LeaveManage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -476,7 +476,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
       </Link>
       
         <Link to="LeaveManage" className="sidebar-item">
-          <div className={`flex items-center p-4 ${isActive('leavemanage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+          <div className={`flex items-center p-4 ${isActive('LeaveManage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

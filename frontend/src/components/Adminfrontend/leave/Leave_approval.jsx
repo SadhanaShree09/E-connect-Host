@@ -375,12 +375,7 @@ const Leaveapproval = () => {
             </h1>
             {isAdmin ? (
               <div>
-                {/* <Link to="/admin/leave_details">
-                  <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
-                    Details
-                  </button>
-                </Link> */}
-                <Link to="/admin/leave">
+                <Link to="/admin/LeaveManage">
                   <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Back
                   </button>
@@ -388,11 +383,6 @@ const Leaveapproval = () => {
               </div>
             ) : (
               <div>
-                {/* <Link to="/User/leave_details">
-                  <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
-                    Details
-                  </button>
-                </Link> */}
                 <Link to="/User/LeaveManage">
                   <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Back

@@ -2,8 +2,8 @@ import React, { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { AiOutlineEdit } from "react-icons/ai";
 import { BarChart3 } from "lucide-react";
-import { LS, ipadr } from "../Utils/Resuse";
-import AttendanceStats from "./AttendanceStats"; // Import the new component
+import { LS, ipadr } from "../../Utils/Resuse";
+import AttendanceStats from "../profile/AttendanceStats"; // Import the new component
 
 const API_BASE_URL = `${ipadr}`; // Backend URL
 

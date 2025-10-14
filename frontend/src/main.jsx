@@ -5,19 +5,19 @@ import { ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./index.css";
 import App from "./App";
-import Clockin from "./components/Clockin";
+import Clockin from "./components/clock/Clockin";
 import Sidebar from "./components/Sidebar";
 import Checkauth from "./Utils/Checkauth";
-import Setting from "./components/Setting";
-import Clockdashboard from "./components/Clockdashboard";
-import Clockin_int from "./components/Clockin_int";
+import Setting from "./components/welcome/Setting";
+import Clockdashboard from "./components/clock/Clockdashboard";
+import Clockin_int from "./components/clock/Clockin_int";
 import Leave from "./components/leave/Leave";
 import LeaveHistory from "./components/leave/LeaveHistory";
 import Leaverequest from "./components/leave/Leaverequest";
-import Holidaylist from "./components/Holidayslist";
+import Holidaylist from "./components/leave/Holidayslist";
 import Workfromhome from "./components/leave/Workfromhome";
 import Remote_details from "./components/leave/Remote_details";
-import UserProfile from "./components/UserProfile";
+import UserProfile from "./components/profile/UserProfile";
 import Timemanagement from "./components/Adminfrontend/Timemanagement";
 import Employeelist from "./components/Adminfrontend/Employeelist";
 import Leavemanagement from "./components/Adminfrontend/leave/Leavemanagement";
@@ -25,9 +25,9 @@ import Leaveapproval from "./components/Adminfrontend/leave/Leave_approval";
 import Wfh from "./components/Adminfrontend/leave/Wfh_approval";
 import AdminProfile from "./components/Adminfrontend/Adminprofile";
 import AddUser from "./components/Adminfrontend/new_employee";
-import EmployeeDetails from "./components/EmployeeDetails";
-import LoginPage from "./components/Loginpage";
-import Navbar from "./components/Navbar";
+import EmployeeDetails from "./components/Adminfrontend/EmployeeDetails";
+import LoginPage from "./components/login/Loginpage";
+import Navbar from "./components/welcome/Navbar";
 import ProgressDetail from './components/Task/ProgressDetail';
 import TaskAssign from './components/Task/TaskAssign';
 import TaskDetailsPage from "./components/Task/TaskDetailsPage";
@@ -40,7 +40,7 @@ import AdminAuth from "./Utils/AdminAuth";
 
 import Attendance from "./components/Adminfrontend/Attendance";
 import AddLeave from "./components/Adminfrontend/leave/AddLeave";
-import AttendanceStats from "./components/AttendanceStats";
+import AttendanceStats from "./components/profile/AttendanceStats";
 import LeaveDetails from "./components/Adminfrontend/leave/LeaveDetails";
 import RemoteDetails from "./components/Adminfrontend/leave/RemoteDetails";
 import Chat from './components/Chat';
@@ -144,23 +144,23 @@ const router = createBrowserRouter([
         element: <Leave />,
       },
       {
-        path: "LeaveHistory",
-        element: <LeaveHistory />,
-      },
-      {
-        path: "Holidaylist",
-        element: <Holidaylist />,
-      },
-      {
-        path: "Workfromhome",
-        element: <Workfromhome />,
-      },
-      {
-        path: "Leaverequest",
+        path: "Leave/Leaverequest",
         element: <Leaverequest />,
       },
       {
-        path: "Remote_details",
+        path: "Leave/LeaveHistory",
+        element: <LeaveHistory />,
+      },
+      {
+        path: "Leave/Holidaylist",
+        element: <Holidaylist />,
+      },
+      {
+        path: "Leave/Workfromhome",
+        element: <Workfromhome />,
+      },
+      {
+        path: "Leave/LeaveHistory/Remote_details",
         element: <Remote_details />,
       },
       {
@@ -177,11 +177,11 @@ const router = createBrowserRouter([
   element: <AddUser />,
 },
 {
-  path: "leaveapproval",
+  path: "LeaveManage/leaveapproval",
   element: <Leaveapproval />,
 },
 {
-  path: "wfh",
+  path: "LeaveManage/wfh",
   element: <Wfh />,
 },
 {
@@ -219,9 +219,9 @@ const router = createBrowserRouter([
           path: 'fileuploader',
           element:<Fileuploader/>,
         },
-{ path: "leave_details", element: <LeaveDetails /> },
-{ path: "wfh_details", element: <RemoteDetails />},
-{ path: "attendance", element: <Attendance />},
+{ path: "LeaveManage/leave_details", element: <LeaveDetails /> },
+{ path: "LeaveManage/leave_details/wfh_details", element: <RemoteDetails />},
+{ path: "LeaveManage/attendance", element: <Attendance />},
 { path: "individualStats", element: <AttendanceStats />},
     ],
   },
@@ -234,7 +234,7 @@ const router = createBrowserRouter([
         element: <></>,
       },
       {
-        path: "leave",
+        path: "LeaveManage",
         element: <Leavemanagement />,
       },
       {
@@ -254,11 +254,11 @@ const router = createBrowserRouter([
         // },],
       },
       {
-        path: "leaveapproval",
+        path: "LeaveManage/leaveapproval",
         element: <Leaveapproval />,
       },
       {
-        path: "wfh",
+        path: "LeaveManage/wfh",
         element: <Wfh />,
       },
       {
@@ -296,18 +296,18 @@ const router = createBrowserRouter([
       
       
       { index: true, element: <DashboardHome /> }, // default admin page
-      { path: "leave", element: <Leavemanagement /> },
+      { path: "Leave", element: <Leavemanagement /> },
       { path: "time", element: <Timemanagement /> },
       { path: "employee", element: <Employeelist /> },
       { path: "employee/:id", element: <EmployeeDetails /> },
-      { path: "leaveapproval", element: <Leaveapproval /> },
-      { path: "leave_details", element: <LeaveDetails /> },
-      { path: "wfh", element: <Wfh /> },
-      { path: "wfh_details", element: <RemoteDetails />},
+      { path: "LeaveManage/leaveapproval", element: <Leaveapproval /> },
+      { path: "LeaveManage/leave_details", element: <LeaveDetails /> },
+      { path: "LeaveManage/wfh", element: <Wfh /> },
+      { path: "LeaveManage/leave_details/wfh_details", element: <RemoteDetails />},
       { path: "profile", element: <AdminProfile /> },
-      { path: "attendance", element: <Attendance />},
+      { path: "LeaveManage/attendance", element: <Attendance />},
       { path: "newUser", element: <AddUser /> },
-      { path: "leave/addLeave", element: <AddLeave /> },
+      { path: "addLeave", element: <AddLeave /> },
     ],
   }, // Fixed: Added missing comma here
 ]);

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import { Calendar, TrendingUp, Clock, UserCheck } from "lucide-react";
-import { LS, ipadr } from "../Utils/Resuse";
+import { LS, ipadr } from "../../Utils/Resuse";
 
 const API_BASE_URL = `${ipadr}`;
 

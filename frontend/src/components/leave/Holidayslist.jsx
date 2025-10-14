@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import { ipadr } from '../Utils/Resuse'; // Adjust the import path as needed
+import { ipadr } from '../../Utils/Resuse'; // Adjust the import path as needed
 
 const Holidayslist = () => {
   const [showAllHolidays, setShowAllHolidays] = useState(false);

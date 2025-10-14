@@ -406,7 +406,7 @@ async def check_pending_approvals():
                         message=f"{employee_name} has requested Work From Home from {from_date} to {to_date}. Status: {status}",
                         notification_type="wfh_approval_required",
                         priority="medium",
-                        action_url="/admin/wfh",
+                        action_url="/admin/LeaveManage/wfh",
                         related_id=wfh_id,
                         metadata={
                             "wfh_id": wfh_id,

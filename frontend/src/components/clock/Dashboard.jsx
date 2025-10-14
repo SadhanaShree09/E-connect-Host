@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from "axios";
-import { Baseaxios, LS ,ipadr} from "../Utils/Resuse";
+import { Baseaxios, LS ,ipadr} from "../../Utils/Resuse";
 import { format } from "date-fns";
 
 export default function Clockdashboard() {

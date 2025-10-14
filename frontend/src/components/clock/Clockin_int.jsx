@@ -4,7 +4,7 @@ import { AiOutlineMenuUnfold } from "react-icons/ai";
 import { FaClock, FaPlay, FaStop, FaSpinner, FaCheckCircle } from "react-icons/fa";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { Baseaxios, LS } from "../Utils/Resuse";
+import { Baseaxios, LS } from "../../Utils/Resuse";
 
 function Clockin_int() {
   const location = useLocation();

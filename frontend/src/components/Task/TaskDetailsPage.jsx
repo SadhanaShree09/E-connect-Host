@@ -1,28 +1,3 @@
-// import { useState,useEffect } from "react";
-// import axios from "axios";
-// import Datetime from "react-datetime";
-// import { Link,useParams } from "react-router-dom";
-// import { LS,ipadr } from "../Utils/Resuse";
-// import { toast, ToastContainer } from "react-toastify";
-
-//  const TaskDetails=()=>{
-//     const[taskdata,SetTaskdata]=useState([{
-//         userid :'',
-//         task:'',
-//         date:'',
-//         due_date:'',
-//         status:'',
-        
-//     }]);
-
-//     const {id}=useParams();
-
-
-//  }
-
-//  export default TaskDetails;
-
-
 import React, { useState, useEffect, useRef, useCallback } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import { FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaArrowLeft, FaPlus } from "react-icons/fa";
@@ -159,10 +134,10 @@ const mapStatusToColumn = (status) => {
     if (LS.get("position") === "Employee") {
       endpoint = `${ipadr}/get_manager_tasks/${userId}?date=${date}`;
     } else if (LS.get("position") === "Manager") {
-      endpoint = `${ipadr}/get_manager_hr_tasks/${userId}?date=${date}`;
-    } else if (LS.get("position") === "HR") {
-      endpoint = `${ipadr}/get_hr_self_tasks/${userId}?date=${date}`;
-    }
+      endpoint = `${ipadr}/get_manager_hr_tasks/${userId}?date=${date}`;}
+    //  else if (LS.get("position") === "HR") {
+    //   endpoint = `${ipadr}/get_hr_self_tasks/${userId}?date=${date}`;
+    // }
 
     const response = await fetch(endpoint);
     if (!response.ok) {

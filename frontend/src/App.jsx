@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { useNavigate, Outlet } from 'react-router-dom';
-import Loginpage from './components/Loginpage';
+import Loginpage from './components/login/Loginpage';
 
 function App() {
   const [isMobile, setIsMobile] = useState(false);

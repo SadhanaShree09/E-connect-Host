@@ -11,14 +11,7 @@ import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-/**
- * role: 'manager', 'hr', or 'employee'
- * dashboardRoute: route to go back to dashboard
- * commentLabel: label for comment sender (e.g., 'Manager', 'HR', 'Employee')
- * fileUploadLabel: label for file uploader (e.g., 'Manager', 'HR', 'Employee')
- */
 const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUploadLabel }) => {
-  // Utility to always format date as yyyy-mm-dd
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;

@@ -1,14 +1,14 @@
 import React from "react";
-import logo from "../assets/logo.png";
+import logo from "../../assets/logo.png";
 import { GoogleOAuthProvider, GoogleLogin } from "@react-oauth/google";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import "./login.css";
 import { useNavigate } from "react-router-dom";
-import { Authdata } from "../Utils/Authprovider";
-import { Apisignin } from "../Api/Loginauth";
+import { Authdata } from "../../Utils/Authprovider";
+import { Apisignin } from "../../Api/Loginauth";
 import { jwtDecode } from "jwt-decode";
-import { LS } from "../Utils/Resuse";
+import { LS } from "../../Utils/Resuse";
 
 export default function LoginPage() {
   const navigate = useNavigate();

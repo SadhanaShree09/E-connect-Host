@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { useNavigate, useParams, useSearchParams } from "react-router-dom";
 import axios from "axios";
 import { ipadr, LS } from "../../Utils/Resuse";
-import { Modal } from "../Modal";
+import { Modal } from "../modal/Modal";
 import { createPortal } from "react-dom";
 import Multiselect from 'multiselect-react-dropdown';
 import { RotateCw } from "lucide-react";

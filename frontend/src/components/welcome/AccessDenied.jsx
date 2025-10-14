@@ -1,6 +1,6 @@
 import React from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { LS } from "../Utils/Resuse";
+import { LS } from "../../Utils/Resuse";
 
 const AccessDenied = () => {
   const navigate = useNavigate();

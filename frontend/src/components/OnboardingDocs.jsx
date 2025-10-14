@@ -19,7 +19,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 
 import axios from "axios";
 import { LS,ipadr } from "../Utils/Resuse";
-import Fileuploader from './components/Docs/Fileuploader'; 
+import Fileuploader from '../components/Fileuploader'; 
 
 export default function EmployeeDashboard() {
   const userid = LS.get("userid");

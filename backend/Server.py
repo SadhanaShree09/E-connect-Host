@@ -830,7 +830,7 @@ async def get_leave_History(userid: str = Path(..., title="The userid of the use
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/all_users_leave_requests/") 
+@app.get("/all_users_leave_requests") 
 async def fetch_user_leave_requests(selectedOption: str = Query(..., alias="selectedOption")):
     print(f"DEBUG: /all_users_leave_requests endpoint called - selectedOption: {selectedOption}")
     user_leave_requests = get_user_leave_requests(selectedOption) # HR sees recommended
@@ -838,7 +838,7 @@ async def fetch_user_leave_requests(selectedOption: str = Query(..., alias="sele
     return {"user_leave_requests": user_leave_requests or []}
 
 # Admin Page To Fetch Only Managers Leave Requests
-@app.get("/manager_leave_requests/")
+@app.get("/manager_leave_requests")
 async def fetch_manager_leave_requests(selectedOption: str = Query(..., alias="selectedOption")):
     print(f"DEBUG: /manager_leave_requests endpoint called - selectedOption: {selectedOption}")
     user_leave_requests = get_manager_leave_requests(selectedOption) # Admin sees manager requests
@@ -846,7 +846,7 @@ async def fetch_manager_leave_requests(selectedOption: str = Query(..., alias="s
     return {"user_leave_requests": user_leave_requests or []}
 
 #TL,Manager Page To Fetch Only Users Leave Requests Under Their Team
-@app.get("/only_users_leave_requests/")
+@app.get("/only_users_leave_requests")
 async def fetch_users_leave_requests(selectedOption: str = Query(..., alias="selectedOption"), TL: str = Query(..., alias="TL")):
     print(f"DEBUG: Endpoint called - selectedOption: {selectedOption}, TL: {TL}")
     user_leave_requests = get_only_user_leave_requests(selectedOption, TL) # Manager sees new requests
@@ -1159,7 +1159,7 @@ async def remote_work_request(request: RemoteWorkRequest):
   
 
 # Remote Work History    
-@app.get("/Remote-History/{userid}/") 
+@app.get("/Remote-History/{userid}") 
 async def get_Remote_History(userid:str = Path(..., title="The name of the user whose Remote History you want to fetch")):
     try:
         Remote_History = Remote_History_Details(userid)
@@ -1566,7 +1566,7 @@ async def permission_request(item: Item8):
         print(f"❌ Error in permission request: {e}")
         raise HTTPException(400, str(e))
    
-@app.get("/Other-leave-history/{userid}/") 
+@app.get("/Other-leave-history/{userid}") 
 async def get_other_leave_history(userid: str = Path(..., title="The ID of the user")):
     try:
         # Call your function to get the leave history for the specified user
@@ -1578,7 +1578,7 @@ async def get_other_leave_history(userid: str = Path(..., title="The ID of the u
         # If an exception occurs, return a 500 Internal Server Error
         raise HTTPException(status_code=500, detail=str(e))
    
-@app.get("/Permission-history/{userid}/")  # Also handle requests with trailing slash
+@app.get("/Permission-history/{userid}")  # Also handle requests with trailing slash
 async def get_Permission_history(userid: str = Path(..., title="The ID of the user")):
     try:
         # Call your function to get the leave history for the specified user
@@ -1590,7 +1590,7 @@ async def get_Permission_history(userid: str = Path(..., title="The ID of the us
         # If an exception occurs, return a 500 Internal Server Error
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/leave_details/user/{userid}/")  # Also handle requests with trailing slash
+@app.get("/leave_details/user/{userid}")  # Also handle requests with trailing slash
 async def get_user_leave_details(
     userid: str,
     status_filter: str = Query("All", alias="statusFilter"),
@@ -1634,7 +1634,7 @@ async def get_user_leave_details(
 
 
 # ============== REMOTE WORK ENDPOINTS ==============
-@app.get("/remote_work_details/user/{userid}/")  # Also handle requests with trailing slash
+@app.get("/remote_work_details/user/{userid}")  # Also handle requests with trailing slash
 async def get_user_remote_work_details(
     userid: str,
     status_filter: str = Query("All", alias="statusFilter")

@@ -1,6 +1,6 @@
 import React, { useState } from "react";
-import { Apisignup } from "../Api/Loginauth";
-import { LS } from "../Utils/Resuse";
+import { Apisignup } from "../../Api/Loginauth";
+import { LS } from "../../Utils/Resuse";
 import { useNavigate } from "react-router-dom";
 
 export default function Signup() {

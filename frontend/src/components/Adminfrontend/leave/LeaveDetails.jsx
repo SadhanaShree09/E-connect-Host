@@ -291,12 +291,12 @@ const LeaveDetails = () => {
             Leave Management Dashboard
           </h1>
           <div>
-            <Link to={isAdmin ? "/admin/wfh_details" : "/User/wfh_details"}>
+            <Link to={isAdmin ? "/admin/LeaveManage/leave_details/wfh_details" : "/User/LeaveManage/leave_details/wfh_details"}>
                   <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                     Remote Details
                   </button>
             </Link>
-            <Link to={isAdmin ? "/admin/leave" : "/User/leaveManage"}>
+            <Link to={isAdmin ? "/admin/LeaveManage" : "/User/LeaveManage"}>
               <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                 Back to Overview
               </button>

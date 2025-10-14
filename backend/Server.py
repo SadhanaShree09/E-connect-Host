@@ -1,8 +1,8 @@
-from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, manager_task_assignment, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_hr_assigned_tasks, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
+from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_hr_assigned_tasks, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
 from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
-from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, manager_task_assignment, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
+from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
 from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, HolidayYear, Holiday
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request
 from fastapi.responses import JSONResponse
@@ -131,7 +131,6 @@ from Mongo import (
     task_assign_to_multiple_users,
     task_assign_to_multiple_users_with_notification,
     get_team_members,
-    manager_task_assignment,
     assigned_task,
     get_single_task,
     get_public_ip,
@@ -479,178 +478,6 @@ def read_root():
 def test_connection():
     return {"status": "Backend is connected", "timestamp": datetime.now().isoformat()}
 
-@app.get("/notification-system-status")
-async def notification_system_status():
-    """Check the status of the enhanced notification system"""
-    try:
-        from websocket_manager import notification_manager
-        from notification_automation import get_current_timestamp_ist
-        
-        # Get current timestamp
-        current_time = get_current_timestamp_ist()
-        
-        # Check active WebSocket connections
-        active_users = notification_manager.get_active_users()
-        total_connections = sum(notification_manager.get_user_connection_count(user_id) for user_id in active_users)
-        
-        # Check notification database
-        total_notifications = Notifications.count_documents({})
-        
-        # Check recent notifications (last 24 hours)
-        yesterday = current_time - timedelta(hours=24)
-        recent_notifications = Notifications.count_documents({
-            "created_at": {"$gte": yesterday.isoformat()}
-        })
-        
-        # Check scheduler status
-        scheduler_status = "running" if scheduler.running else "stopped"
-        
-        # Get some sample stats
-        notification_types = {}
-        for notif_type in ["task", "leave", "wfh", "attendance", "system"]:
-            count = Notifications.count_documents({"type": notif_type})
-            notification_types[notif_type] = count
-        
-        return {
-            "status": "operational",
-            "timestamp": current_time.isoformat(),
-            "websocket": {
-                "active_users": len(active_users),
-                "total_connections": total_connections,
-                "active_user_ids": active_users[:10]  # Show first 10
-            },
-            "notifications": {
-                "total": total_notifications,
-                "recent_24h": recent_notifications,
-                "by_type": notification_types
-            },
-            "scheduler": {
-                "status": scheduler_status,
-                "jobs": len(scheduler.get_jobs()) if scheduler.running else 0
-            },
-            "automation": {
-                "enabled": True,
-                "modules": [
-                    "overdue_tasks_check",
-                    "upcoming_deadlines_check", 
-                    "missed_attendance_check",
-                    "pending_approvals_check"
-                ]
-            }
-        }
-        
-    except Exception as e:
-        return {
-            "status": "error",
-            "message": str(e),
-            "timestamp": datetime.now().isoformat()
-        }
-
-# Enhanced notification testing and automation endpoints
-@app.get("/test-notifications/{userid}")
-async def test_notifications(userid: str):
-    """Test endpoint to create a sample notification"""
-    try:
-        # Create a test notification with WebSocket
-        notification_id = create_notification(
-            userid=userid,
-            title="Test Notification",
-            message="This is a test notification to verify the enhanced system is working perfectly!",
-            notification_type="system",
-            priority="medium",
-            metadata={"test": True, "timestamp": get_current_timestamp_iso()}
-        )
-        
-        # Send via WebSocket if user is connected
-        if notification_id:
-            notification_data = {
-                "_id": notification_id,
-                "userid": userid,
-                "title": "Test Notification",
-                "message": "This is a test notification to verify the enhanced system is working perfectly!",
-                "type": "system",
-                "priority": "medium",
-                "metadata": {"test": True, "timestamp": get_current_timestamp_iso()},
-                "is_read": False,
-                "created_at": get_current_timestamp_iso()
-            }
-            await notification_manager.send_personal_notification(userid, notification_data)
-        
-        return {
-            "status": "success",
-            "message": "Test notification sent successfully",
-            "notification_id": notification_id,
-            "userid": userid,
-            "timestamp": get_current_timestamp_iso()
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@app.post("/run-automation-checks")
-async def run_automation_checks():
-    """Manually trigger all automated notification checks"""
-    try:
-        from notification_automation import run_all_automated_checks
-        result = await run_all_automated_checks()
-        return {
-            "status": "success",
-            "message": "Automation checks completed",
-            "results": result,
-            "timestamp": get_current_timestamp_iso()
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@app.post("/check-overdue-tasks")
-async def manual_overdue_check():
-    """Manually check for overdue tasks"""
-    try:
-        from notification_automation import check_and_notify_overdue_tasks
-        result = await check_and_notify_overdue_tasks()
-        return {
-            "status": "success",
-            "message": "Overdue tasks check completed",
-            "result": result,
-            "timestamp": get_current_timestamp_iso()
-        }
-    except Exception as e:
-        return {"status": "error", "message": str(e)}
-
-@app.get("/notification-stats/{userid}")
-async def get_notification_stats(userid: str):
-    """Get notification statistics for a user"""
-    try:
-        total_notifications = Notifications.count_documents({"userid": userid})
-        unread_count = get_unread_notification_count(userid)
-        read_count = total_notifications - unread_count
-        
-        # Get notifications by type
-        type_stats = {}
-        for notification_type in ["task", "leave", "wfh", "attendance", "system"]:
-            count = Notifications.count_documents({"userid": userid, "type": notification_type})
-            type_stats[notification_type] = count
-        
-        return {
-            "userid": userid,
-            "total_notifications": total_notifications,
-            "unread_count": unread_count,
-            "read_count": read_count,
-            "by_type": type_stats,
-            "timestamp": get_current_timestamp_iso()
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-        
-        # Create notification in database
-        result = create_notification(notification_data)
-        
-        # Send real-time notification if user is connected
-        asyncio.create_task(notification_manager.send_personal_notification(userid, notification_data))
-        
-        return {"status": "Test notification created", "notification": result}
-    except Exception as e:
-        return {"status": "Error", "message": str(e)}
-
 @app.post('/addjson',dependencies=[Depends(JWTBearer())])
 def Addjson(item:Item4):
     a=Mongo.Adddata(item.data,item.id,item.filename)
@@ -766,61 +593,13 @@ def clockout(Data: CT):
     result = Mongo.Clockout(userid=Data.userid, name=Data.name, time=time_str)
     return {"message": result}
 
-# Test endpoint for attendance notifications
-@app.post('/test-attendance-notification')
-def test_attendance_notification():
-    """Test endpoint to create sample attendance notifications"""
-    try:
-        # Create test notifications for the first user found
-        user = Mongo.Users.find_one()
-        if user:
-            userid = str(user["_id"])
-            
-            # Test clock-in notification
-            create_attendance_notification(
-                userid=userid,
-                message="Test clock-in notification - System working correctly!",
-                priority="low",
-                attendance_type="clock_in"
-            )
-            
-            # Test auto clock-out notification  
-            create_attendance_notification(
-                userid=userid,
-                message="Test auto clock-out notification - System working correctly!",
-                priority="medium", 
-                attendance_type="auto_clock_out"
-            )
-            
-            # Test missed clock-out notification
-            create_attendance_notification(
-                userid=userid,
-                message="Test missed clock-out notification - System working correctly!",
-                priority="high",
-                attendance_type="missed_clock_out"
-            )
-            
-            return {"message": f"Test notifications created for user {userid}"}
-        else:
-            return {"message": "No users found"}
-    except Exception as e:
-        return {"message": f"Error creating test notifications: {e}"}
-
-
 @app.post('/PreviousDayClockout')
 def previous_day_clockout(Data: CT):
     result = PreviousDayClockout(userid=Data.userid, name=Data.name)
     return {"message": result}
 
-
-# @app.post('/Clockout')
-# def clockout(Data: CT):
-#     total_hours_worked = Mongo.Clockout(userid=Data.userid,name=Data.name, time=Data.time)
-#     return {"message": f"Total hours worked today: {total_hours_worked} hours"}
-
 # Clockin Details
-@app.get("/clock-records/{userid}")
-@app.get("/clock-records/{userid}/")  # Also handle requests with trailing slash
+@app.get("/clock-records/{userid}")  
 async def get_clock_records(userid: str = Path(..., title="The name of the user whose clock records you want to fetch")):
     try:
         clock_records = attendance_details(userid)
@@ -1041,8 +820,7 @@ async def bonus_leave_request(item: Item9):
         raise HTTPException(status_code=400, detail=str(e))
 
 # Leave History
-@app.get("/leave-History/{userid}")
-@app.get("/leave-History/{userid}/")  # Also handle requests with trailing slash
+@app.get("/leave-History/{userid}/") 
 async def get_leave_History(userid: str = Path(..., title="The userid of the user")):
     try:
        
@@ -1052,41 +830,15 @@ async def get_leave_History(userid: str = Path(..., title="The userid of the use
         raise HTTPException(status_code=500, detail=str(e))
 
 
-
-
-# HR Page To Fetch Every Users Leave Requests
-# HR endpoint - Uses get_user_leave_requests
-@app.get("/all_users_leave_requests/")
-@app.get("/all_users_leave_requests")  # Also handle requests without trailing slash
+@app.get("/all_users_leave_requests") 
 async def fetch_user_leave_requests(selectedOption: str = Query(..., alias="selectedOption")):
     print(f"DEBUG: /all_users_leave_requests endpoint called - selectedOption: {selectedOption}")
     user_leave_requests = get_user_leave_requests(selectedOption) # HR sees recommended
     print(f"DEBUG: Returning {len(user_leave_requests) if user_leave_requests else 0} requests")
     return {"user_leave_requests": user_leave_requests or []}
 
-# Admin Page To Fetch Only Managers Leave Requests 
-# @app.get("/manager_leave_requests/")
-# async def fetch_manager_leave_requests(selectedOption: str = Query(..., alias="selectedOption")):
-#     user_leave_requests = get_manager_leave_requests(selectedOption)
-#     if not user_leave_requests:
-#         raise HTTPException(status_code=404, detail="No leave data found for the selected date")
-
-#     return {"user_leave_requests": user_leave_requests}
-
 # Admin Page To Fetch Only Managers Leave Requests
-# @app.get("/manager_leave_requests/")
-# async def fetch_manager_leave_requests(selectedOption: str = Query(..., alias="selectedOption")):
-#     user_leave_requests = get_manager_leave_requests(selectedOption)
-#     if not user_leave_requests:
-#         raise HTTPException(status_code=404, detail="No leave data found for the selected date")
-
-
-#     return {"user_leave_requests": user_leave_requests}
-
-
-# Admin Page To Fetch Only Managers Leave Requests
-@app.get("/manager_leave_requests/")
-@app.get("/manager_leave_requests")  # Also handle requests without trailing slash
+@app.get("/manager_leave_requests")
 async def fetch_manager_leave_requests(selectedOption: str = Query(..., alias="selectedOption")):
     print(f"DEBUG: /manager_leave_requests endpoint called - selectedOption: {selectedOption}")
     user_leave_requests = get_manager_leave_requests(selectedOption) # Admin sees manager requests
@@ -1094,8 +846,7 @@ async def fetch_manager_leave_requests(selectedOption: str = Query(..., alias="s
     return {"user_leave_requests": user_leave_requests or []}
 
 #TL,Manager Page To Fetch Only Users Leave Requests Under Their Team
-@app.get("/only_users_leave_requests/")
-@app.get("/only_users_leave_requests")  # Also handle requests without trailing slash
+@app.get("/only_users_leave_requests")
 async def fetch_users_leave_requests(selectedOption: str = Query(..., alias="selectedOption"), TL: str = Query(..., alias="TL")):
     print(f"DEBUG: Endpoint called - selectedOption: {selectedOption}, TL: {TL}")
     user_leave_requests = get_only_user_leave_requests(selectedOption, TL) # Manager sees new requests
@@ -1119,41 +870,6 @@ async def fetch_pending_leave():
 async def fetch_pending_leave(TL: str = Query(..., alias="TL")):
     result = users_leave_recommend_notification(TL)
     return result
-
-# HR page - Notify HR about pending leave approvals
-@app.get("/hr_leave_notification_reminder")
-async def fetch_hr_pending_leaves():
-    result = await notify_hr_pending_leaves()
-    return result
-
-# HR page - Force refresh HR notifications for recommended leaves
-@app.post("/hr_force_notification_refresh")
-async def force_hr_notification_refresh():
-    """Force refresh HR notifications for all pending recommended leaves"""
-    try:
-        result = await Mongo.notify_hr_pending_leaves()
-        return {"success": True, "result": result}
-    except Exception as e:
-        print(f"Error in force HR notification refresh: {e}")
-        return {"success": False, "error": str(e)}
-
-# Admin page - Notify admin about pending manager leave approvals
-@app.get("/admin_leave_notification_reminder")
-async def fetch_admin_pending_leaves():
-    """Notify admin about all pending manager leave requests"""
-    result = await Mongo.notify_admin_pending_leaves()
-    return result
-
-# Admin page - Force refresh admin notifications for pending manager leaves
-@app.post("/admin_force_notification_refresh")
-async def force_admin_notification_refresh():
-    """Force refresh admin notifications for all pending manager leave requests"""
-    try:
-        result = await Mongo.notify_admin_pending_leaves()
-        return {"success": True, "result": result}
-    except Exception as e:
-        print(f"Error in force admin notification refresh: {e}")
-        return {"success": False, "error": str(e)}
 
 # HR Page Leave Responses
 @app.put("/updated_user_leave_requests")
@@ -1443,8 +1159,7 @@ async def remote_work_request(request: RemoteWorkRequest):
   
 
 # Remote Work History    
-@app.get("/Remote-History/{userid}")
-@app.get("/Remote-History/{userid}/")  # Also handle requests with trailing slash
+@app.get("/Remote-History/{userid}") 
 async def get_Remote_History(userid:str = Path(..., title="The name of the user whose Remote History you want to fetch")):
     try:
         Remote_History = Remote_History_Details(userid)
@@ -1576,7 +1291,6 @@ async def update_remote_work_request_status(userid: str = Form(...), status: str
         raise HTTPException(status_code=500, detail=str(e))
    
 # Admin Page User Leave History
-@app.get("/approved-leave-history/{name}")
 @app.get("/approved-leave-history/{name}/")  # Also handle requests with trailing slash
 def get_leave_history(name: str = Path(..., title= "Team lead name")):
     leave_history = get_approved_leave_history(name)
@@ -1852,8 +1566,7 @@ async def permission_request(item: Item8):
         print(f"❌ Error in permission request: {e}")
         raise HTTPException(400, str(e))
    
-@app.get("/Other-leave-history/{userid}")
-@app.get("/Other-leave-history/{userid}/")  # Also handle requests with trailing slash
+@app.get("/Other-leave-history/{userid}/") 
 async def get_other_leave_history(userid: str = Path(..., title="The ID of the user")):
     try:
         # Call your function to get the leave history for the specified user
@@ -1865,8 +1578,6 @@ async def get_other_leave_history(userid: str = Path(..., title="The ID of the u
         # If an exception occurs, return a 500 Internal Server Error
         raise HTTPException(status_code=500, detail=str(e))
    
-   
-@app.get("/Permission-history/{userid}")
 @app.get("/Permission-history/{userid}/")  # Also handle requests with trailing slash
 async def get_Permission_history(userid: str = Path(..., title="The ID of the user")):
     try:
@@ -1879,10 +1590,7 @@ async def get_Permission_history(userid: str = Path(..., title="The ID of the us
         # If an exception occurs, return a 500 Internal Server Error
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
-@app.get("/leave_details/user/{userid}")
-@app.get("/leave_details/user/{userid}/")  # Also handle requests with trailing slash
+@app.get("/leave_details/user/{userid}")  # Also handle requests with trailing slash
 async def get_user_leave_details(
     userid: str,
     status_filter: str = Query("All", alias="statusFilter"),
@@ -1926,9 +1634,7 @@ async def get_user_leave_details(
 
 
 # ============== REMOTE WORK ENDPOINTS ==============
-
-@app.get("/remote_work_details/user/{userid}")
-@app.get("/remote_work_details/user/{userid}/")  # Also handle requests with trailing slash
+@app.get("/remote_work_details/user/{userid}")  # Also handle requests with trailing slash
 async def get_user_remote_work_details(
     userid: str,
     status_filter: str = Query("All", alias="statusFilter")
@@ -2540,25 +2246,6 @@ async def add_task(item: Tasklist):
     result = add_task_list(item.task, item.userid, item.date, item.due_date, assigned_by="self", priority=item.priority, subtasks=[subtask.dict() for subtask in item.subtasks])
     return {"task_id": result, "message": "Task added successfully"}
 
-
-@app.post("/manager_task_assign")
-async def task_assign(item:SingleTaskAssign):
-    # Parse the date to ensure it's in the correct format
-    parsed_date = datetime.strptime(item.date, "%Y-%m-%d").strftime("%d-%m-%Y")
-    due_date = datetime.strptime(item.due_date, "%Y-%m-%d").strftime("%d-%m-%Y")
-    # result = manager_task_assignment(item.task, item.userid, item.TL, parsed_date, due_date)
-    result = manager_task_assignment(
-    item.task,
-    item.userid,
-    item.TL,
-    parsed_date,
-    due_date,
-    assigned_by=item.TL,  
-    priority=item.priority
-)
-
-    return result
-
 from typing import Optional
 
 from datetime import datetime
@@ -2649,72 +2336,11 @@ async def trigger_deadline_check():
     except Exception as e:
         raise HTTPException(status_code=500, detail=f"Error checking deadlines: {str(e)}")
 
-@app.get("/task_notification_stats/{userid}")
-async def get_task_notification_stats(userid: str):
-    """Get task notification statistics for a user"""
-    try:
-        # Get task-related notification counts
-        total_task_notifications = Mongo.Notifications.count_documents({
-            "userid": userid,
-            "type": {"$in": ["task", "task_created", "task_updated", "task_manager_assigned", "task_due_soon", "task_overdue", "task_completed"]}
-        })
-        
-        unread_task_notifications = Mongo.Notifications.count_documents({
-            "userid": userid,
-            "type": {"$in": ["task", "task_created", "task_updated", "task_manager_assigned", "task_due_soon", "task_overdue", "task_completed"]},
-            "is_read": False
-        })
-        
-        # Get active tasks
-        active_tasks = Mongo.Tasks.count_documents({
-            "userid": userid,
-            "status": {"$ne": "Completed"}
-        })
-        
-        # Get overdue tasks
-        current_date = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%d-%m-%Y")
-        current_date_obj = datetime.strptime(current_date, "%d-%m-%Y")
-        
-        overdue_tasks = list(Mongo.Tasks.find({
-            "userid": userid,
-            "status": {"$ne": "Completed"}
-        }))
-        
-        overdue_count = 0
-        for task in overdue_tasks:
-            due_date_str = task.get("due_date")
-            if due_date_str:
-                try:
-                    due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
-                    if due_date < current_date_obj:
-                        overdue_count += 1
-                except ValueError:
-                    continue
-        
-        # Get notifications by type
-        notification_types = {}
-        for notification_type in ["task", "leave", "wfh", "attendance", "system"]:
-            count = Mongo.Notifications.count_documents({"userid": userid, "type": notification_type})
-            notification_types[notification_type] = count
-        
-        return {
-            "userid": userid,
-            "total_task_notifications": total_task_notifications,
-            "unread_task_notifications": unread_task_notifications,
-            "active_tasks": active_tasks,
-            "overdue_tasks": overdue_count,
-            "notification_types": notification_types
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting task notification stats: {str(e)}")
-    result = delete_a_task(taskid)
 @app.delete("/task_delete/{taskid}")
 async def task_delete(taskid: str):
     result = delete_a_task(taskid)
     return {"result": result}
 
-
-@app.get("/get_tasks/{userid}")
 @app.get("/get_tasks/{userid}/")  # Also handle requests with trailing slash
 async def get_tasks(userid: str):
     result = get_the_tasks(userid)
@@ -3042,95 +2668,6 @@ async def fetch_hr_self_tasks(userid: str, date: str = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Debug endpoint to check recent notifications for a user
-@app.get("/debug/notifications/{userid}")
-async def debug_notifications(userid: str):
-    try:
-        # Get recent notifications for the user
-        recent_notifications = list(Mongo.Notifications.find(
-            {"userid": userid}
-        ).sort("created_at", -1).limit(10))
-        
-        # Convert ObjectId to string and format dates
-        for notif in recent_notifications:
-            notif["_id"] = str(notif["_id"])
-            if "created_at" in notif:
-                notif["created_at"] = notif["created_at"].isoformat() + "Z"
-            if "updated_at" in notif:
-                notif["updated_at"] = notif["updated_at"].isoformat() + "Z"
-        
-        # Check WebSocket connection
-        is_connected = userid in notification_manager.active_connections
-        connection_count = notification_manager.get_user_connection_count(userid)
-        
-        return {
-            "userid": userid,
-            "recent_notifications": recent_notifications,
-            "is_connected": is_connected,
-            "connection_count": connection_count
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error checking overdue tasks: {str(e)}")
-
-@app.post("/tasks/check-upcoming-deadlines")
-async def manually_check_upcoming_deadlines():
-    """Manually trigger upcoming deadline check"""
-    try:
-        upcoming_count = await Mongo.check_upcoming_deadlines()
-        return {
-            "message": f"Checked upcoming deadlines successfully",
-            "upcoming_tasks_found": upcoming_count
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error checking upcoming deadlines: {str(e)}")
-
-@app.get("/tasks/overdue-summary")
-async def get_overdue_tasks_summary():
-    """Get summary of all overdue tasks"""
-    try:
-        current_time = datetime.now(pytz.timezone("Asia/Kolkata"))
-        current_date = current_time.strftime("%d-%m-%Y")
-        
-        # Find all incomplete tasks
-        incomplete_tasks = list(Mongo.Tasks.find({"status": {"$ne": "Completed"}}))
-        overdue_tasks = []
-        upcoming_tasks = []
-        
-        for task in incomplete_tasks:
-            due_date_str = task.get("due_date")
-            if due_date_str:
-                try:
-                    due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
-                    current_date_obj = datetime.strptime(current_date, "%d-%m-%Y")
-                    tomorrow = current_date_obj + timedelta(days=1)
-                    
-                    task_info = {
-                        "task_id": str(task["_id"]),
-                        "userid": task.get("userid"),
-                        "task": task.get("task"),
-                        "due_date": due_date_str,
-                        "status": task.get("status"),
-                        "TL": task.get("TL")
-                    }
-                    
-                    if due_date < current_date_obj:
-                        overdue_tasks.append(task_info)
-                    elif due_date.strftime("%d-%m-%Y") == tomorrow.strftime("%d-%m-%Y"):
-                        upcoming_tasks.append(task_info)
-                        
-                except ValueError:
-                    pass
-        
-        return {
-            "current_date": current_date,
-            "overdue_tasks": overdue_tasks,
-            "upcoming_tasks": upcoming_tasks,
-            "overdue_count": len(overdue_tasks),
-            "upcoming_count": len(upcoming_tasks)
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error getting task summary: {str(e)}")
-
 @app.get("/get_assigned_task")
 def get_assigned_tasks(TL: str = Query(..., alias="TL"), userid: str | None = Query(None, alias = "userid")):
     result = assigned_task(TL, userid)
@@ -3237,49 +2774,6 @@ async def get_notifications_by_type_endpoint(userid: str, notification_type: str
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-# Test endpoint to create sample notifications
-@app.post("/notifications/test/{userid}")
-async def create_test_notification(userid: str):
-    """Create a test notification - useful for testing the system"""
-    try:
-        from websocket_manager import notification_manager
-        
-        # Create test notification in database
-        notification_id = create_notification(
-            userid=userid,
-            title="Test Notification",
-            message="This is a test notification to verify the system is working correctly.",
-            notification_type="system",
-            priority="low",
-            action_url="/User/notifications",
-            metadata={"test": True}
-        )
-        
-        if notification_id:
-            # Send via WebSocket if connected
-            notification_data = {
-                "_id": notification_id,
-                "userid": userid,
-                "title": "Test Notification",
-                "message": "This is a test notification to verify the system is working correctly.",
-                "type": "system",
-                "priority": "low",
-                "action_url": "/User/notifications",
-                "metadata": {"test": True},
-                "is_read": False,
-                "created_at": datetime.now(pytz.timezone("Asia/Kolkata")).isoformat()
-            }
-            
-            await notification_manager.send_personal_notification(userid, notification_data)
-            
-            # Update unread count
-            unread_count = get_unread_notification_count(userid)
-            await notification_manager.send_unread_count_update(userid, unread_count)
-            
-        return {"message": "Test notification created successfully", "notification_id": notification_id}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 # WebSocket endpoint for real-time notifications
 @app.websocket("/ws/notifications/{userid}")
 async def websocket_endpoint(websocket: WebSocket, userid: str):
@@ -3330,332 +2824,6 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
     finally:
         # Ensure cleanup happens
         notification_manager.disconnect(websocket, userid)
-
-@app.post("/test-notification")
-async def create_test_notification(data: dict):
-    """Test endpoint to create a notification with current timestamp"""
-    try:
-        userid = data.get("userid", "test_user")
-        title = data.get("title", "Test Notification")
-        message = data.get("message", "Testing timestamp display")
-        
-        # Create notification using the fixed create_notification function
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title=title,
-            message=message,
-            notification_type="test",
-            priority="medium"
-        )
-        
-        if notification_id:
-            # Also send via WebSocket for real-time display
-            await notification_manager.send_personal_notification(
-                userid=userid,
-                notification_data={
-                    "_id": notification_id,
-                    "userid": userid,
-                    "title": title,
-                    "message": message,
-                    "type": "test",
-                    "priority": "medium",
-                    "is_read": False,
-                    "created_at": Mongo.get_current_timestamp_iso()
-                }
-            )
-            
-            return {"success": True, "notification_id": notification_id, "message": "Test notification created with current timestamp"}
-        else:
-            return {"success": False, "message": "Failed to create notification"}
-            
-    except Exception as e:
-        print(f"Error creating test notification: {e}")
-        return {"success": False, "error": str(e)}
-
-# Enhanced Leave and WFH Notification Endpoints
-
-@app.post("/notifications/leave/submitted")
-async def notify_leave_submitted_endpoint(data: dict):
-    """Create leave submitted notification"""
-    try:
-        userid = data.get("userid")
-        leave_type = data.get("leave_type", "Leave")
-        leave_id = data.get("leave_id")
-        
-        if not userid:
-            raise HTTPException(status_code=400, detail="userid is required")
-        
-        result = await Mongo.notify_leave_submitted(userid, leave_type, leave_id)
-        return {"success": True, "notification_id": result, "message": "Leave submitted notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating leave submitted notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/notifications/leave/approved")
-async def notify_leave_approved_endpoint(data: dict):
-    """Create leave approved notification"""
-    try:
-        userid = data.get("userid")
-        leave_type = data.get("leave_type", "Leave")
-        leave_id = data.get("leave_id")
-        
-        if not userid:
-            raise HTTPException(status_code=400, detail="userid is required")
-        
-        result = await Mongo.notify_leave_approved(userid, leave_type, leave_id)
-        return {"success": True, "notification_id": result, "message": "Leave approved notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating leave approved notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/notifications/leave/rejected")
-async def notify_leave_rejected_endpoint(data: dict):
-    """Create leave rejected notification"""
-    try:
-        userid = data.get("userid")
-        leave_type = data.get("leave_type", "Leave")
-        leave_id = data.get("leave_id")
-        reason = data.get("reason")
-        
-        if not userid:
-            raise HTTPException(status_code=400, detail="userid is required")
-        
-        result = await Mongo.notify_leave_rejected(userid, leave_type, leave_id, reason)
-        return {"success": True, "notification_id": result, "message": "Leave rejected notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating leave rejected notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/notifications/leave/recommended")
-async def notify_leave_recommended_endpoint(data: dict):
-    """Create leave recommended notification"""
-    try:
-        userid = data.get("userid")
-        leave_type = data.get("leave_type", "Leave")
-        manager_name = data.get("manager_name")
-        leave_id = data.get("leave_id")
-        
-        if not userid or not manager_name:
-            raise HTTPException(status_code=400, detail="userid and manager_name are required")
-        
-        result = await Mongo.notify_leave_recommended(userid, leave_type, manager_name, leave_id)
-        return {"success": True, "notification_id": result, "message": "Leave recommended notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating leave recommended notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/notifications/wfh/submitted")
-async def notify_wfh_submitted_endpoint(data: dict):
-    """Create WFH submitted notification"""
-    try:
-        userid = data.get("userid")
-        request_date = data.get("request_date")
-        wfh_id = data.get("wfh_id")
-        
-        if not userid:
-            raise HTTPException(status_code=400, detail="userid is required")
-        
-        result = await Mongo.notify_wfh_submitted(userid, request_date, wfh_id)
-        return {"success": True, "notification_id": result, "message": "WFH submitted notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating WFH submitted notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/notifications/wfh/approved")
-async def notify_wfh_approved_endpoint(data: dict):
-    """Create WFH approved notification"""
-    try:
-        userid = data.get("userid")
-        request_date = data.get("request_date")
-        wfh_id = data.get("wfh_id")
-        
-        if not userid:
-            raise HTTPException(status_code=400, detail="userid is required")
-        
-        result = await Mongo.notify_wfh_approved(userid, request_date, wfh_id)
-        return {"success": True, "notification_id": result, "message": "WFH approved notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating WFH approved notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/notifications/wfh/rejected")
-async def notify_wfh_rejected_endpoint(data: dict):
-    """Create WFH rejected notification"""
-    try:
-        userid = data.get("userid")
-        request_date = data.get("request_date")
-        wfh_id = data.get("wfh_id")
-        reason = data.get("reason")
-        
-        if not userid:
-            raise HTTPException(status_code=400, detail="userid is required")
-        
-        result = await Mongo.notify_wfh_rejected(userid, request_date, wfh_id, reason)
-        return {"success": True, "notification_id": result, "message": "WFH rejected notification sent"}
-        
-    except Exception as e:
-        print(f"Error creating WFH rejected notification: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/test/notifications/manager-workflow/{userid}")
-async def test_manager_workflow_notifications(userid: str):
-    """Test endpoint for complete leave/WFH manager notification workflow"""
-    try:
-        # Get user details
-        user = Mongo.Users.find_one({"_id": Mongo.ObjectId(userid)})
-        if not user:
-            return {"error": "User not found"}
-        
-        user_name = user.get("name", "Test User")
-        
-        results = []
-        
-        # Test 1: Leave submission notification to employee
-        result1 = await Mongo.notify_leave_submitted(userid, "Test Leave", "test_leave_001")
-        results.append({"test": "Employee Leave Notification", "result": result1})
-        
-        # Test 2: WFH submission notification to employee  
-        result2 = await Mongo.notify_wfh_submitted(userid, "2025-09-10", "test_wfh_001")
-        results.append({"test": "Employee WFH Notification", "result": result2})
-        
-        # Test 3: Manager notifications (if manager exists)
-        manager_id = await Mongo.get_user_manager_id(userid)
-        if manager_id:
-            # Test leave manager notification
-            result3 = await Mongo.notify_manager_leave_request(
-                employee_name=user_name,
-                employee_id=userid,
-                leave_type="Test Leave",
-                leave_date="10-09-2025",
-                manager_id=manager_id,
-                leave_id="test_leave_001"
-            )
-            results.append({"test": "Manager Leave Approval Notification", "result": result3})
-            
-            # Test WFH manager notification
-            result4 = await Mongo.notify_manager_wfh_request(
-                employee_name=user_name,
-                employee_id=userid,
-                request_date_from="2025-09-15",
-                request_date_to="2025-09-15",
-                manager_id=manager_id,
-                wfh_id="test_wfh_001"
-            )
-            results.append({"test": "Manager WFH Approval Notification", "result": result4})
-        else:
-            results.append({"test": "Manager Notifications", "result": "No manager found for user"})
-        
-        return {
-            "message": "Manager workflow notification test completed",
-            "user": user_name,
-            "manager_id": manager_id,
-            "results": results
-        }
-        
-    except Exception as e:
-        print(f"Error testing manager workflow notifications: {e}")
-        return {"error": str(e)}
-
-@app.post("/test/enhanced-notifications/{userid}")
-async def test_enhanced_notifications_endpoint(userid: str):
-    """Test endpoint for enhanced leave and WFH notifications"""
-    try:
-        results = []
-        
-        # Test Leave Notifications
-        result1 = await Mongo.notify_leave_submitted(userid, "Annual Leave", "leave_test_001")
-        results.append(f"Leave submitted: {result1}")
-        
-        await asyncio.sleep(0.5)  # Brief delay between notifications
-        
-        result2 = await Mongo.notify_leave_recommended(userid, "Annual Leave", "John Smith", "leave_test_001")
-        results.append(f"Leave recommended: {result2}")
-        
-        await asyncio.sleep(0.5)
-        
-        result3 = await Mongo.notify_leave_approved(userid, "Annual Leave", "leave_test_001")
-        results.append(f"Leave approved: {result3}")
-        
-        # Test WFH Notifications
-        await asyncio.sleep(0.5)
-        
-        result4 = await Mongo.notify_wfh_submitted(userid, "2025-09-10", "wfh_test_001")
-        results.append(f"WFH submitted: {result4}")
-        
-        await asyncio.sleep(0.5)
-        
-        result5 = await Mongo.notify_wfh_approved(userid, "2025-09-10", "wfh_test_001")
-        results.append(f"WFH approved: {result5}")
-        
-        # Test rejection scenarios
-        await asyncio.sleep(0.5)
-        
-        result6 = await Mongo.notify_leave_rejected(userid, "Sick Leave", "leave_test_002", "Insufficient documentation")
-        results.append(f"Leave rejected: {result6}")
-        
-        await asyncio.sleep(0.5)
-        
-        result7 = await Mongo.notify_wfh_rejected(userid, "2025-09-15", "wfh_test_002", "Team meeting scheduled")
-        results.append(f"WFH rejected: {result7}")
-        
-        return {
-            "success": True, 
-            "message": "Enhanced notification test completed",
-            "results": results,
-            "total_notifications": len(results)
-        }
-        
-    except Exception as e:
-        print(f"Error testing enhanced notifications: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/test/admin-notifications")
-async def test_admin_notifications():
-    """Test endpoint for admin notification system"""
-    try:
-        results = []
-        
-        # Test 1: Check if admin IDs can be retrieved
-        admin_ids = await Mongo.get_admin_user_ids()
-        results.append(f"Admin IDs found: {admin_ids}")
-        
-        if not admin_ids:
-            return {
-                "success": False,
-                "message": "No admin users found - this is why admin is not getting notifications!",
-                "results": results
-            }
-        
-        # Test 2: Test admin notification for a sample manager leave
-        result1 = await Mongo.notify_admin_manager_leave_request(
-            manager_name="Test Manager",
-            manager_id="test_manager_001",
-            leave_type="Test Leave",
-            leave_date="10-09-2025",
-            leave_id="test_leave_admin_001"
-        )
-        results.append(f"Admin manager leave notification: {result1}")
-        
-        # Test 3: Test admin pending leaves notification
-        result2 = await Mongo.notify_admin_pending_leaves()
-        results.append(f"Admin pending leaves notification: {result2}")
-        
-        return {
-            "success": True,
-            "message": "Admin notification test completed",
-            "results": results,
-            "admin_count": len(admin_ids)
-        }
-        
-    except Exception as e:
-        print(f"Error testing admin notifications: {e}")
-        return {"success": False, "error": str(e)}
 
 @app.get("/debug/admin-data")
 async def debug_admin_data():
@@ -3711,69 +2879,6 @@ async def debug_admin_data():
         
     except Exception as e:
         print(f"Error in admin debug: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/test/hr-wfh-notifications")
-async def test_hr_wfh_notifications():
-    """Test endpoint for HR WFH notification system"""
-    try:
-        results = []
-        
-        # Test HR notification for pending WFH requests
-        result1 = await Mongo.notify_hr_pending_wfh()
-        results.append(f"HR pending WFH notifications: {result1}")
-        
-        # Test individual HR recommended WFH notification
-        result2 = await Mongo.notify_hr_recommended_wfh(
-            employee_name="Test Employee",
-            employee_id="test_employee_id",
-            request_date_from="15-09-2025",
-            request_date_to="15-09-2025",
-            recommended_by="Test Manager",
-            wfh_id="test_wfh_001"
-        )
-        results.append(f"HR recommended WFH notification: {result2}")
-        
-        return {
-            "success": True,
-            "message": "HR WFH notification test completed",
-            "results": results,
-            "note": "Check HR users for new notifications"
-        }
-        
-    except Exception as e:
-        print(f"Error in HR WFH notification test: {e}")
-        return {"success": False, "error": str(e)}
-
-@app.post("/test/admin-wfh-notifications")
-async def test_admin_wfh_notifications():
-    """Test endpoint for admin WFH notification system"""
-    try:
-        results = []
-        
-        # Test admin notification for pending WFH requests
-        result1 = await Mongo.notify_admin_pending_wfh()
-        results.append(f"Admin pending WFH notifications: {result1}")
-        
-        # Test individual admin manager WFH notification
-        result2 = await Mongo.notify_admin_manager_wfh_request(
-            manager_name="Test Manager",
-            manager_id="test_manager_id",
-            request_date_from="2025-09-15",
-            request_date_to="2025-09-15",
-            wfh_id="test_wfh_001"
-        )
-        results.append(f"Admin manager WFH notification: {result2}")
-        
-        return {
-            "success": True,
-            "message": "Admin WFH notification test completed",
-            "results": results,
-            "note": "Check admin users for new notifications"
-        }
-        
-    except Exception as e:
-        print(f"Error in admin WFH notification test: {e}")
         return {"success": False, "error": str(e)}
 
 if __name__ == "__main__":
@@ -4729,144 +3834,6 @@ async def add_task_subtask(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.post("/tasks/test-notifications/{taskid}")
-async def test_task_notifications(taskid: str):
-    """Test all task notification types for a specific task"""
-    try:
-        # Get task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        userid = task.get("userid")
-        task_title = task.get("task", "Test Task")
-        
-        notifications_sent = []
-        
-        # Test different notification types
-        
-        # 1. Task Creation Notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="Task Created Successfully",
-            message=f"Your task '{task_title}' has been created successfully.",
-            notification_type="task",
-            priority="medium",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "Created"}
-        )
-        notifications_sent.append({"type": "creation", "id": notification_id})
-        
-        # 2. Task Update Notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="Task Updated",
-            message=f"Your task '{task_title}' has been updated. Changes: status to In Progress, priority to High",
-            notification_type="task",
-            priority="medium",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "Updated", "changes": {"status": "In Progress", "priority": "High"}}
-        )
-        notifications_sent.append({"type": "update", "id": notification_id})
-        
-        # 3. Comment Notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="New Comment Added",
-            message=f"Test User added a comment to your task '{task_title}': 'This is a test comment for notification testing'",
-            notification_type="task",
-            priority="medium",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "Comment Added", "comment_text": "This is a test comment for notification testing"}
-        )
-        notifications_sent.append({"type": "comment", "id": notification_id})
-        
-        # 4. File Upload Notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="File Uploaded",
-            message=f"Test User uploaded a file 'test_document.pdf' to your task '{task_title}'.",
-            notification_type="task",
-            priority="medium",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "File Uploaded", "filename": "test_document.pdf"}
-        )
-        notifications_sent.append({"type": "file_upload", "id": notification_id})
-        
-        # 5. Status Change Notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="Task Status Updated",
-            message=f"Your task '{task_title}' status has been changed from 'Not completed' to 'Completed'.",
-            notification_type="task",
-            priority="high",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "Status Changed", "old_status": "Not completed", "new_status": "Completed"}
-        )
-        notifications_sent.append({"type": "status_change", "id": notification_id})
-        
-        # 6. Deadline Approach Notification (due tomorrow)
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="Task Deadline Approaching",
-            message=f"Your task '{task_title}' is due tomorrow. Please ensure it's completed on time.",
-            notification_type="task",
-            priority="high",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "Deadline Approaching", "days_remaining": 1}
-        )
-        notifications_sent.append({"type": "deadline_approach", "id": notification_id})
-        
-        # 7. Overdue Task Notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="Task Overdue",
-            message=f"Your task '{task_title}' is 2 days overdue. This requires immediate attention.",
-            notification_type="task",
-            priority="critical",
-            action_url=Mongo.get_role_based_action_url(userid, "task"),
-            related_id=taskid,
-            metadata={"task_title": task_title, "action": "Overdue", "days_overdue": 2}
-        )
-        notifications_sent.append({"type": "overdue", "id": notification_id})
-        
-        # 8. Test Hierarchy-based Task Completion Notifications
-        # Check if user is manager or employee and test appropriate notification path
-        user = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        if user:
-            user_name = user.get("name", "Test User")
-            assigned_by_id = task.get("assigned_by")
-            
-            # Test the enhanced task completion notification
-            completion_notification_ids = await Mongo.create_task_completion_notification(
-                assignee_id=userid,
-                manager_id=assigned_by_id,
-                task_title=task_title,
-                assignee_name=user_name,
-                task_id=taskid
-            )
-            
-            if completion_notification_ids:
-                for notif_id in completion_notification_ids:
-                    notifications_sent.append({"type": "hierarchy_completion", "id": notif_id})
-        
-        return {
-            "message": "All task notification types tested successfully (including enhanced hierarchy-based completion)",
-            "task_id": taskid,
-            "task_title": task_title,
-            "notifications_sent": notifications_sent,
-            "total_notifications": len(notifications_sent)
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.post("/tasks/trigger-deadline-reminders")
 async def trigger_deadline_reminders():
     """Manually trigger deadline reminder checks"""
@@ -4885,145 +3852,6 @@ async def trigger_deadline_reminders():
             "upcoming_deadlines": upcoming_result,
             "overdue_tasks": overdue_result,
             "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/tasks/{taskid}/notification-history")
-async def get_task_notification_history(taskid: str):
-    """Get notification history for a specific task"""
-    try:
-        # Get all notifications related to this task
-        notifications = list(Mongo.Notifications.find({
-            "related_id": taskid,
-            "notification_type": "task"
-        }).sort("created_at", -1).limit(50))
-        
-        # Convert ObjectId to string for JSON serialization
-        for notification in notifications:
-            notification["_id"] = str(notification["_id"])
-            if "created_at" in notification and isinstance(notification["created_at"], datetime):
-                notification["created_at"] = notification["created_at"].isoformat()
-        
-        return {
-            "task_id": taskid,
-            "notification_count": len(notifications),
-            "notifications": notifications
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/tasks/notification-summary")
-async def get_task_notification_summary():
-    """Get summary of all task-related notifications"""
-    try:
-        # Get notification counts by type
-        pipeline = [
-            {"$match": {"notification_type": "task"}},
-            {"$group": {
-                "_id": "$metadata.action",
-                "count": {"$sum": 1}
-            }},
-            {"$sort": {"count": -1}}
-        ]
-        
-        action_counts = list(Mongo.Notifications.aggregate(pipeline))
-        
-        # Get recent notifications
-        recent_notifications = list(Mongo.Notifications.find({
-            "notification_type": "task"
-        }).sort("created_at", -1).limit(20))
-        
-        # Convert ObjectId to string
-        for notification in recent_notifications:
-            notification["_id"] = str(notification["_id"])
-            if "created_at" in notification and isinstance(notification["created_at"], datetime):
-                notification["created_at"] = notification["created_at"].isoformat()
-        
-        return {
-            "total_task_notifications": sum(item["count"] for item in action_counts),
-            "action_breakdown": action_counts,
-            "recent_notifications": recent_notifications,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/test-simple-notification/{userid}")
-async def test_simple_notification(userid: str):
-    """Create a simple test notification to verify the system is working"""
-    try:
-        # Create a simple notification
-        notification_id = Mongo.create_notification(
-            userid=userid,
-            title="Test Notification",
-            message="This is a test notification to verify the system is working correctly.",
-            notification_type="system",
-            priority="medium",
-            metadata={"test": True}
-        )
-        
-        # Try to send via WebSocket
-        try:
-            from websocket_manager import notification_manager
-            await notification_manager.send_personal_notification(userid, {
-                "_id": notification_id,
-                "title": "Test Notification", 
-                "message": "This is a test notification to verify the system is working correctly.",
-                "type": "system",
-                "priority": "medium",
-                "timestamp": datetime.now().isoformat()
-            })
-            websocket_sent = True
-        except Exception as ws_error:
-            print(f"WebSocket error: {ws_error}")
-            websocket_sent = False
-        
-        return {
-            "success": True,
-            "notification_id": notification_id,
-            "userid": userid,
-            "websocket_sent": websocket_sent,
-            "message": "Test notification created successfully"
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/debug-notifications/{userid}")
-async def debug_notifications(userid: str):
-    """Debug notification system for a specific user"""
-    try:
-        from websocket_manager import notification_manager
-        
-        # Check database notifications
-        db_notifications = list(Mongo.Notifications.find({"userid": userid}).sort("created_at", -1).limit(10))
-        for notification in db_notifications:
-            notification["_id"] = str(notification["_id"])
-            if "created_at" in notification and isinstance(notification["created_at"], datetime):
-                notification["created_at"] = notification["created_at"].isoformat()
-        
-        # Check WebSocket connections
-        is_connected = userid in notification_manager.active_connections
-        connection_count = notification_manager.get_user_connection_count(userid)
-        
-        # Get user info
-        user = Mongo.Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
-        user_name = user.get("name", "Unknown") if user else "User not found"
-        
-        return {
-            "userid": userid,
-            "user_name": user_name,
-            "user_exists": user is not None,
-            "websocket_connected": is_connected,
-            "connection_count": connection_count,
-            "active_users": notification_manager.get_active_users(),
-            "total_db_notifications": len(db_notifications),
-            "recent_notifications": db_notifications,
-            "unread_count": Mongo.get_unread_notification_count(userid)
         }
         
     except Exception as e:

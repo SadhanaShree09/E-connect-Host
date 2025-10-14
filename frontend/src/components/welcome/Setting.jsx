@@ -1,9 +1,9 @@
 import React, { useState } from "react";
 import "./setting.css";
 import { useLocation } from "react-router-dom";
-import Navbar from "./Navbar";
+import Navbar from "../welcome/Navbar";
 import { AiOutlineMenuUnfold } from "react-icons/ai";
-import "./json.css";
+import "../json.css";
 function Setting() {
   const location = useLocation();
   let path = location.pathname.split("/")[2];

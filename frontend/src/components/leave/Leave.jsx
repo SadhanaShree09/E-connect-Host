@@ -51,7 +51,7 @@ const LeaveApplication = () => {
                   Submit your leave request
                 </p>
               </div>
-              <Link to={"/User/Leaverequest"}>
+              <Link to={"/User/Leave/Leaverequest"}>
                 <button
                   className={`mt-3 px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black  active:bg-white active:text-white ${
                     showDetails ? "opacity-70 cursor-not-allowed" : ""
@@ -78,7 +78,7 @@ const LeaveApplication = () => {
                   Check your leave records
                 </p>
               </div>
-              <Link to={"/User/LeaveHistory"}>
+              <Link to={"/User/Leave/LeaveHistory"}>
                 <button
                  className={`mt-3 px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black  active:bg-white active:text-white ${
                     showLeaveDetails ? "opacity-70 cursor-not-allowed" : ""
@@ -105,7 +105,7 @@ const LeaveApplication = () => {
                    Check upcoming Holidays
                 </p>
               </div>
-              <Link to={"/User/Holidaylist"}>
+              <Link to={"/User/Leave/Holidaylist"}>
                 <button
                   className={`mt-3 px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black  active:bg-white active:text-white ${
                     showHolidayList ? "opacity-70 cursor-not-allowed" : ""
@@ -132,7 +132,7 @@ const LeaveApplication = () => {
                   Apply for the Remote Work
                 </p>
               </div>
-              <Link to={"/User/Workfromhome"}>
+              <Link to={"/User/Leave/Workfromhome"}>
                 <button
                   className={`mt-3 px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black  active:bg-white active:text-white ${
                     showDetails ? "opacity-70 cursor-not-allowed" : ""

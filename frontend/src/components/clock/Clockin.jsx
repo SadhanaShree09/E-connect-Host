@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 import { FaClock, FaSignInAlt, FaSignOutAlt, FaSpinner, FaCheckCircle, FaTimesCircle, FaCalendarDay } from "react-icons/fa";
-import { Baseaxios, LS  ,ipadr } from "../Utils/Resuse";
+import { Baseaxios, LS  ,ipadr } from "../../Utils/Resuse";
 
 function Clockin() {
   const [Login, setLogin] = useState(false);

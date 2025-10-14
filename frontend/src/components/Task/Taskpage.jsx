@@ -264,12 +264,13 @@ const TaskPage = () => {
         endpoint = selectedDate
           ? `${ipadr}/get_manager_hr_tasks/${userId}?date=${selectedDate}`
           : `${ipadr}/get_manager_hr_tasks/${userId}`;
-      } else if (LS.get("position") === "HR") {
-        // HR → only self-assigned tasks
-        endpoint = selectedDate
-          ? `${ipadr}/get_hr_self_tasks/${userId}?date=${selectedDate}`
-          : `${ipadr}/get_hr_self_tasks/${userId}`;
       }
+      // else if (LS.get("position") === "HR") {
+      //   // HR → only self-assigned tasks
+      //   endpoint = selectedDate
+      //     ? `${ipadr}/get_hr_self_tasks/${userId}?date=${selectedDate}`
+      //     : `${ipadr}/get_hr_self_tasks/${userId}`;
+      // }
 
       const response = await fetch(endpoint);
 

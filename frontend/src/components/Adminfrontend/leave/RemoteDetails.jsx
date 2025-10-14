@@ -287,7 +287,7 @@ const RemoteDetails = () => {
             Remote Work Management Dashboard
           </h1>
           <div>
-            <Link to={isAdmin ? "/admin/leave_details" : "/User/leave_details"}>
+            <Link to={isAdmin ? "/admin/LeaveManage/leave_details" : "/User/LeaveManage/leave_details"}>
               <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                 Back
               </button>

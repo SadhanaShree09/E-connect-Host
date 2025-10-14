@@ -381,9 +381,9 @@ const NotificationDashboard = () => {
         case 'leave_hr_pending':
         case 'leave_final_approval_required':
           if (isAdminLevel) {
-            targetUrl = '/admin/leaveapproval';
+            targetUrl = '/admin/LeaveManage/leaveapproval';
           } else {
-            targetUrl = '/User/LeaveHistory';
+            targetUrl = '/User/Leave/LeaveHistory';
           }
           break;
 
@@ -391,7 +391,7 @@ const NotificationDashboard = () => {
         case 'leave_admin_pending':
         case 'leave_manager_pending':
           if (isAdminLevel) {
-            targetUrl = '/admin/leaveapproval';
+            targetUrl = '/admin/LeaveManage/leaveapproval';
           } else {
             targetUrl = '/User/Leave';
           }
@@ -406,9 +406,9 @@ const NotificationDashboard = () => {
         case 'wfh_hr_pending':
         case 'wfh_final_approval_required':
           if (isAdminLevel) {
-            targetUrl = '/admin/wfh';
+            targetUrl = '/admin/LeaveManage/wfh';
           } else {
-            targetUrl = '/User/Remote_details';
+            targetUrl = '/User/Leave/LeaveHistory/Remote_details';
           }
           break;
 
@@ -416,9 +416,9 @@ const NotificationDashboard = () => {
         case 'wfh_admin_pending':
         case 'wfh_manager_pending':
           if (isAdminLevel) {
-            targetUrl = '/admin/wfh';
+            targetUrl = '/admin/LeaveManage/wfh';
           } else {
-            targetUrl = '/User/Workfromhome';
+            targetUrl = '/User/Leave/Workfromhome';
           }
           break;
 
@@ -454,13 +454,13 @@ const NotificationDashboard = () => {
             if (actionUrl.startsWith('/User/') && isAdminLevel) {
               // Map user URLs to admin equivalents for admin/HR users
               if (actionUrl.includes('LeaveHistory')) {
-                actionUrl = '/admin/leaveapproval';
+                actionUrl = '/admin/LeaveManage/leaveapproval';
               } else if (actionUrl.includes('Leave')) {
-                actionUrl = '/admin/leave';
+                actionUrl = '/admin/LeaveManage';
               } else if (actionUrl.includes('Remote_details')) {
-                actionUrl = '/admin/wfh_details';
+                actionUrl = '/admin/LeaveManage/leave_details/wfh_details';
               } else if (actionUrl.includes('Workfromhome')) {
-                actionUrl = '/admin/wfh';
+                actionUrl = '/admin/LeaveManage/wfh';
               } else if (actionUrl.includes('Task/TaskProgress')) {
                 actionUrl = '/admin/task';
               } else if (actionUrl.includes('Task/Todo/TaskPage')) {
@@ -475,22 +475,22 @@ const NotificationDashboard = () => {
             } else if ((actionUrl.startsWith('/Admin/') || actionUrl.startsWith('/HR/')) && !isAdminLevel) {
               // Map admin/HR URLs to user equivalents for regular users
               if (actionUrl.includes('leaveapproval') || actionUrl.includes('leave_details')) {
-                actionUrl = '/User/LeaveHistory';
+                actionUrl = '/User/Leave/LeaveHistory';
               } else if (actionUrl.includes('leave')) {
                 actionUrl = '/User/Leave';
               } else if (actionUrl.includes('wfh_details')) {
-                actionUrl = '/User/Remote_details';
+                actionUrl = '/User/Leave/LeaveHistory/Remote_details';
               } else if (actionUrl.includes('wfh')) {
-                actionUrl = '/User/Workfromhome';
+                actionUrl = '/User/Leave/Workfromhome';
               } else if (actionUrl.includes('task') || actionUrl.includes('Task')) {
                 actionUrl = '/User/Task/Todo';
               }
             } else if (actionUrl.startsWith('/HR/') && isAdminLevel) {
               // Map old HR URLs to admin equivalents
               if (actionUrl.includes('leave')) {
-                actionUrl = '/admin/leaveapproval';
+                actionUrl = '/admin/LeaveManage/leaveapproval';
               } else if (actionUrl.includes('wfh')) {
-                actionUrl = '/admin/wfh';
+                actionUrl = '/admin/LeaveManage/wfh';
               } else if (actionUrl.includes('task') || actionUrl.includes('Task')) {
                 actionUrl = '/admin/task';
               }

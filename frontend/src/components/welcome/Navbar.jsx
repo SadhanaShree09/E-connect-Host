@@ -1,9 +1,9 @@
 import { SlArrowDown } from "react-icons/sl";
-import Headlogo from "../assets/chat.png";
+import Headlogo from "../../assets/chat.png";
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { AiFillCloseCircle } from "react-icons/ai";
-import { LS } from "../Utils/Resuse";
+import { LS } from "../../Utils/Resuse";
 export default function Navbar({ path, togglebtn }) {
   const navigate = useNavigate();
 

@@ -2099,61 +2099,6 @@ def add_task_list(task, userid, date, due_date, assigned_by="self",priority="Med
     
     return str(result.inserted_id)
 
-def manager_task_assignment(task:str, userid: str, TL, today, due_date, assigned_by=None, priority="Medium"):
-    task_entry = {
-        "task": task,
-        "status": "Not completed",
-        "date": today,
-        "due_date": due_date,
-        "userid": userid,
-        "TL": TL,
-        "assigned_by": assigned_by or TL,
-        "priority": priority,
-        "subtasks": [],
-        "comments": [],
-        "files": [],
-        "created_at": get_current_timestamp_iso()
-    }
-    result = Tasks.insert_one(task_entry)
-    
-    # Create notification for task assignment
-    try:
-        # Use the enhanced notification function for the assignee
-        import asyncio
-        asyncio.create_task(create_task_manager_assigned_notification(
-            userid=userid,
-            task_title=task,
-            manager_name=assigned_by or TL,
-            task_id=str(result.inserted_id),
-            due_date=due_date,
-            priority="high"
-        ))
-        
-        # Notify the manager/assigner
-        if assigned_by or TL:
-            manager_id = assigned_by or TL
-            user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
-            assignee_name = user.get("name", "Employee") if user else "Employee"
-            
-            create_notification(
-                userid=manager_id,
-                title="Task Assignment Confirmed",
-                message=f"You have successfully assigned the task '{task}' to {assignee_name}.",
-                notification_type="task",
-                priority="medium",
-                action_url=get_role_based_action_url(manager_id, "manager_task"),
-                related_id=str(result.inserted_id),
-                metadata={
-                    "task_title": task,
-                    "action": "Assignment Confirmed",
-                    "assignee_name": assignee_name
-                }
-            )
-    except Exception as e:
-        print(f"Error creating task assignment notification: {e}")
-    
-    return str(result.inserted_id)
-
 def edit_the_task(
     taskid,
     userid,
@@ -3760,24 +3705,24 @@ def get_role_based_action_url(userid, notification_type, base_path=None):
             
             # Leave-related notifications
             'leave': {
-                'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'admin': '/approval',
+                'user': '/User/Leave/LeaveHistory'
             },
             'leave_submitted': {
                 'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'user': '/User/Leave/LeaveHistory'
             },
             'leave_approved': {
                 'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'user': '/User/Leave/LeaveHistory'
             },
             'leave_rejected': {
                 'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'user': '/User/Leave/LeaveHistory'
             },
             'leave_recommended': {
                 'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'user': '/User/Leave/LeaveHistory'
             },
             'leave_admin_pending': {
                 'admin': '/admin/leaveapproval',
@@ -3789,49 +3734,49 @@ def get_role_based_action_url(userid, notification_type, base_path=None):
             },
             'leave_hr_final_approval': {
                 'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'user': '/User/Leave/LeaveHistory'
             },
             'leave_final_approval_required': {
                 'admin': '/admin/leaveapproval',
-                'user': '/User/LeaveHistory'
+                'user': '/User/Leave/LeaveHistory'
             },
             
             # WFH-related notifications
             'wfh': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             'wfh_submitted': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             'wfh_approved': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             'wfh_rejected': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             'wfh_admin_pending': {
-                'admin': '/admin/wfh',
-                'user': '/User/Workfromhome'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/Workfromhome'
             },
             'wfh_manager_pending': {
-                'admin': '/admin/wfh',
-                'user': '/User/Workfromhome'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/Workfromhome'
             },
             'wfh_hr_final_approval': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             'wfh_hr_pending': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             'wfh_final_approval_required': {
-                'admin': '/admin/wfh',
-                'user': '/User/Remote_details'
+                'admin': '/admin/LeaveManage/wfh',
+                'user': '/User/Leave/LeaveHistory/Remote_details'
             },
             
             # Attendance-related notifications

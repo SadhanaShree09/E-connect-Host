@@ -1,8 +1,8 @@
 import React, { useState } from "react";
-import { Apisignin } from "../Api/Loginauth";
+import { Apisignin } from "../../Api/Loginauth";
 import { useNavigate } from "react-router-dom";
 import { Toaster, toast } from "react-hot-toast";
-import { LS } from "../Utils/Resuse";
+import { LS } from "../../Utils/Resuse";
 
 export default function Signin() {
   const navigate = useNavigate();

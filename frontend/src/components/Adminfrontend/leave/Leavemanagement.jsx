@@ -12,32 +12,32 @@ const Leavemanagement = () => {
       desc: "Easy tracking of employee leave requests",
       icon: <FontAwesomeIcon icon={faUserClock} className="text-6xl mb-6 text-zinc-700" />,
       button: "View now",
-      link1: "/admin/leaveapproval",
-      link2: "/User/leaveapproval"
+      link1: "/admin/LeaveManage/leaveapproval",
+      link2: "/User/LeaveManage/leaveapproval"
     },
     {
       title: "Remote Work Approval",
       desc: "Easy tracking of employee remote work requests",
       icon: <FontAwesomeIcon icon={faHome} className="text-6xl mb-6 text-zinc-700" />,
       button: "View now",
-      link1: "/admin/wfh",
-      link2:"/User/wfh",
+      link1: "/admin/LeaveManage/wfh",
+      link2:"/User/LeaveManage/wfh",
     },
     {
       title: "Employees Leave Details",
       desc: "Easy tracking of employee leave details",
       icon: <FontAwesomeIcon icon={faClipboardList} className="text-6xl mb-6 text-zinc-700" />,
       button: "View now",
-      link1: "/admin/leave_details",
-      link2:"/User/leave_details"
+      link1: "/admin/LeaveManage/leave_details",
+      link2:"/User/LeaveManage/leave_details"
     },
     {
       title: "Employees Attendance Percentage",
       desc: "Easy tracking of employee attendance percentage",
       icon: <FontAwesomeIcon icon={faCalendarDay} className="text-6xl mb-6 text-zinc-700" />,
       button: "View now",
-      link1: "/admin/attendance",
-      link2:"/User/attendance"
+      link1: "/admin/LeaveManage/attendance",
+      link2:"/User/LeaveManage/attendance"
     },
   ];
 

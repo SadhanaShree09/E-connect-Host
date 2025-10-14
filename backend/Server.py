@@ -599,7 +599,7 @@ def previous_day_clockout(Data: CT):
     return {"message": result}
 
 # Clockin Details
-@app.get("/clock-records/{userid}/")  # Also handle requests with trailing slash
+@app.get("/clock-records/{userid}")  
 async def get_clock_records(userid: str = Path(..., title="The name of the user whose clock records you want to fetch")):
     try:
         clock_records = attendance_details(userid)

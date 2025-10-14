@@ -18,7 +18,7 @@ import "react-toastify/dist/ReactToastify.css";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import axios from "axios";
-import { LS,ipadr } from "../../Utils/Resuse";
+import { LS,ipadr } from "../Utils/Resuse";
 import Fileuploader from './components/Docs/Fileuploader'; 
 
 export default function EmployeeDashboard() {

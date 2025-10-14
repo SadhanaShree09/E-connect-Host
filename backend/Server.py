@@ -2471,6 +2471,172 @@ async def get_task_file(taskid: str, fileid: str):
     except Exception:
         raise HTTPException(status_code=404, detail="File not found in GridFS")
 
+
+
+@app.post("/tasks/{taskid}/comments")
+async def add_task_comment(
+    taskid: str,
+    comment: str = Form(...),
+    userid: str = Form(...)
+):
+    """Add comment to task and send notifications"""
+    try:
+        # Get current task
+        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Create comment object
+        comment_obj = {
+            "id": str(uuid.uuid4()),
+            "text": comment,
+            "userId": userid,
+            "timestamp": datetime.now().isoformat(),
+            "userName": ""  # Will be populated from user data
+        }
+        
+        # Get user name
+        user = Mongo.Users.find_one({"_id": ObjectId(userid)})
+        if user:
+            comment_obj["userName"] = user.get("name", "Unknown User")
+        
+        # Add comment to task
+        Mongo.Tasks.update_one(
+            {"_id": ObjectId(taskid)},
+            {"$push": {"comments": comment_obj}}
+        )
+        
+        # Send notifications
+        task_title = task.get("task", "Task")
+        task_userid = task.get("userid")
+        
+        # Get commenter name
+        commenter = Mongo.Users.find_one({"_id": ObjectId(userid)})
+        commenter_name = commenter.get("name", "Team Member") if commenter else "Team Member"
+        
+        # Notify task owner if comment is by someone else
+        if task_userid and userid != task_userid:
+            Mongo.create_notification(
+                userid=task_userid,
+                title="New Comment Added",
+                message=f"{commenter_name} added a comment to your task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
+                notification_type="task",
+                priority="medium",
+                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
+                related_id=taskid,
+                metadata={
+                    "task_title": task_title,
+                    "action": "Comment Added",
+                    "comment_text": comment,
+                    "commented_by": userid
+                }
+            )
+        
+        # Notify manager if they exist and didn't make the comment
+        assigned_by = task.get("assigned_by")
+        if assigned_by and assigned_by != "self" and assigned_by != userid and assigned_by != task_userid:
+            Mongo.create_notification(
+                userid=assigned_by,
+                title="Comment Added to Assigned Task",
+                message=f"{commenter_name} added a comment to the task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
+                notification_type="task",
+                priority="medium",
+                action_url=Mongo.get_role_based_action_url(assigned_by, "manager_task"),
+                related_id=taskid,
+                metadata={
+                    "task_title": task_title,
+                    "action": "Comment Added",
+                    "comment_text": comment,
+                    "commented_by": userid
+                }
+            )
+        
+        return {"message": "Comment added successfully", "comment_id": comment_obj["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tasks/{taskid}/subtasks")
+async def add_task_subtask(
+    taskid: str,
+    subtask_text: str = Form(...),
+    assigned_by: str = Form(...)
+):
+    """Add subtask to task and send notifications"""
+    try:
+        # Get current task
+        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Create subtask object
+        subtask_obj = {
+            "id": int(datetime.now().timestamp()),
+            "text": subtask_text,
+            "completed": False,
+            "assignedBy": assigned_by,
+            "createdAt": datetime.now().isoformat()
+        }
+        
+        # Add subtask to task
+        Mongo.Tasks.update_one(
+            {"_id": ObjectId(taskid)},
+            {"$push": {"subtasks": subtask_obj}}
+        )
+        
+        # Send notifications
+        task_title = task.get("task", "Task")
+        task_userid = task.get("userid")
+        
+        # Get assigner name
+        assigner = Mongo.Users.find_one({"_id": ObjectId(assigned_by)}) if ObjectId.is_valid(assigned_by) else None
+        assigner_name = assigner.get("name", "Manager") if assigner else "Manager"
+        
+        if task_userid:
+            Mongo.create_notification(
+                userid=task_userid,
+                title="Subtask Added",
+                message=f"{assigner_name} added a new subtask '{subtask_text}' to your task '{task_title}'.",
+                notification_type="task",
+                priority="medium",
+                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
+                related_id=taskid,
+                metadata={
+                    "task_title": task_title,
+                    "action": "Subtask Added",
+                    "subtask_text": subtask_text,
+                    "assigned_by": assigned_by
+                }
+            )
+        
+        return {"message": "Subtask added successfully", "subtask_id": subtask_obj["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tasks/trigger-deadline-reminders")
+async def trigger_deadline_reminders():
+    """Manually trigger deadline reminder checks"""
+    try:
+        import asyncio
+        from notification_automation import check_upcoming_deadlines, check_and_notify_overdue_tasks
+        
+        # Check upcoming deadlines
+        upcoming_result = await check_upcoming_deadlines()
+        
+        # Check overdue tasks
+        overdue_result = await check_and_notify_overdue_tasks()
+        
+        return {
+            "message": "Deadline reminder checks completed",
+            "upcoming_deadlines": upcoming_result,
+            "overdue_tasks": overdue_result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/get_user/{userid}")
 def get_user(userid: str):
     print("Searching user ID:", userid)
@@ -3218,8 +3384,131 @@ async def get_threads(rootId: str):
     return result
 
 
-# Assign docs to users
-# ------------------ Assign Documents ------------------
+
+@app.post("/create_group")
+async def create_group(group: GroupCreate):
+    group_id = str(uuid.uuid4())
+    doc = {
+        "_id": group_id,
+        "name": group.name,
+        "members": group.members,
+        "created_at": datetime.utcnow()
+    }
+    groups_collection.insert_one(doc)
+    return {"status": "success", "group_id": group_id, "name": group.name}
+
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
+@app.get("/get_user_groups/{user_id}")
+async def get_user_groups(user_id: str):
+    # Fetch groups where user is a member
+    groups_cursor = groups_collection.find({"members": user_id})
+    groups = list(groups_cursor)  # <--- await here
+
+    # Convert MongoDB ObjectId and datetime to JSON-safe
+    groups_json = jsonable_encoder(groups)
+
+    return JSONResponse(content=groups_json)
+
+
+
+
+
+
+@app.websocket("/ws/group/{group_id}")
+async def websocket_group(websocket: WebSocket, group_id: str):
+    await group_ws_manager.connect(group_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            # Add timestamp & unique id
+            data["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            data["id"] = data.get("id") or str(ObjectId())
+
+            # Save to MongoDB
+            messages_collection.insert_one({
+                "chatId": group_id,
+                "from_user": data.get("from_user"),
+                "text": data.get("text"),
+                "file": data.get("file"),
+                "timestamp": data["timestamp"]
+            })
+
+            # Broadcast to all group members
+            await group_ws_manager.broadcast(group_id, data)
+            
+            # Create group chat notifications
+            try:
+                sender_id = data.get("from_user")
+                message_text = data.get("text", "")
+                
+                # Get group info
+                group = groups_collection.find_one({"_id": group_id})
+                if group and message_text:
+                    group_name = group.get("name", "Group")
+                    member_ids = group.get("members", [])
+                    
+                    # Get sender name
+                    sender = Users.find_one({"userid": sender_id})
+                    sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
+                    
+                    # Send notifications to all members except sender
+                    await Mongo.create_group_chat_notification(
+                        sender_id=sender_id,
+                        group_id=group_id,
+                        sender_name=sender_name,
+                        group_name=group_name,
+                        message_preview=message_text,
+                        member_ids=member_ids
+                    )
+            except Exception as e:
+                print(f"Error creating group chat notification: {e}")
+                
+    except Exception as e:
+        print("WS disconnected", e)
+    finally:
+        group_ws_manager.disconnect(group_id, websocket)
+
+
+# Fetch group chat history
+@app.get("/group_history/{group_id}")
+async def group_history(group_id: str):
+    cursor = messages_collection.find({"chatId": group_id}).sort("timestamp", 1)
+    messages = []
+    for doc in cursor:
+        messages.append({
+            "id": str(doc.get("_id")),
+            "from_user": doc.get("from_user"),
+            "text": doc.get("text"),
+            "file": doc.get("file"),
+            "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
+            "chatId": doc.get("chatId")
+        })
+    return messages
+
+@app.delete("/delete_group/{group_id}")
+async def delete_group(group_id: str):
+    result = groups_collection.delete_one({"_id": group_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Optionally, delete all messages in that group
+    messages_collection.delete_many({"chatId": group_id})
+    
+    return {"status": "success", "message": f"Group {group_id} deleted successfully"}
+
+@app.put("/update_group/{group_id}")
+async def update_group(group_id: str, group: GroupUpdate):
+    result = groups_collection.update_one(
+        {"_id": group_id},
+        {"$set": {"name": group.name, "members": group.members, "updated_at": datetime.utcnow()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return {"status": "success", "group_id": group_id, "name": group.name}
+
+
 
 # ------------------ Assign Document ------------------
 @app.post("/assign_docs")
@@ -3258,6 +3547,7 @@ async def assign_docs(payload: AssignPayload, assigned_by: str = "HR"):
                 print(f"Error sending document assignment notification: {e}")
 
     return {"message": f'"{payload.docName}" assigned to {count} user(s)'}
+
 @app.get("/assign_docs")
 def get_assigned_docs(userId: str = Query(...)):
     """
@@ -3347,43 +3637,6 @@ async def review_document(payload: ReviewPayload):
     return {"message": f"Document {payload.docName} marked as {payload.status}"}
 
 
-
-@app.post("/chat_upload")
-async def upload_chat_file(
-    file: UploadFile = File(...),
-    from_user: str = Form(...),
-    to_user: str = Form(...),
-    chatId: str = Form(...)
-):
-    try:
-        file_bytes = await file.read()
-        file_doc = {
-            "filename": file.filename,
-            "content": Binary(file_bytes),
-            "from_user": from_user,
-            "to_user": to_user,
-            "chatId": chatId,
-            "timestamp": datetime.utcnow(),
-            "size": len(file_bytes),
-            "mime_type": file.content_type,
-        }
-        result = files_collection.insert_one(file_doc)
-        file_doc["_id"] = str(result.inserted_id)
-
-        # Optional: return all files for the chat
-        docs = list(files_collection.find({"chatId": chatId}))
-        for d in docs:
-            d["_id"] = str(d["_id"])
-
-        return {"status": "success", "file": file_doc, "all_chat_files": docs}
-
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/get_files/{chatId}")
-async def get_files(chatId: str):
-    docs = list(files_collection.find({"chatId": chatId}))
-    return [{"name": d["name"], "type": d["type"], "data": d["data"]} for d in docs]
 
 # ------------------ Upload Document ------------------
 
@@ -3528,314 +3781,3 @@ async def delete_assigned_doc(data: dict):
 
 from fastapi import Response
 
-@app.get("/view_file/{file_id}")
-async def view_file(file_id: str):
-    file_doc = files_collection.find_one({"_id": ObjectId(file_id)})
-    if not file_doc:
-        raise HTTPException(status_code=404, detail="File not found")
-    return Response(
-        content=file_doc["file"],
-        media_type=file_doc["content_type"],
-        headers={"Content-Disposition": f"inline; filename={file_doc['filename']}"}
-    )
-
-@app.post("/create_group")
-async def create_group(group: GroupCreate):
-    group_id = str(uuid.uuid4())
-    doc = {
-        "_id": group_id,
-        "name": group.name,
-        "members": group.members,
-        "created_at": datetime.utcnow()
-    }
-    groups_collection.insert_one(doc)
-    return {"status": "success", "group_id": group_id, "name": group.name}
-
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-@app.get("/get_user_groups/{user_id}")
-async def get_user_groups(user_id: str):
-    # Fetch groups where user is a member
-    groups_cursor = groups_collection.find({"members": user_id})
-    groups = list(groups_cursor)  # <--- await here
-
-    # Convert MongoDB ObjectId and datetime to JSON-safe
-    groups_json = jsonable_encoder(groups)
-
-    return JSONResponse(content=groups_json)
-
-
-@app.get("/group_members/{group_id}")
-async def get_group_members(group_id: str):
-    group = groups_collection.find_one({"_id": group_id})
-    if not group:
-        raise HTTPException(status_code=404, detail="Group not found")
-    
-    members = list(Users.find({"_id": {"$in": group.get("members", [])}}, {"name": 1, "depart": 1}))
-    # Convert ObjectId to string for frontend
-    for m in members:
-        m["_id"] = str(m["_id"])
-    return members
-
-
-
-@app.websocket("/ws/group/{group_id}")
-async def websocket_group(websocket: WebSocket, group_id: str):
-    await group_ws_manager.connect(group_id, websocket)
-    try:
-        while True:
-            data = await websocket.receive_json()
-            # Add timestamp & unique id
-            data["timestamp"] = datetime.utcnow().isoformat() + "Z"
-            data["id"] = data.get("id") or str(ObjectId())
-
-            # Save to MongoDB
-            messages_collection.insert_one({
-                "chatId": group_id,
-                "from_user": data.get("from_user"),
-                "text": data.get("text"),
-                "file": data.get("file"),
-                "timestamp": data["timestamp"]
-            })
-
-            # Broadcast to all group members
-            await group_ws_manager.broadcast(group_id, data)
-            
-            # Create group chat notifications
-            try:
-                sender_id = data.get("from_user")
-                message_text = data.get("text", "")
-                
-                # Get group info
-                group = groups_collection.find_one({"_id": group_id})
-                if group and message_text:
-                    group_name = group.get("name", "Group")
-                    member_ids = group.get("members", [])
-                    
-                    # Get sender name
-                    sender = Users.find_one({"userid": sender_id})
-                    sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
-                    
-                    # Send notifications to all members except sender
-                    await Mongo.create_group_chat_notification(
-                        sender_id=sender_id,
-                        group_id=group_id,
-                        sender_name=sender_name,
-                        group_name=group_name,
-                        message_preview=message_text,
-                        member_ids=member_ids
-                    )
-            except Exception as e:
-                print(f"Error creating group chat notification: {e}")
-                
-    except Exception as e:
-        print("WS disconnected", e)
-    finally:
-        group_ws_manager.disconnect(group_id, websocket)
-
-
-# Fetch group chat history
-@app.get("/group_history/{group_id}")
-async def group_history(group_id: str):
-    cursor = messages_collection.find({"chatId": group_id}).sort("timestamp", 1)
-    messages = []
-    for doc in cursor:
-        messages.append({
-            "id": str(doc.get("_id")),
-            "from_user": doc.get("from_user"),
-            "text": doc.get("text"),
-            "file": doc.get("file"),
-            "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
-            "chatId": doc.get("chatId")
-        })
-    return messages
-
-@app.delete("/delete_group/{group_id}")
-async def delete_group(group_id: str):
-    result = groups_collection.delete_one({"_id": group_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Group not found")
-    
-    # Optionally, delete all messages in that group
-    messages_collection.delete_many({"chatId": group_id})
-    
-    return {"status": "success", "message": f"Group {group_id} deleted successfully"}
-
-@app.put("/update_group/{group_id}")
-async def update_group(group_id: str, group: GroupUpdate):
-    result = groups_collection.update_one(
-        {"_id": group_id},
-        {"$set": {"name": group.name, "members": group.members, "updated_at": datetime.utcnow()}}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Group not found")
-    return {"status": "success", "group_id": group_id, "name": group.name}
-
-# ===============================
-# ENHANCED TASK NOTIFICATION ENDPOINTS
-# ===============================
-
-@app.post("/tasks/{taskid}/comments")
-async def add_task_comment(
-    taskid: str,
-    comment: str = Form(...),
-    userid: str = Form(...)
-):
-    """Add comment to task and send notifications"""
-    try:
-        # Get current task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        # Create comment object
-        comment_obj = {
-            "id": str(uuid.uuid4()),
-            "text": comment,
-            "userId": userid,
-            "timestamp": datetime.now().isoformat(),
-            "userName": ""  # Will be populated from user data
-        }
-        
-        # Get user name
-        user = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        if user:
-            comment_obj["userName"] = user.get("name", "Unknown User")
-        
-        # Add comment to task
-        Mongo.Tasks.update_one(
-            {"_id": ObjectId(taskid)},
-            {"$push": {"comments": comment_obj}}
-        )
-        
-        # Send notifications
-        task_title = task.get("task", "Task")
-        task_userid = task.get("userid")
-        
-        # Get commenter name
-        commenter = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        commenter_name = commenter.get("name", "Team Member") if commenter else "Team Member"
-        
-        # Notify task owner if comment is by someone else
-        if task_userid and userid != task_userid:
-            Mongo.create_notification(
-                userid=task_userid,
-                title="New Comment Added",
-                message=f"{commenter_name} added a comment to your task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Comment Added",
-                    "comment_text": comment,
-                    "commented_by": userid
-                }
-            )
-        
-        # Notify manager if they exist and didn't make the comment
-        assigned_by = task.get("assigned_by")
-        if assigned_by and assigned_by != "self" and assigned_by != userid and assigned_by != task_userid:
-            Mongo.create_notification(
-                userid=assigned_by,
-                title="Comment Added to Assigned Task",
-                message=f"{commenter_name} added a comment to the task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(assigned_by, "manager_task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Comment Added",
-                    "comment_text": comment,
-                    "commented_by": userid
-                }
-            )
-        
-        return {"message": "Comment added successfully", "comment_id": comment_obj["id"]}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tasks/{taskid}/subtasks")
-async def add_task_subtask(
-    taskid: str,
-    subtask_text: str = Form(...),
-    assigned_by: str = Form(...)
-):
-    """Add subtask to task and send notifications"""
-    try:
-        # Get current task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        # Create subtask object
-        subtask_obj = {
-            "id": int(datetime.now().timestamp()),
-            "text": subtask_text,
-            "completed": False,
-            "assignedBy": assigned_by,
-            "createdAt": datetime.now().isoformat()
-        }
-        
-        # Add subtask to task
-        Mongo.Tasks.update_one(
-            {"_id": ObjectId(taskid)},
-            {"$push": {"subtasks": subtask_obj}}
-        )
-        
-        # Send notifications
-        task_title = task.get("task", "Task")
-        task_userid = task.get("userid")
-        
-        # Get assigner name
-        assigner = Mongo.Users.find_one({"_id": ObjectId(assigned_by)}) if ObjectId.is_valid(assigned_by) else None
-        assigner_name = assigner.get("name", "Manager") if assigner else "Manager"
-        
-        if task_userid:
-            Mongo.create_notification(
-                userid=task_userid,
-                title="Subtask Added",
-                message=f"{assigner_name} added a new subtask '{subtask_text}' to your task '{task_title}'.",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Subtask Added",
-                    "subtask_text": subtask_text,
-                    "assigned_by": assigned_by
-                }
-            )
-        
-        return {"message": "Subtask added successfully", "subtask_id": subtask_obj["id"]}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tasks/trigger-deadline-reminders")
-async def trigger_deadline_reminders():
-    """Manually trigger deadline reminder checks"""
-    try:
-        import asyncio
-        from notification_automation import check_upcoming_deadlines, check_and_notify_overdue_tasks
-        
-        # Check upcoming deadlines
-        upcoming_result = await check_upcoming_deadlines()
-        
-        # Check overdue tasks
-        overdue_result = await check_and_notify_overdue_tasks()
-        
-        return {
-            "message": "Deadline reminder checks completed",
-            "upcoming_deadlines": upcoming_result,
-            "overdue_tasks": overdue_result,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

@@ -2527,6 +2527,172 @@ async def get_task_file(taskid: str, fileid: str):
     except Exception:
         raise HTTPException(status_code=404, detail="File not found in GridFS")
 
+
+
+@app.post("/tasks/{taskid}/comments")
+async def add_task_comment(
+    taskid: str,
+    comment: str = Form(...),
+    userid: str = Form(...)
+):
+    """Add comment to task and send notifications"""
+    try:
+        # Get current task
+        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Create comment object
+        comment_obj = {
+            "id": str(uuid.uuid4()),
+            "text": comment,
+            "userId": userid,
+            "timestamp": datetime.now().isoformat(),
+            "userName": ""  # Will be populated from user data
+        }
+        
+        # Get user name
+        user = Mongo.Users.find_one({"_id": ObjectId(userid)})
+        if user:
+            comment_obj["userName"] = user.get("name", "Unknown User")
+        
+        # Add comment to task
+        Mongo.Tasks.update_one(
+            {"_id": ObjectId(taskid)},
+            {"$push": {"comments": comment_obj}}
+        )
+        
+        # Send notifications
+        task_title = task.get("task", "Task")
+        task_userid = task.get("userid")
+        
+        # Get commenter name
+        commenter = Mongo.Users.find_one({"_id": ObjectId(userid)})
+        commenter_name = commenter.get("name", "Team Member") if commenter else "Team Member"
+        
+        # Notify task owner if comment is by someone else
+        if task_userid and userid != task_userid:
+            Mongo.create_notification(
+                userid=task_userid,
+                title="New Comment Added",
+                message=f"{commenter_name} added a comment to your task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
+                notification_type="task",
+                priority="medium",
+                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
+                related_id=taskid,
+                metadata={
+                    "task_title": task_title,
+                    "action": "Comment Added",
+                    "comment_text": comment,
+                    "commented_by": userid
+                }
+            )
+        
+        # Notify manager if they exist and didn't make the comment
+        assigned_by = task.get("assigned_by")
+        if assigned_by and assigned_by != "self" and assigned_by != userid and assigned_by != task_userid:
+            Mongo.create_notification(
+                userid=assigned_by,
+                title="Comment Added to Assigned Task",
+                message=f"{commenter_name} added a comment to the task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
+                notification_type="task",
+                priority="medium",
+                action_url=Mongo.get_role_based_action_url(assigned_by, "manager_task"),
+                related_id=taskid,
+                metadata={
+                    "task_title": task_title,
+                    "action": "Comment Added",
+                    "comment_text": comment,
+                    "commented_by": userid
+                }
+            )
+        
+        return {"message": "Comment added successfully", "comment_id": comment_obj["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tasks/{taskid}/subtasks")
+async def add_task_subtask(
+    taskid: str,
+    subtask_text: str = Form(...),
+    assigned_by: str = Form(...)
+):
+    """Add subtask to task and send notifications"""
+    try:
+        # Get current task
+        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
+        if not task:
+            raise HTTPException(status_code=404, detail="Task not found")
+        
+        # Create subtask object
+        subtask_obj = {
+            "id": int(datetime.now().timestamp()),
+            "text": subtask_text,
+            "completed": False,
+            "assignedBy": assigned_by,
+            "createdAt": datetime.now().isoformat()
+        }
+        
+        # Add subtask to task
+        Mongo.Tasks.update_one(
+            {"_id": ObjectId(taskid)},
+            {"$push": {"subtasks": subtask_obj}}
+        )
+        
+        # Send notifications
+        task_title = task.get("task", "Task")
+        task_userid = task.get("userid")
+        
+        # Get assigner name
+        assigner = Mongo.Users.find_one({"_id": ObjectId(assigned_by)}) if ObjectId.is_valid(assigned_by) else None
+        assigner_name = assigner.get("name", "Manager") if assigner else "Manager"
+        
+        if task_userid:
+            Mongo.create_notification(
+                userid=task_userid,
+                title="Subtask Added",
+                message=f"{assigner_name} added a new subtask '{subtask_text}' to your task '{task_title}'.",
+                notification_type="task",
+                priority="medium",
+                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
+                related_id=taskid,
+                metadata={
+                    "task_title": task_title,
+                    "action": "Subtask Added",
+                    "subtask_text": subtask_text,
+                    "assigned_by": assigned_by
+                }
+            )
+        
+        return {"message": "Subtask added successfully", "subtask_id": subtask_obj["id"]}
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+@app.post("/tasks/trigger-deadline-reminders")
+async def trigger_deadline_reminders():
+    """Manually trigger deadline reminder checks"""
+    try:
+        import asyncio
+        from notification_automation import check_upcoming_deadlines, check_and_notify_overdue_tasks
+        
+        # Check upcoming deadlines
+        upcoming_result = await check_upcoming_deadlines()
+        
+        # Check overdue tasks
+        overdue_result = await check_and_notify_overdue_tasks()
+        
+        return {
+            "message": "Deadline reminder checks completed",
+            "upcoming_deadlines": upcoming_result,
+            "overdue_tasks": overdue_result,
+            "timestamp": datetime.now().isoformat()
+        }
+        
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
 @app.get("/get_user/{userid}")
 def get_user(userid: str):
     print("Searching user ID:", userid)
@@ -3657,170 +3823,3 @@ async def update_group(group_id: str, group: GroupUpdate):
         raise HTTPException(status_code=404, detail="Group not found")
     return {"status": "success", "group_id": group_id, "name": group.name}
 
-# ===============================
-# ENHANCED TASK NOTIFICATION ENDPOINTS
-# ===============================
-
-@app.post("/tasks/{taskid}/comments")
-async def add_task_comment(
-    taskid: str,
-    comment: str = Form(...),
-    userid: str = Form(...)
-):
-    """Add comment to task and send notifications"""
-    try:
-        # Get current task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        # Create comment object
-        comment_obj = {
-            "id": str(uuid.uuid4()),
-            "text": comment,
-            "userId": userid,
-            "timestamp": datetime.now().isoformat(),
-            "userName": ""  # Will be populated from user data
-        }
-        
-        # Get user name
-        user = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        if user:
-            comment_obj["userName"] = user.get("name", "Unknown User")
-        
-        # Add comment to task
-        Mongo.Tasks.update_one(
-            {"_id": ObjectId(taskid)},
-            {"$push": {"comments": comment_obj}}
-        )
-        
-        # Send notifications
-        task_title = task.get("task", "Task")
-        task_userid = task.get("userid")
-        
-        # Get commenter name
-        commenter = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        commenter_name = commenter.get("name", "Team Member") if commenter else "Team Member"
-        
-        # Notify task owner if comment is by someone else
-        if task_userid and userid != task_userid:
-            Mongo.create_notification(
-                userid=task_userid,
-                title="New Comment Added",
-                message=f"{commenter_name} added a comment to your task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Comment Added",
-                    "comment_text": comment,
-                    "commented_by": userid
-                }
-            )
-        
-        # Notify manager if they exist and didn't make the comment
-        assigned_by = task.get("assigned_by")
-        if assigned_by and assigned_by != "self" and assigned_by != userid and assigned_by != task_userid:
-            Mongo.create_notification(
-                userid=assigned_by,
-                title="Comment Added to Assigned Task",
-                message=f"{commenter_name} added a comment to the task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(assigned_by, "manager_task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Comment Added",
-                    "comment_text": comment,
-                    "commented_by": userid
-                }
-            )
-        
-        return {"message": "Comment added successfully", "comment_id": comment_obj["id"]}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tasks/{taskid}/subtasks")
-async def add_task_subtask(
-    taskid: str,
-    subtask_text: str = Form(...),
-    assigned_by: str = Form(...)
-):
-    """Add subtask to task and send notifications"""
-    try:
-        # Get current task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        # Create subtask object
-        subtask_obj = {
-            "id": int(datetime.now().timestamp()),
-            "text": subtask_text,
-            "completed": False,
-            "assignedBy": assigned_by,
-            "createdAt": datetime.now().isoformat()
-        }
-        
-        # Add subtask to task
-        Mongo.Tasks.update_one(
-            {"_id": ObjectId(taskid)},
-            {"$push": {"subtasks": subtask_obj}}
-        )
-        
-        # Send notifications
-        task_title = task.get("task", "Task")
-        task_userid = task.get("userid")
-        
-        # Get assigner name
-        assigner = Mongo.Users.find_one({"_id": ObjectId(assigned_by)}) if ObjectId.is_valid(assigned_by) else None
-        assigner_name = assigner.get("name", "Manager") if assigner else "Manager"
-        
-        if task_userid:
-            Mongo.create_notification(
-                userid=task_userid,
-                title="Subtask Added",
-                message=f"{assigner_name} added a new subtask '{subtask_text}' to your task '{task_title}'.",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Subtask Added",
-                    "subtask_text": subtask_text,
-                    "assigned_by": assigned_by
-                }
-            )
-        
-        return {"message": "Subtask added successfully", "subtask_id": subtask_obj["id"]}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tasks/trigger-deadline-reminders")
-async def trigger_deadline_reminders():
-    """Manually trigger deadline reminder checks"""
-    try:
-        import asyncio
-        from notification_automation import check_upcoming_deadlines, check_and_notify_overdue_tasks
-        
-        # Check upcoming deadlines
-        upcoming_result = await check_upcoming_deadlines()
-        
-        # Check overdue tasks
-        overdue_result = await check_and_notify_overdue_tasks()
-        
-        return {
-            "message": "Deadline reminder checks completed",
-            "upcoming_deadlines": upcoming_result,
-            "overdue_tasks": overdue_result,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))

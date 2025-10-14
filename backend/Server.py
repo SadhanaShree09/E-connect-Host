@@ -1566,7 +1566,7 @@ async def permission_request(item: Item8):
         print(f"❌ Error in permission request: {e}")
         raise HTTPException(400, str(e))
    
-@app.get("/Other-leave-history/{userid}") 
+@app.get("/Other-leave-history/{userid}/") 
 async def get_other_leave_history(userid: str = Path(..., title="The ID of the user")):
     try:
         # Call your function to get the leave history for the specified user
@@ -1578,7 +1578,7 @@ async def get_other_leave_history(userid: str = Path(..., title="The ID of the u
         # If an exception occurs, return a 500 Internal Server Error
         raise HTTPException(status_code=500, detail=str(e))
    
-@app.get("/Permission-history/{userid}")  # Also handle requests with trailing slash
+@app.get("/Permission-history/{userid}/")  # Also handle requests with trailing slash
 async def get_Permission_history(userid: str = Path(..., title="The ID of the user")):
     try:
         # Call your function to get the leave history for the specified user

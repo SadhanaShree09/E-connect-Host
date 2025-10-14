@@ -39,14 +39,14 @@ from typing import List, Dict
 import os
 from pymongo import MongoClient
 
-
+from dotenv import load_dotenv
+load_dotenv() 
 
 
 
   # For storing yearly working days
 
-mongo_url = os.environ.get("MONGODB_URI")
-print("MongoDB is connecting to:",mongo_url)
+mongo_url = os.getenv("MONGODB_URI")
 client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,
@@ -56,6 +56,9 @@ client = MongoClient(
 
 
 db = client["RBG_AI"]
+print(f"DEBUG: MONGODB_URI={mongo_url}")
+print(f"DEBUG: Selected DB name={db.name}")
+print(f"DEBUG: client object before any reassignment: {type(client)}")
 client=client.RBG_AI
 Users=client.Users
 Add=client.Dataset
@@ -138,29 +141,13 @@ def Signup(email,password,name):
     )
 
 def cleanid(data):
-    """Clean MongoDB document for JSON serialization"""
-    if data is None:
-        return None
-    
-    # Convert ObjectId to string
-    if '_id' in data:
-        obid = data.get('_id')
+    obid=data.get('_id')
+    if obid:
         data['id'] = str(obid)
-        del data['_id']
-    
-    # Convert datetime objects to ISO format strings
-    for key, value in list(data.items()):
-        if isinstance(value, datetime):
-            data[key] = value.isoformat()
-        elif isinstance(value, date):
-            data[key] = value.isoformat()
-        elif isinstance(value, ObjectId):
-            data[key] = str(value)
-        elif isinstance(value, dict):
-            data[key] = cleanid(value)
-        elif isinstance(value, list):
-            data[key] = [cleanid(item) if isinstance(item, dict) else item for item in value]
-    
+    if 'userid' not in data:
+        data['userid'] = str(obid)
+    # data.update({'userid':str(obid)})
+    del data['_id']
     return data
   
 def signin(email,password):
@@ -192,43 +179,20 @@ def admin_Signup(email,password,name,phone,position,date_of_joining):
         return signJWT(email)
     
 def admin_signin(checkuser, password, email):
-    if (checkuser):
-        checkpass=CheckPassword(password,checkuser.get('password'))
-        if (checkpass):
-            a=signJWT(email, "admin")
-            b=checkuser
-            checkuser=cleanid(checkuser)
+    if checkuser:
+        checkpass = CheckPassword(password, checkuser.get('password'))
+        if checkpass:
+            a = signJWT(email, "admin")
+            b = checkuser
+            checkuser = cleanid(checkuser)
             checkuser.update(a)
-            return {"jwt":a, "Details":b, "isadmin":True}
-     
-# # Google Signin      
-# def Gsignin(client_name,email):
-#     checkuser=Users.find_one({'email': email})
-#     checkadmin=admin.find_one({'email': email})
-#     checkmanager=Managers.find_one({'email': email})
-#     selected_date = date.today().strftime("%d-%m-%Y")
-#     if (checkuser):
-#             a=signJWT(client_name)
-#             b=checkuser
-#             checkuser=cleanid(checkuser)
-#             checkuser.update(a)
-#             print(checkuser)
-#             # # Keep the real admin status from DB, don’t overwrite
-#             # is_admin_from_db = checkuser.get("isadmin", False)
-#             # checkuser.update({"isloggedin": True, "isadmin": is_admin_from_db})
-#             checkuser.update({"isloggedin":True, "isadmin":False})
-#             return checkuser
-#     elif (checkadmin):
-#         result = admin_Gsignin(checkadmin, client_name)
-#         return result
-#     elif (checkmanager):
-#         result = manager_Gsignin(checkmanager, client_name)
-#         print(result)
-#         return result
-#     else:
-#         raise HTTPException(status_code=300, detail="Given Email does not exists")
+            # Ensure 'email' key is present in the returned dictionary
+            return {"jwt": a, "Details": b, "isadmin": True, "email": checkuser.get("email", email)}
+        else:
+            raise HTTPException(status_code=300, detail="Given Password is Incorrect")
+    else:
+        raise HTTPException(status_code=300, detail="Given Email does not exist")
 
-# Google Signin      
 def Gsignin(client_name, email):
     checkuser = Users.find_one({'email': email})
     checkadmin = admin.find_one({'email': email})
@@ -287,7 +251,7 @@ def admin_Gsignin(checkuser, client_name):
         return checkuser
     else:
         raise HTTPException(status_code=404, detail="User not found")
-    
+ 
 # Manager Google Signin
 def manager_Gsignin(checkuser, client_name):
     
@@ -1333,41 +1297,6 @@ def get_TL_page_remote_work_requests_with_history(TL, show_processed=False):
         list1.append(user)
     return list1
 
-# Admin Page Leave Requests
-# def get_manager_leave_requests(selected_option):
-#     managers = list(Users.find({"position": "Manager"}))
-#     print(f"Found {len(managers)} managers")
-    
-#     # Prepare a list of manager IDs
-#     manager_ids = [str(manager["_id"]) for manager in managers]
-#     print(f"Manager IDs: {manager_ids}")
-
-#     # Debug: Check what leave requests exist for managers
-#     all_manager_leaves = list(Leave.find({"userid": {"$in": manager_ids}}))
-#     print(f"Total manager leaves in DB: {len(all_manager_leaves)}")
-    
-#     # Check status values
-#     status_values = [leave.get("status") for leave in all_manager_leaves]
-#     print(f"Status values found: {set(status_values)}")
-
-#     if selected_option == "Leave":
-#         leave_request = list(Leave.find({
-#             "leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]},
-#             "status": {"$exists": False},
-#             "userid": {"$in": manager_ids}
-#         }))
-#         print(f"Found {len(leave_request)} leave requests with no status")
-        
-#         # Also check what would be found with different status conditions
-#         with_status = list(Leave.find({
-#             "leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]},
-#             "userid": {"$in": manager_ids}
-#         }))
-#         print(f"Total leave requests (any status): {len(with_status)}")
-        
-#     # ... rest of your conditions
-    
-#     return leave_request
 
 # Admin Page Leave Requests
 def get_manager_leave_requests(selected_option):

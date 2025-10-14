@@ -3,31 +3,60 @@ import React, { useState } from "react";
 import { Link, NavLink, useNavigate, useLocation } from "react-router-dom";
 import { toast } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
-import { FiLogOut, FiUser } from "react-icons/fi";
+import { FiLogOut, FiUser, FiClock } from "react-icons/fi";
 import { LS } from "../Utils/Resuse";
-import NotificationBell from "./NotificationBell";
+import NotificationBell from "./notifications/NotificationBell";
 
 // Modal component
 const Modal = ({ show, onClose, onConfirm, message }) => {
   if (!show) return null;
 
   return (
-    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50 ">
-      <div className="bg-blue-100 p-4 rounded-lg">
-        <p className="mb-3 text-black font-poppins">{message}</p>
-        <hr className="border-gray-400" />
-        <div className="flex flex-row">
+    <div className="fixed top-0 left-0 w-full h-full flex items-center justify-center bg-black bg-opacity-50 z-50 backdrop-blur-sm">
+      <div className="bg-white rounded-xl shadow-2xl max-w-md w-full mx-4 overflow-hidden transform transition-all">
+        <div className="bg-blue-600 px-6 py-4 text-center">
+          <h3 className="text-xl font-semibold text-white font-poppins">
+            Confirm Logout
+          </h3>
+        </div>
+        
+        <div className="px-6 py-6">
+          <div className="flex items-center justify-center space-x-4">
+            <div className="flex-shrink-0">
+              <svg
+                className="w-12 h-12 text-blue-600"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"
+                />
+              </svg>
+            </div>
+            <div>
+              <p className="text-gray-700 text-base font-poppins leading-relaxed">
+                {message}
+              </p>
+            </div>
+          </div>
+        </div>
+
+        <div className="bg-gray-50 px-6 py-4 flex gap-3 justify-center">
           <button
-            className="bg-red-400 hover:bg-red-500 text-white w-1/2 px-4 py-2 mt-4 rounded mr-2 font-poppins"
-            onClick={onConfirm}
-          >
-            Yes
-          </button>
-          <button
-            className="bg-gray-300 hover:bg-gray-400 text-black w-1/2 px-4 py-2 mt-4 rounded font-poppins"
+            className="px-6 py-2.5 rounded-lg font-medium font-poppins transition-all duration-200 bg-gray-200 hover:bg-gray-300 text-gray-700 hover:shadow-md"
             onClick={onClose}
           >
             Cancel
+          </button>
+          <button
+            className="px-6 py-2.5 rounded-lg font-medium font-poppins transition-all duration-200 bg-blue-600 hover:bg-blue-700 text-white hover:shadow-lg"
+            onClick={onConfirm}
+          >
+            Yes, Logout
           </button>
         </div>
       </div>
@@ -38,39 +67,75 @@ const Modal = ({ show, onClose, onConfirm, message }) => {
 const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => {
   const navigate = useNavigate(); // Declare navigate only once
   const location = useLocation();
+  
   /**
-   * Check whether the current pathname contains any exact segment match.
-   * Accepts a string or an array of candidate segments. Matching is
-   * case-insensitive and compares whole path segments (split by '/'),
-   * so 'addleave' won't match 'leave'.
+   * Enhanced isActive function that checks if the current route matches or contains the target route.
+   * This handles nested routes properly (e.g., Task/Todo/TaskPage will highlight Task/Todo in sidebar)
    */
   const isActive = (segmentOrArray) => {
     try {
-      const path = location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
-      const segments = path.split("/").filter(Boolean);
-      if (segments.length === 0) return false;
-      const lastSeg = segments[segments.length - 1];
+      const currentPath = location.pathname.toLowerCase().replace(/^\/|\/$/g, "");
+      
+      // Handle array of possible paths
       const targets = Array.isArray(segmentOrArray)
         ? segmentOrArray.map((s) => String(s).toLowerCase())
         : [String(segmentOrArray).toLowerCase()];
 
-  // Match whole last segment, or match its first token when segments use
-  // separators (e.g. 'clockin_int' -> ['clockin','int']) so checking
-  // for 'clockin' will still succeed. This avoids collisions like
-  // 'addleave' matching 'leave' because the first token of 'addleave'
-  // is 'addleave', not 'leave'.
-  const normalize = (s) => String(s).toLowerCase();
-  if (targets.includes(lastSeg)) return true;
-  const firstToken = lastSeg.split(/[^a-z0-9]+/).filter(Boolean)[0] || lastSeg;
-  return targets.includes(firstToken);
+      // Check each target path
+      for (const target of targets) {
+        const targetPath = target.replace(/^\/|\/$/g, "");
+        
+        // Exact match
+        if (currentPath === targetPath) {
+          return true;
+        }
+        
+        // Check if current path starts with the target (for nested routes)
+        // e.g., "user/task/todo/taskpage" should match "task/todo"
+        const currentSegments = currentPath.split("/").filter(Boolean);
+        const targetSegments = targetPath.split("/").filter(Boolean);
+        
+        // Check if all target segments appear consecutively in current path
+        for (let i = 0; i <= currentSegments.length - targetSegments.length; i++) {
+          let match = true;
+          for (let j = 0; j < targetSegments.length; j++) {
+            if (currentSegments[i + j] !== targetSegments[j]) {
+              match = false;
+              break;
+            }
+          }
+          if (match) {
+            return true;
+          }
+        }
+        
+        // Fallback: Check if the last segment matches (for single-word routes)
+        if (targetSegments.length === 1) {
+          const lastSegment = currentSegments[currentSegments.length - 1];
+          if (lastSegment === targetSegments[0]) {
+            return true;
+          }
+          
+          // Check first token for routes with separators (e.g., 'clockin_int' -> 'clockin')
+          const firstToken = lastSegment.split(/[^a-z0-9]+/).filter(Boolean)[0] || lastSegment;
+          if (firstToken === targetSegments[0]) {
+            return true;
+          }
+        }
+      }
+      
+      return false;
     } catch (e) {
+      console.error('isActive error:', e);
       return false;
     }
   };
+  
   const [showLogoutModal, setShowLogoutModal] = useState(false);
 
   const handleLogoutConfirm = () => {
-    // Clear all localStorage data
+    setShowLogoutModal(false);
+    
     LS.remove("isloggedin");
     LS.remove("access_token");
     LS.remove("userid");
@@ -79,18 +144,19 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
     LS.remove("position");
     LS.remove("department");
     
+    if (onLogout && typeof onLogout === 'function') {
+      onLogout();
+    }
+    
     toast.success("Successfully logged out!", {
       position: "top-right",
-      autoClose: 1000,
-      onClose: () => {
-        navigate("/"); // Redirect after logout
-        setShowLogoutModal(false);
-        if (onLogout && typeof onLogout === 'function') {
-          onLogout();
-        }
-      },
+      autoClose: 2000,
     });
-  };
+    
+    setTimeout(() => {
+      navigate("/", { replace: true });
+    }, 0);
+  }; 
 
   const handleLogoutCancel = () => {
     setShowLogoutModal(false);
@@ -117,7 +183,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
       <div className="flex flex-col mt-6">
         {loggedIn && isAdmin ? (
           <>
-            <NavLink to="time" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <NavLink to="time" className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -209,8 +275,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
               </div>
             </Link>
 
-            <Link to="addLeave" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <Link to="leave/addLeave" className="sidebar-item">
+              <div className={`flex items-center p-4 ${isActive('leave/addleave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 
                 <svg xmlns="http://www.w3.org/2000/svg" 
                   fill="none" 
@@ -231,7 +297,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           </>
         ) : loggedIn && !isAdmin && (
           <>
-            <NavLink to="Clockin_int" end className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+            <NavLink to="Clockin_int" className={({isActive}) => `sidebar-item flex items-center p-4 ${isActive ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"
@@ -266,7 +332,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
 
             {isDepart !== "HR" && (
-            <Link to="todo" className="sidebar-item">
+            <Link to="Task/Todo" className="sidebar-item">
               <div className={`flex items-center p-4 ${isActive('todo') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
@@ -281,23 +347,6 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
               </div>
             </Link>
             )}
-
-            {/* <Link to={`${userid}`} className="sidebar-item">
-
-            <Link to={`${userid}`} className="sidebar-item">
-              <div className="flex items-center p-4 hover:bg-blue-700 transition-colors">
-              <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6 mr-3 text-white"
-                >
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 3h12M6 7h12M6 11h12M6 15h12M6 19h12" />
-                </svg>
-                <span className="font-medium">Task Assign</span>
-              </div>
-            </Link> */}
 
             <Link to="notifications" className="sidebar-item">
               <div className={`flex items-center p-4 ${isActive('notifications') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
@@ -379,8 +428,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           loggedIn && isManager=="Manager" ?(
           <>
 
-                <Link to="manager-employee" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('manager-employee') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+                <Link to="Task/TaskProgress" className="sidebar-item">
+              <div className={`flex items-center p-4 ${isActive('Task/TaskProgress') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                     stroke="currentColor" className="w-6 h-6 mr-3 text-white">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -415,8 +464,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
           ): loggedIn && isDepart=="HR" && (
            <>
 
-        <Link to="hr-manager" className="sidebar-item">
-      <div className={`flex items-center p-4 ${isActive('hr-manager') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+        <Link to="Task/TaskProgress" className="sidebar-item">
+      <div className={`flex items-center p-4 ${isActive('Task/TaskProgress') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
           <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24"
                stroke="currentColor" className="w-6 h-6 mr-3 text-white">
             <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2"
@@ -447,20 +496,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </Link>
             <Link to="timemanage" className="sidebar-item">
           <div className={`flex items-center p-4 ${isActive('Timemanage') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
-                <svg
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  className="w-6 h-6 mr-3 text-white"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth="2"
-                    d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5m8.25 3v6.75m0 0l-3-3m3 3l3-3M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-                  />
-                </svg>
+                <FiClock className="w-6 h-6 mr-3 text-white" />
                 <span className="font-medium">Employee Time Management</span>
               </div>
             </Link>

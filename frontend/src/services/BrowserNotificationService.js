@@ -1,12 +1,4 @@
-/**
- * Browser Notification Service
- * Handles all browser notification functionality including:
- * - Permission management
- * - Notification creation and display
- * - Sound alerts
- * - Tab title notifications
- * - Focus detection
- */
+
 
 class BrowserNotificationService {
   constructor() {

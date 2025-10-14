@@ -238,24 +238,7 @@ class DesktopNotificationManager {
     }
   }
 
-  /**
-   * Get notification icon based on type
-   */
-  getIcon(type) {
-    const icons = {
-      message: '💬',
-      task: '📋',
-      urgent: '⚠️',
-      success: '✅',
-      error: '❌',
-      info: 'ℹ️',
-      leave: '🏖️',
-      wfh: '🏠',
-      attendance: '⏰',
-      reminder: '🔔'
-    };
-    return icons[type] || icons.info;
-  }
+  
 
   /**
    * Format notification for better readability

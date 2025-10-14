@@ -11,48 +11,44 @@ import Checkauth from "./Utils/Checkauth";
 import Setting from "./components/Setting";
 import Clockdashboard from "./components/Clockdashboard";
 import Clockin_int from "./components/Clockin_int";
-import Leave from "./components/Leave";
-import LeaveHistory from "./components/LeaveHistory";
-import Leaverequest from "./components/Leaverequest";
+import Leave from "./components/leave/Leave";
+import LeaveHistory from "./components/leave/LeaveHistory";
+import Leaverequest from "./components/leave/Leaverequest";
 import Holidaylist from "./components/Holidayslist";
-import Workfromhome from "./components/Workfromhome";
-import Remote_details from "./components/Remote_details";
-import ToDoList from "./components/todo";
+import Workfromhome from "./components/leave/Workfromhome";
+import Remote_details from "./components/leave/Remote_details";
 import UserProfile from "./components/UserProfile";
 import Timemanagement from "./components/Adminfrontend/Timemanagement";
 import Employeelist from "./components/Adminfrontend/Employeelist";
-import Leavemanagement from "./components/Adminfrontend/Leavemanagement";
-import Leaveapproval from "./components/Adminfrontend/Leave_approval";
-import Wfh from "./components/Adminfrontend/Wfh_approval";
+import Leavemanagement from "./components/Adminfrontend/leave/Leavemanagement";
+import Leaveapproval from "./components/Adminfrontend/leave/Leave_approval";
+import Wfh from "./components/Adminfrontend/leave/Wfh_approval";
 import AdminProfile from "./components/Adminfrontend/Adminprofile";
-import Leavehistory from "./components/Adminfrontend/Leave_History";
 import AddUser from "./components/Adminfrontend/new_employee";
 import EmployeeDetails from "./components/EmployeeDetails";
-import ViewAssignedTask from "./components/ViewAssignedTask";
 import LoginPage from "./components/Loginpage";
 import Navbar from "./components/Navbar";
-import TaskPage from "./components/Taskpage";
-import TaskDetailsPage from "./components/TaskDetailsPage";
-import TaskProgress from "./components/TaskProgress";
-import TaskAssign from './components/TaskAssign';
-import ProgressDetail from './components/ProgressDetail';
-import NotificationDashboard from "./components/NotificationDashboard";
-import EnhancedNotificationDashboard from "./components/EnhancedNotificationDashboard";
-import ApiTest from "./components/ApiTest";
+import ProgressDetail from './components/Task/ProgressDetail';
+import TaskAssign from './components/Task/TaskAssign';
+import TaskDetailsPage from "./components/Task/TaskDetailsPage";
+import TaskPage from "./components/Task/Taskpage";
+import TaskProgress from "./components/Task/TaskProgress";
+import ToDoList from "./components/Task/Todo";
+import NotificationDashboard from "./components/notifications/NotificationDashboard";
 import AdminAuth from "./Utils/AdminAuth";
 
 
 import Attendance from "./components/Adminfrontend/Attendance";
-import AddLeave from "./components/Adminfrontend/AddLeave";
+import AddLeave from "./components/Adminfrontend/leave/AddLeave";
 import AttendanceStats from "./components/AttendanceStats";
-import LeaveDetails from "./components/Adminfrontend/LeaveDetails";
-import RemoteDetails from "./components/Adminfrontend/RemoteDetails";
+import LeaveDetails from "./components/Adminfrontend/leave/LeaveDetails";
+import RemoteDetails from "./components/Adminfrontend/leave/RemoteDetails";
 import Chat from './components/Chat';
 import OnboardingDocs from './components/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
 
 import Fileuploader from './components/Fileuploader';
-import GlobalNotificationToast from './components/GlobalNotificationToast';
+import GlobalNotificationToast from './components/notifications/GlobalNotificationToast';
 
 
 
@@ -107,10 +103,6 @@ const router = createBrowserRouter([
     path: "/Login",
     element: <LoginPage />,
   },
-  {
-    path: "/websocket-test",
-    element: <NotificationDashboard />,
-  },
   // {path:"Login",
   // element:<LoginPage />
   // },
@@ -135,18 +127,18 @@ const router = createBrowserRouter([
         path: "profile",
         element: <UserProfile />,
       },
-      {
-        path: "todo",
-        element: <ToDoList />
-      },
-      {
-        path: "task",
-        element: <TaskPage />,
-      },
-         {
-        path: "task/:taskId",
-        element: <TaskDetailsPage />,
-      },
+        {
+      path: "Task/Todo",
+      element: <ToDoList />,
+    },
+    {
+      path: "Task/Todo/TaskPage",
+      element: <TaskPage />,
+    },
+    {
+      path: "Task/Todo/TaskPage/TaskDetailsPage/:taskId",
+      element: <TaskDetailsPage />,
+    },
       {
         path: "Leave",
         element: <Leave />,
@@ -175,14 +167,7 @@ const router = createBrowserRouter([
         path: "notifications",
         element: <NotificationDashboard />,
       },
-      {
-        path: "enhanced-notifications",
-        element: <EnhancedNotificationDashboard />,
-      },
-      {
-        path: "test",
-        element: <ApiTest />,
-},
+      
 {
   path: "LeaveManage",
   element: <Leavemanagement />,
@@ -200,43 +185,31 @@ const router = createBrowserRouter([
   element: <Wfh />,
 },
 {
-  path: "history",
-  element: <Leavehistory />,
-},
-{
   path: 'chat',
   element: <Chat />, 
-},
-{
-  path:"viewtask",
-  element:<ViewAssignedTask />
-},
-{
-  path: "manager-employee",
-  element: <TaskProgress/>,
-},
-{path:"/User/manager-task-detail/:taskId",
-  element:<ProgressDetail role="manager" dashboardRoute="/User/manager-employee" commentLabel="Manager" fileUploadLabel="Manager" />, 
 },
 {
         path: "timemanage",
         element: <Timemanagement />,
       },
-{
-  path: "hr-manager",
-  element: <TaskProgress/>,
-},
-{path:"/User/hr-task-detail/:taskId",
-  element:<ProgressDetail role="hr" dashboardRoute="/User/hr-manager" commentLabel="HR" fileUploadLabel="HR" />, 
-},
-{
-  path: "employee-task-assign",
-  element: <TaskAssign assignType="manager-to-employee" />
-},
-{
-  path: "manager-task-assign",
-  element: <TaskAssign assignType="hr-to-manager" />
-},
+    {
+      path: "Task/TaskProgress",
+      element: <TaskProgress/>,
+    },
+    {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
+      element:<ProgressDetail role="manager" dashboardRoute="/User/Task/TaskProgress" commentLabel="TeamLead" fileUploadLabel="TeamLead" />, 
+    },
+    {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
+      element:<ProgressDetail role="hr" dashboardRoute="/User/Task/TaskProgress" commentLabel="HR" fileUploadLabel="HR" />, 
+    },
+    {
+      path: "Task/TaskProgress/TaskAssign/tl-employee",
+      element: <TaskAssign assignType="TL-to-employee" />
+    },
+    {
+      path: "Task/TaskProgress/TaskAssign/hr-tl",
+      element: <TaskAssign assignType="hr-to-TL" />
+    },
  {
         path:'my-documents',
         element:<OnboardingDocs/>,
@@ -250,7 +223,6 @@ const router = createBrowserRouter([
 { path: "wfh_details", element: <RemoteDetails />},
 { path: "attendance", element: <Attendance />},
 { path: "individualStats", element: <AttendanceStats />},
-{ path: ":userid", element: <TaskAssign /> },
     ],
   },
   {
@@ -264,6 +236,10 @@ const router = createBrowserRouter([
       {
         path: "leave",
         element: <Leavemanagement />,
+      },
+      {
+        path: 'chat',
+        element: <Chat />, // your Slack-like chat component
       },
       {
         path: "time",
@@ -290,10 +266,6 @@ const router = createBrowserRouter([
         element: <AdminProfile />,
       },
       {
-        path: "history",
-        element: <Leavehistory />,
-      },
-      {
         path: "newUser",
         element: <AddUser />,
       },
@@ -302,21 +274,13 @@ const router = createBrowserRouter([
         element: <TaskPage />,
       },
       {
-        path: "viewtask",
-        element: <ViewAssignedTask />,
-      },
-      {
-        path: ":userid",
-        element: <TaskAssign />,
-      },
-      {
         path: "notifications",
         element: <NotificationDashboard />,
       },
-      {
-        path: "enhanced-notifications",
-        element: <EnhancedNotificationDashboard />,
-      },
+      // {
+      //   path: "enhanced-notifications",
+      //   element: <EnhancedNotificationDashboard />,
+      // },
       {
         path:':id',
         element:<EmployeeDetails/>
@@ -341,10 +305,9 @@ const router = createBrowserRouter([
       { path: "wfh", element: <Wfh /> },
       { path: "wfh_details", element: <RemoteDetails />},
       { path: "profile", element: <AdminProfile /> },
-      { path: "history", element: <Leavehistory /> },
       { path: "attendance", element: <Attendance />},
       { path: "newUser", element: <AddUser /> },
-      { path: "addLeave", element: <AddLeave /> },
+      { path: "leave/addLeave", element: <AddLeave /> },
     ],
   }, // Fixed: Added missing comma here
 ]);

@@ -6819,6 +6819,67 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
         traceback.print_exc()
         return []
 
+
+async def create_direct_chat_notification(sender_id, recipient_id, sender_name, message_preview):
+    """
+    Create notification for direct 1-on-1 chat message
+    
+    Args:
+        sender_id: ID of the user sending the message
+        recipient_id: ID of the user receiving the message
+        sender_name: Name of the sender
+        message_preview: Preview of the message content
+    """
+    try:
+        print(f"💬 Creating direct chat notification from {sender_name} to {recipient_id}")
+        
+        # Don't send notification to the sender themselves
+        if sender_id == recipient_id:
+            return None
+        
+        # Get recipient info
+        recipient = Users.find_one({"_id": ObjectId(recipient_id)}) if ObjectId.is_valid(recipient_id) else Users.find_one({"userid": recipient_id})
+        if not recipient:
+            print(f"⚠️ Recipient {recipient_id} not found")
+            return None
+        
+        recipient_name = recipient.get("name", "User")
+        
+        # Truncate message preview
+        if len(message_preview) > 50:
+            message_preview = message_preview[:47] + "..."
+        
+        title = f"New Message from {sender_name}"
+        message = f"Hi {recipient_name}, {sender_name} sent you a message: '{message_preview}'"
+        
+        # Create notification with WebSocket support
+        notification_id = await create_notification_with_websocket(
+            userid=recipient_id,
+            title=title,
+            message=message,
+            notification_type="chat",
+            priority="low",
+            action_url="/User/Chat",
+            related_id=sender_id,
+            metadata={
+                "sender_id": sender_id,
+                "sender_name": sender_name,
+                "message_preview": message_preview,
+                "chat_type": "direct"
+            }
+        )
+        
+        if notification_id:
+            print(f"✅ Direct chat notification sent to {recipient_name} from {sender_name}")
+        
+        return notification_id
+        
+    except Exception as e:
+        print(f"❌ Error creating direct chat notification: {e}")
+        traceback.print_exc()
+        return None
+
+
 # ======================== DOCUMENT REVIEW NOTIFICATION FUNCTIONS ========================
 
 async def create_document_assignment_notification(userid, doc_name, assigned_by_name, assigned_by_id=None):

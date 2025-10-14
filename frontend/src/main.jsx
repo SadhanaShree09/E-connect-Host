@@ -44,10 +44,10 @@ import AttendanceStats from "./components/profile/AttendanceStats";
 import LeaveDetails from "./components/Adminfrontend/leave/LeaveDetails";
 import RemoteDetails from "./components/Adminfrontend/leave/RemoteDetails";
 import Chat from './components/Chat';
-import OnboardingDocs from './components/OnboardingDocs';
+import OnboardingDocs from './components/Docs/OnboardingDocs';
 import HRDocsReview from './components/Adminfrontend/AdminDocsReview';
 
-import Fileuploader from './components/Fileuploader';
+import Fileuploader from './components/Docs/Fileuploader';
 import GlobalNotificationToast from './components/notifications/GlobalNotificationToast';
 
 
@@ -211,12 +211,12 @@ const router = createBrowserRouter([
       element: <TaskAssign assignType="hr-to-TL" />
     },
  {
-        path:'my-documents',
+        path:'Docs/my-documents',
         element:<OnboardingDocs/>,
         
       },
       {
-          path: 'fileuploader',
+          path: 'Docs/fileuploader',
           element:<Fileuploader/>,
         },
 { path: "LeaveManage/leave_details", element: <LeaveDetails /> },

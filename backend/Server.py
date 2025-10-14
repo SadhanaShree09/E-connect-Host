@@ -3274,9 +3274,6 @@ async def get_threads(rootId: str):
     return result
 
 
-# Assign docs to users
-# ------------------ Assign Documents ------------------
-
 # ------------------ Assign Document ------------------
 @app.post("/assign_docs")
 async def assign_docs(payload: AssignPayload, assigned_by: str = "HR"):
@@ -3314,19 +3311,7 @@ async def assign_docs(payload: AssignPayload, assigned_by: str = "HR"):
                 print(f"Error sending document assignment notification: {e}")
 
     return {"message": f'"{payload.docName}" assigned to {count} user(s)'}
-# @app.get("/assign_docs")
-# def get_assigned_docs(userId: str = Query(...)):
-#     """
-#     Return all assigned documents for a given userId.
-#     """
-#     user = Users.find_one({"userId": userId}, {"assigned_docs": 1, "_id": 0})
-#     if not user:
-#         raise HTTPException(status_code=404, detail="User not found")
-    
-#     assigned_docs = user.get("assigned_docs", [])
-#     # Optional: sort by assignedAt descending
-#     assigned_docs.sort(key=lambda d: d["assignedAt"], reverse=True)
-#     return assigned_docs
+
 
 # ------------------ Fetch Assigned Documents ------------------
 @app.get("/documents/assigned/{userId}")
@@ -3403,43 +3388,6 @@ async def review_document(payload: ReviewPayload):
     return {"message": f"Document {payload.docName} marked as {payload.status}"}
 
 
-
-# @app.post("/chat_upload")
-# async def upload_chat_file(
-#     file: UploadFile = File(...),
-#     from_user: str = Form(...),
-#     to_user: str = Form(...),
-#     chatId: str = Form(...)
-# ):
-#     try:
-#         file_bytes = await file.read()
-#         file_doc = {
-#             "filename": file.filename,
-#             "content": Binary(file_bytes),
-#             "from_user": from_user,
-#             "to_user": to_user,
-#             "chatId": chatId,
-#             "timestamp": datetime.utcnow(),
-#             "size": len(file_bytes),
-#             "mime_type": file.content_type,
-#         }
-#         result = files_collection.insert_one(file_doc)
-#         file_doc["_id"] = str(result.inserted_id)
-
-#         # Optional: return all files for the chat
-#         docs = list(files_collection.find({"chatId": chatId}))
-#         for d in docs:
-#             d["_id"] = str(d["_id"])
-
-#         return {"status": "success", "file": file_doc, "all_chat_files": docs}
-
-#     except Exception as e:
-#         raise HTTPException(status_code=500, detail=str(e))
-
-# @app.get("/get_files/{chatId}")
-# async def get_files(chatId: str):
-#     docs = list(files_collection.find({"chatId": chatId}))
-#     return [{"name": d["name"], "type": d["type"], "data": d["data"]} for d in docs]
 
 # ------------------ Upload Document ------------------
 
@@ -3584,16 +3532,7 @@ async def delete_assigned_doc(data: dict):
 
 from fastapi import Response
 
-# @app.get("/view_file/{file_id}")
-# async def view_file(file_id: str):
-#     file_doc = files_collection.find_one({"_id": ObjectId(file_id)})
-#     if not file_doc:
-#         raise HTTPException(status_code=404, detail="File not found")
-#     return Response(
-#         content=file_doc["file"],
-#         media_type=file_doc["content_type"],
-#         headers={"Content-Disposition": f"inline; filename={file_doc['filename']}"}
-#     )
+
 
 @app.post("/create_group")
 async def create_group(group: GroupCreate):
@@ -3622,17 +3561,7 @@ async def get_user_groups(user_id: str):
     return JSONResponse(content=groups_json)
 
 
-# @app.get("/group_members/{group_id}")
-# async def get_group_members(group_id: str):
-#     group = groups_collection.find_one({"_id": group_id})
-#     if not group:
-#         raise HTTPException(status_code=404, detail="Group not found")
-    
-#     members = list(Users.find({"_id": {"$in": group.get("members", [])}}, {"name": 1, "depart": 1}))
-#     # Convert ObjectId to string for frontend
-#     for m in members:
-#         m["_id"] = str(m["_id"])
-#     return members
+
 
 
 

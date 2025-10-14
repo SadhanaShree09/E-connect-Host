@@ -211,12 +211,12 @@ const router = createBrowserRouter([
       element: <TaskAssign assignType="hr-to-TL" />
     },
  {
-        path:'my-documents',
+        path:'Docs/my-documents',
         element:<OnboardingDocs/>,
         
       },
       {
-          path: 'fileuploader',
+          path: 'Docs/fileuploader',
           element:<Fileuploader/>,
         },
 { path: "LeaveManage/leave_details", element: <LeaveDetails /> },

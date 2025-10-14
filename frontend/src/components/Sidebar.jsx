@@ -369,7 +369,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
         }
         
 {loggedIn && !isAdmin  && (
-  <Link to="my-documents" className="sidebar-item">
+  <Link to="Docs/my-documents" className="sidebar-item">
     <div className={`flex items-center p-4 ${isActive('my-documents') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
       <svg xmlns="http://www.w3.org/2000/svg" fill="none" 
         viewBox="0 0 24 24" stroke="currentColor" 

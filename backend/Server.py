@@ -3440,6 +3440,132 @@ async def get_threads(rootId: str):
     return result
 
 
+
+@app.post("/create_group")
+async def create_group(group: GroupCreate):
+    group_id = str(uuid.uuid4())
+    doc = {
+        "_id": group_id,
+        "name": group.name,
+        "members": group.members,
+        "created_at": datetime.utcnow()
+    }
+    groups_collection.insert_one(doc)
+    return {"status": "success", "group_id": group_id, "name": group.name}
+
+from fastapi.responses import JSONResponse
+from fastapi.encoders import jsonable_encoder
+
+@app.get("/get_user_groups/{user_id}")
+async def get_user_groups(user_id: str):
+    # Fetch groups where user is a member
+    groups_cursor = groups_collection.find({"members": user_id})
+    groups = list(groups_cursor)  # <--- await here
+
+    # Convert MongoDB ObjectId and datetime to JSON-safe
+    groups_json = jsonable_encoder(groups)
+
+    return JSONResponse(content=groups_json)
+
+
+
+
+
+
+@app.websocket("/ws/group/{group_id}")
+async def websocket_group(websocket: WebSocket, group_id: str):
+    await group_ws_manager.connect(group_id, websocket)
+    try:
+        while True:
+            data = await websocket.receive_json()
+            # Add timestamp & unique id
+            data["timestamp"] = datetime.utcnow().isoformat() + "Z"
+            data["id"] = data.get("id") or str(ObjectId())
+
+            # Save to MongoDB
+            messages_collection.insert_one({
+                "chatId": group_id,
+                "from_user": data.get("from_user"),
+                "text": data.get("text"),
+                "file": data.get("file"),
+                "timestamp": data["timestamp"]
+            })
+
+            # Broadcast to all group members
+            await group_ws_manager.broadcast(group_id, data)
+            
+            # Create group chat notifications
+            try:
+                sender_id = data.get("from_user")
+                message_text = data.get("text", "")
+                
+                # Get group info
+                group = groups_collection.find_one({"_id": group_id})
+                if group and message_text:
+                    group_name = group.get("name", "Group")
+                    member_ids = group.get("members", [])
+                    
+                    # Get sender name
+                    sender = Users.find_one({"userid": sender_id})
+                    sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
+                    
+                    # Send notifications to all members except sender
+                    await Mongo.create_group_chat_notification(
+                        sender_id=sender_id,
+                        group_id=group_id,
+                        sender_name=sender_name,
+                        group_name=group_name,
+                        message_preview=message_text,
+                        member_ids=member_ids
+                    )
+            except Exception as e:
+                print(f"Error creating group chat notification: {e}")
+                
+    except Exception as e:
+        print("WS disconnected", e)
+    finally:
+        group_ws_manager.disconnect(group_id, websocket)
+
+
+# Fetch group chat history
+@app.get("/group_history/{group_id}")
+async def group_history(group_id: str):
+    cursor = messages_collection.find({"chatId": group_id}).sort("timestamp", 1)
+    messages = []
+    for doc in cursor:
+        messages.append({
+            "id": str(doc.get("_id")),
+            "from_user": doc.get("from_user"),
+            "text": doc.get("text"),
+            "file": doc.get("file"),
+            "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
+            "chatId": doc.get("chatId")
+        })
+    return messages
+
+@app.delete("/delete_group/{group_id}")
+async def delete_group(group_id: str):
+    result = groups_collection.delete_one({"_id": group_id})
+    if result.deleted_count == 0:
+        raise HTTPException(status_code=404, detail="Group not found")
+    
+    # Optionally, delete all messages in that group
+    messages_collection.delete_many({"chatId": group_id})
+    
+    return {"status": "success", "message": f"Group {group_id} deleted successfully"}
+
+@app.put("/update_group/{group_id}")
+async def update_group(group_id: str, group: GroupUpdate):
+    result = groups_collection.update_one(
+        {"_id": group_id},
+        {"$set": {"name": group.name, "members": group.members, "updated_at": datetime.utcnow()}}
+    )
+    if result.matched_count == 0:
+        raise HTTPException(status_code=404, detail="Group not found")
+    return {"status": "success", "group_id": group_id, "name": group.name}
+
+
+
 # ------------------ Assign Document ------------------
 @app.post("/assign_docs")
 async def assign_docs(payload: AssignPayload, assigned_by: str = "HR"):
@@ -3478,6 +3604,19 @@ async def assign_docs(payload: AssignPayload, assigned_by: str = "HR"):
 
     return {"message": f'"{payload.docName}" assigned to {count} user(s)'}
 
+@app.get("/assign_docs")
+def get_assigned_docs(userId: str = Query(...)):
+    """
+    Return all assigned documents for a given userId.
+    """
+    user = Users.find_one({"userId": userId}, {"assigned_docs": 1, "_id": 0})
+    if not user:
+        raise HTTPException(status_code=404, detail="User not found")
+    
+    assigned_docs = user.get("assigned_docs", [])
+    # Optional: sort by assignedAt descending
+    assigned_docs.sort(key=lambda d: d["assignedAt"], reverse=True)
+    return assigned_docs
 
 # ------------------ Fetch Assigned Documents ------------------
 @app.get("/documents/assigned/{userId}")
@@ -3697,129 +3836,4 @@ async def delete_assigned_doc(data: dict):
     return {"message": f"Document '{docName}' deleted successfully"}
 
 from fastapi import Response
-
-
-
-@app.post("/create_group")
-async def create_group(group: GroupCreate):
-    group_id = str(uuid.uuid4())
-    doc = {
-        "_id": group_id,
-        "name": group.name,
-        "members": group.members,
-        "created_at": datetime.utcnow()
-    }
-    groups_collection.insert_one(doc)
-    return {"status": "success", "group_id": group_id, "name": group.name}
-
-from fastapi.responses import JSONResponse
-from fastapi.encoders import jsonable_encoder
-
-@app.get("/get_user_groups/{user_id}")
-async def get_user_groups(user_id: str):
-    # Fetch groups where user is a member
-    groups_cursor = groups_collection.find({"members": user_id})
-    groups = list(groups_cursor)  # <--- await here
-
-    # Convert MongoDB ObjectId and datetime to JSON-safe
-    groups_json = jsonable_encoder(groups)
-
-    return JSONResponse(content=groups_json)
-
-
-
-
-
-
-@app.websocket("/ws/group/{group_id}")
-async def websocket_group(websocket: WebSocket, group_id: str):
-    await group_ws_manager.connect(group_id, websocket)
-    try:
-        while True:
-            data = await websocket.receive_json()
-            # Add timestamp & unique id
-            data["timestamp"] = datetime.utcnow().isoformat() + "Z"
-            data["id"] = data.get("id") or str(ObjectId())
-
-            # Save to MongoDB
-            messages_collection.insert_one({
-                "chatId": group_id,
-                "from_user": data.get("from_user"),
-                "text": data.get("text"),
-                "file": data.get("file"),
-                "timestamp": data["timestamp"]
-            })
-
-            # Broadcast to all group members
-            await group_ws_manager.broadcast(group_id, data)
-            
-            # Create group chat notifications
-            try:
-                sender_id = data.get("from_user")
-                message_text = data.get("text", "")
-                
-                # Get group info
-                group = groups_collection.find_one({"_id": group_id})
-                if group and message_text:
-                    group_name = group.get("name", "Group")
-                    member_ids = group.get("members", [])
-                    
-                    # Get sender name
-                    sender = Users.find_one({"userid": sender_id})
-                    sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
-                    
-                    # Send notifications to all members except sender
-                    await Mongo.create_group_chat_notification(
-                        sender_id=sender_id,
-                        group_id=group_id,
-                        sender_name=sender_name,
-                        group_name=group_name,
-                        message_preview=message_text,
-                        member_ids=member_ids
-                    )
-            except Exception as e:
-                print(f"Error creating group chat notification: {e}")
-                
-    except Exception as e:
-        print("WS disconnected", e)
-    finally:
-        group_ws_manager.disconnect(group_id, websocket)
-
-
-# Fetch group chat history
-@app.get("/group_history/{group_id}")
-async def group_history(group_id: str):
-    cursor = messages_collection.find({"chatId": group_id}).sort("timestamp", 1)
-    messages = []
-    for doc in cursor:
-        messages.append({
-            "id": str(doc.get("_id")),
-            "from_user": doc.get("from_user"),
-            "text": doc.get("text"),
-            "file": doc.get("file"),
-            "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
-            "chatId": doc.get("chatId")
-        })
-    return messages
-
-@app.delete("/delete_group/{group_id}")
-async def delete_group(group_id: str):
-    result = groups_collection.delete_one({"_id": group_id})
-    if result.deleted_count == 0:
-        raise HTTPException(status_code=404, detail="Group not found")
-    
-    # Optionally, delete all messages in that group
-    messages_collection.delete_many({"chatId": group_id})
-    
-    return {"status": "success", "message": f"Group {group_id} deleted successfully"}
-
-@app.put("/update_group/{group_id}")
-async def update_group(group_id: str, group: GroupUpdate):
-    result = groups_collection.update_one(
-        {"_id": group_id},
-        {"$set": {"name": group.name, "members": group.members, "updated_at": datetime.utcnow()}}
-    )
-    if result.matched_count == 0:
-        raise HTTPException(status_code=404, detail="Group not found")
-    return {"status": "success", "group_id": group_id, "name": group.name}
 

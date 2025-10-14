@@ -17,7 +17,7 @@ import { ipadr } from "../../Utils/Resuse";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
 
-export default function HRDocsReview() {
+export default function AdminDocsReview() {
   const [users, setUsers] = useState([]);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [newDocName, setNewDocName] = useState("");
@@ -222,48 +222,50 @@ export default function HRDocsReview() {
       </div>
 
       {loadingUsers ? (
-        <p className="text-center text-gray-600">Loading users...</p>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
-          {filteredUsers.map((user) => {
-            const userDocs = filterDocsByStatus(assignedDocs[user.userId] || []);
-            return (
-              <div
-                key={user.userId}
-                className="bg-white rounded-lg shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
-                    {user.name?.[0]?.toUpperCase() || <User size={20} />}
-                  </div>
-                  <div>
-                    <div className="font-semibold text-gray-800">{user.name}</div>
-                    <div className="text-sm text-gray-500">{userDocs.length} Documents</div>
-                  </div>
-                </div>
-
-                <div className="mt-4 flex justify-between items-center">
-                  <label className="flex items-center gap-2 text-sm">
-                    <input
-                      type="checkbox"
-                      className="form-checkbox text-blue-600 rounded"
-                      checked={selectedUsers.includes(user.userId)}
-                      onChange={() => toggleUserSelection(user.userId)}
-                    />
-                    Select
-                  </label>
-                  <button
-                    onClick={() => setReviewUser(user)}
-                    className="px-3 py-1 bg-blue-300 text-white rounded-lg hover:bg-blue-400 text-sm"
-                  >
-                    Review
-                  </button>
-                </div>
+  <p className="text-center text-gray-600">Loading users...</p>
+) : (
+  <div className="overflow-y-auto max-h-[65vh] pr-2">
+    <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-6">
+      {filteredUsers.map((user) => {
+        const userDocs = filterDocsByStatus(assignedDocs[user.userId] || []);
+        return (
+          <div
+            key={user.userId}
+            className="bg-white rounded-lg shadow-sm p-4 flex flex-col justify-between hover:shadow-md transition"
+          >
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 bg-blue-100 text-blue-600 rounded-full flex items-center justify-center font-bold">
+                {user.name?.[0]?.toUpperCase() || <User size={20} />}
               </div>
-            );
-          })}
-        </div>
-      )}
+              <div>
+                <div className="font-semibold text-gray-800">{user.name}</div>
+                <div className="text-sm text-gray-500">{userDocs.length} Documents</div>
+              </div>
+            </div>
+
+            <div className="mt-4 flex justify-between items-center">
+              <label className="flex items-center gap-2 text-sm">
+                <input
+                  type="checkbox"
+                  className="form-checkbox text-blue-600 rounded"
+                  checked={selectedUsers.includes(user.userId)}
+                  onChange={() => toggleUserSelection(user.userId)}
+                />
+                Select
+              </label>
+              <button
+                onClick={() => setReviewUser(user)}
+                className="px-3 py-1 bg-blue-300 text-white rounded-lg hover:bg-blue-400 text-sm"
+              >
+                Review
+              </button>
+            </div>
+          </div>
+        );
+      })}
+    </div>
+  </div>
+)}
 
       {reviewUser && (
         <div className="fixed inset-0 bg-black bg-opacity-30 flex justify-center items-center z-50">

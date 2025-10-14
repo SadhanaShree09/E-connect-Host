@@ -853,23 +853,7 @@ async def fetch_users_leave_requests(selectedOption: str = Query(..., alias="sel
     print(f"DEBUG: Returning {len(user_leave_requests) if user_leave_requests else 0} requests")
     return {"user_leave_requests": user_leave_requests or []}
 
-#HR page
-@app.get("/leave_update_reminder")
-async def fetch_pending_leave():
-    result = leave_update_notification()
-    return result
 
-#Admin page
-@app.get("/managers_leave_recommend_reminder")
-async def fetch_pending_leave():
-    result = managers_leave_recommend_notification()
-    return result
-
-#TL page
-@app.get("/leave_update_reminder")
-async def fetch_pending_leave(TL: str = Query(..., alias="TL")):
-    result = users_leave_recommend_notification(TL)
-    return result
 
 # HR Page Leave Responses
 @app.put("/updated_user_leave_requests")
@@ -952,41 +936,6 @@ async def recommend_managers_leave_requests_status(leave_id: str = Form(...), st
         return response
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
-@app.delete("/delete_leave_request")
-async def delete_leave_request(item:DeleteLeave):
-    try:
-        def parse_date(date_str):
-            try:
-                # Attempt to parse as full timestamp with time and microseconds
-                return datetime.strptime(date_str, "%Y-%m-%dT%H:%M:%S.%f")
-            except ValueError:
-                try:
-                    # Fallback to parsing as date-only
-                    return datetime.strptime(date_str, "%Y-%m-%d")
-                except ValueError:
-                    raise ValueError(f"Invalid date format: {date_str}")
-
-        # Parse selectedDate and requestDate
-        selected_date_str = item.fromDate.rstrip('Z')
-        request_date_str = item.requestDate.rstrip('Z')
-        selected_date = parse_date(selected_date_str)
-        request_date = parse_date(request_date_str)
-
-        # Localize to UTC
-        selected_date_utc = pytz.utc.localize(selected_date)
-        request_date_utc = pytz.utc.localize(request_date)
-
-
-        result = delete_leave(item.userid, selected_date_utc, request_date_utc, item.leavetype)
-        return result
-
-
-    except Exception as e:
-        raise HTTPException(400, str(e))
-
-
-
 
 # Remote Work Request
 
@@ -1290,11 +1239,6 @@ async def update_remote_work_request_status(userid: str = Form(...), status: str
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
    
-# Admin Page User Leave History
-@app.get("/approved-leave-history/{name}/")  # Also handle requests with trailing slash
-def get_leave_history(name: str = Path(..., title= "Team lead name")):
-    leave_history = get_approved_leave_history(name)
-    return {"leave_history": leave_history}
 
 # Admin ID
 @app.post('/id',dependencies=[Depends(JWTBearer())])

@@ -374,7 +374,6 @@ const isAdmin = LS.get("isadmin");
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
       {/* Sidebar */}
-      {/* Sidebar */}
 <div className="w-80 bg-gray-100 flex flex-col shadow-lg">
   {/* Header */}
   <div className="p-5 flex justify-between items-center border-b border-gray-300">
@@ -383,8 +382,8 @@ const isAdmin = LS.get("isadmin");
       Messages
     </div>
     {(
-  isManager?.toLowerCase() === "manager" ||
-  isDepart?.toLowerCase() === "hr" ||
+  isManager?.toLowerCase() === "Manager" ||
+  isDepart?.toLowerCase() === "HR" ||
   isAdmin
 )&&(
       <button

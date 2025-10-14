@@ -1,4 +1,4 @@
-// src/components/HRDocsReview.jsx
+
 import { useState, useEffect } from "react";
 import {
   Check,
@@ -77,7 +77,7 @@ export default function AdminDocsReview() {
           const prevDocs = prev[uid] || [];
           updated[uid] = [
             ...prevDocs,
-            { docName: docNameTrimmed, status: "pending", assignedBy: "HR", fileUrl: null },
+            { docName: docNameTrimmed, status: "pending", assignedBy: "Admin", fileUrl: null },
           ];
         });
         return updated;

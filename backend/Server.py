@@ -3173,13 +3173,52 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
                     # Send to group channel
                     await group_ws_manager.send_message(msg["chatId"], msg)
                 else:
-                    # Direct chat
+                    # Direct chat thread - create notification
+                    recipient_id = msg.get("to_user")
+                    message_text = msg.get("text", "")
+                    
+                    if recipient_id and message_text:
+                        try:
+                            # Get sender info
+                            sender = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else Users.find_one({"userid": userid})
+                            sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
+                            
+                            # Create direct chat notification
+                            await Mongo.create_direct_chat_notification(
+                                sender_id=userid,
+                                recipient_id=recipient_id,
+                                sender_name=sender_name,
+                                message_preview=message_text
+                            )
+                        except Exception as e:
+                            print(f"Error creating thread chat notification: {e}")
+                    
                     await direct_chat_manager.send_message(msg["to_user"], msg)
 
             else:  # normal chat
                 msg["chatId"] = msg.get("chatId") or "_".join(sorted([userid, msg["to_user"]]))
                 chats_collection.insert_one(msg.copy())
                 msg.pop("_id", None)
+
+                # Create direct chat notification
+                recipient_id = msg.get("to_user")
+                message_text = msg.get("text", "")
+                
+                if recipient_id and message_text:
+                    try:
+                        # Get sender info
+                        sender = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else Users.find_one({"userid": userid})
+                        sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
+                        
+                        # Create direct chat notification
+                        await Mongo.create_direct_chat_notification(
+                            sender_id=userid,
+                            recipient_id=recipient_id,
+                            sender_name=sender_name,
+                            message_preview=message_text
+                        )
+                    except Exception as e:
+                        print(f"Error creating direct chat notification: {e}")
 
                 # send to both sender and recipient
                 await direct_chat_manager.send_message(msg["to_user"], msg)

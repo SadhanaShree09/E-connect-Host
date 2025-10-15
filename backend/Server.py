@@ -1,4 +1,4 @@
-from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_hr_assigned_tasks, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
+from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
 from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
@@ -317,8 +317,10 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# Initialize APScheduler for background tasks
-scheduler = BackgroundScheduler()
+# Initialize APScheduler for background tasks with IST timezone
+# CRITICAL: Must use IST timezone to ensure jobs run at correct India time
+ist_tz = pytz.timezone("Asia/Kolkata")
+scheduler = BackgroundScheduler(timezone=ist_tz)
 
 # Import notification automation
 from notification_automation import (
@@ -331,7 +333,7 @@ from notification_automation import (
 
 # Schedule the auto-clockout task to run daily at 9:30 PM (21:30 IST)
 # This ensures employees who forget to clock out are automatically clocked out at end of day
-scheduler.add_job(auto_clockout, 'cron', hour=21, minute=30, id='auto_clockout')
+scheduler.add_job(auto_clockout, 'cron', hour=21, minute=30, timezone=ist_tz, id='auto_clockout')
 
 # Define sync wrapper functions for async tasks
 def sync_check_upcoming_deadlines():
@@ -380,47 +382,48 @@ def sync_check_pending_approvals():
         print(f"Error in sync_check_pending_approvals: {e}")
 
 # Schedule notification automation tasks
-# Morning checks at 8:00 AM (upcoming deadlines, missed attendance)
+# Morning checks at 8:00 AM IST (upcoming deadlines, missed attendance)
 scheduler.add_job(
     sync_check_upcoming_deadlines,
-    'cron', hour=8, minute=0, id='morning_deadline_check'
+    'cron', hour=8, minute=0, timezone=ist_tz, id='morning_deadline_check'
 )
 
 scheduler.add_job(
     sync_check_missed_attendance,
-    'cron', hour=10, minute=0, id='missed_attendance_check'
+    'cron', hour=10, minute=0, timezone=ist_tz, id='missed_attendance_check'
 )
 
-# Midday overdue tasks check at 12:00 PM
+# Midday overdue tasks check at 12:00 PM IST
 scheduler.add_job(
     sync_check_and_notify_overdue_tasks,
-    'cron', hour=12, minute=0, id='midday_overdue_check'
+    'cron', hour=12, minute=0, timezone=ist_tz, id='midday_overdue_check'
 )
 
-# Evening comprehensive check at 6:00 PM
+# Evening comprehensive check at 6:00 PM IST
 scheduler.add_job(
     sync_run_all_automated_checks,
-    'cron', hour=18, minute=0, id='evening_comprehensive_check'
+    'cron', hour=18, minute=0, timezone=ist_tz, id='evening_comprehensive_check'
 )
 
-# Pending approvals check twice daily (10 AM and 3 PM)
+# Pending approvals check twice daily (10 AM and 3 PM IST)
 scheduler.add_job(
     sync_check_pending_approvals,
-    'cron', hour=10, minute=30, id='morning_approvals_check'
+    'cron', hour=10, minute=30, timezone=ist_tz, id='morning_approvals_check'
 )
 
 scheduler.add_job(
     sync_check_pending_approvals,
-    'cron', hour=15, minute=0, id='afternoon_approvals_check'
+    'cron', hour=15, minute=0, timezone=ist_tz, id='afternoon_approvals_check'
 )
 
 
-# Add new job for daily attendance stats update
+# Add new job for daily attendance stats update at 11:59 PM IST
 scheduler.add_job(
     update_daily_attendance_stats,
     'cron',
     hour=23,
     minute=59,  # Run at 11:59 PM daily
+    timezone=ist_tz,
     id='daily_attendance_update'
 )
 
@@ -2256,61 +2259,10 @@ def edit_task(request: Taskedit):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-
 @app.delete("/task_delete/{taskid}")
 async def task_delete(taskid: str):
     result = delete_a_task(taskid)
     return {"result": result}
-
-# Enhanced Task Notification Endpoints
-@app.post("/trigger_deadline_check")
-async def trigger_deadline_check():
-    """Manually trigger deadline checking for testing/immediate needs"""
-    try:
-        overdue_count = await Mongo.check_and_notify_overdue_tasks()
-        upcoming_count = await Mongo.check_upcoming_deadlines()
-        
-        return {
-            "status": "success",
-            "overdue_notifications_sent": overdue_count,
-            "upcoming_deadline_notifications_sent": upcoming_count,
-            "message": f"Processed {overdue_count} overdue tasks and {upcoming_count} upcoming deadline reminders"
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=f"Error checking deadlines: {str(e)}")
-
-@app.delete("/task_delete/{taskid}")
-async def task_delete(taskid: str):
-    result = delete_a_task(taskid)
-    return {"result": result}
-
-@app.get("/get_tasks/{userid}/")  # Also handle requests with trailing slash
-async def get_tasks(userid: str):
-    result = get_the_tasks(userid)
-    if not result:
-        return {"message": "No tasks found for the given user"}
-
-    for t in result:
-        t["subtasks"] = t.get("subtasks", [])
-        t["comments"] = t.get("comments", [])   # NEW
-        t["files"] = t.get("files", [])         # NEW
-
-    return result
-
-
-@app.get("/get_tasks/{userid}/{date}")
-async def get_tasks(userid: str, date: str):
-    result = get_the_tasks(userid, date)
-    if not result:
-        return {"message": "No tasks found for the given user in selected date"}
-
-    for t in result:
-        t["subtasks"] = t.get("subtasks", [])
-        t["comments"] = t.get("comments", [])   # NEW
-        t["files"] = t.get("files", [])         # NEW
-
-    return result
 
 @app.get("/get_manager_tasks/{userid}")
 async def fetch_manager_tasks(userid: str, date: str = None):
@@ -2341,18 +2293,6 @@ async def get_task(taskid: str):
     if not task:
         raise HTTPException(status_code=404, detail="Task not found")
     return task
-
-
-    
-@app.get("/get_hr_assigned_tasks/{hr_name}")
-def api_get_hr_assigned_tasks(hr_name: str, userid: str = None, date: str = None):
-    try:
-        tasks = get_hr_assigned_tasks(hr_name, userid, date)
-        return JSONResponse(content=tasks)
-    except Exception as e:
-        return JSONResponse(content={"error": str(e)}, status_code=500)
-
-
 
 @app.get("/get_single_task/{taskid}")
 async def get_task(taskid : str):
@@ -2471,172 +2411,6 @@ async def get_task_file(taskid: str, fileid: str):
     except Exception:
         raise HTTPException(status_code=404, detail="File not found in GridFS")
 
-
-
-@app.post("/tasks/{taskid}/comments")
-async def add_task_comment(
-    taskid: str,
-    comment: str = Form(...),
-    userid: str = Form(...)
-):
-    """Add comment to task and send notifications"""
-    try:
-        # Get current task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        # Create comment object
-        comment_obj = {
-            "id": str(uuid.uuid4()),
-            "text": comment,
-            "userId": userid,
-            "timestamp": datetime.now().isoformat(),
-            "userName": ""  # Will be populated from user data
-        }
-        
-        # Get user name
-        user = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        if user:
-            comment_obj["userName"] = user.get("name", "Unknown User")
-        
-        # Add comment to task
-        Mongo.Tasks.update_one(
-            {"_id": ObjectId(taskid)},
-            {"$push": {"comments": comment_obj}}
-        )
-        
-        # Send notifications
-        task_title = task.get("task", "Task")
-        task_userid = task.get("userid")
-        
-        # Get commenter name
-        commenter = Mongo.Users.find_one({"_id": ObjectId(userid)})
-        commenter_name = commenter.get("name", "Team Member") if commenter else "Team Member"
-        
-        # Notify task owner if comment is by someone else
-        if task_userid and userid != task_userid:
-            Mongo.create_notification(
-                userid=task_userid,
-                title="New Comment Added",
-                message=f"{commenter_name} added a comment to your task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Comment Added",
-                    "comment_text": comment,
-                    "commented_by": userid
-                }
-            )
-        
-        # Notify manager if they exist and didn't make the comment
-        assigned_by = task.get("assigned_by")
-        if assigned_by and assigned_by != "self" and assigned_by != userid and assigned_by != task_userid:
-            Mongo.create_notification(
-                userid=assigned_by,
-                title="Comment Added to Assigned Task",
-                message=f"{commenter_name} added a comment to the task '{task_title}': '{comment[:100]}{'...' if len(comment) > 100 else ''}'",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(assigned_by, "manager_task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Comment Added",
-                    "comment_text": comment,
-                    "commented_by": userid
-                }
-            )
-        
-        return {"message": "Comment added successfully", "comment_id": comment_obj["id"]}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tasks/{taskid}/subtasks")
-async def add_task_subtask(
-    taskid: str,
-    subtask_text: str = Form(...),
-    assigned_by: str = Form(...)
-):
-    """Add subtask to task and send notifications"""
-    try:
-        # Get current task
-        task = Mongo.Tasks.find_one({"_id": ObjectId(taskid)})
-        if not task:
-            raise HTTPException(status_code=404, detail="Task not found")
-        
-        # Create subtask object
-        subtask_obj = {
-            "id": int(datetime.now().timestamp()),
-            "text": subtask_text,
-            "completed": False,
-            "assignedBy": assigned_by,
-            "createdAt": datetime.now().isoformat()
-        }
-        
-        # Add subtask to task
-        Mongo.Tasks.update_one(
-            {"_id": ObjectId(taskid)},
-            {"$push": {"subtasks": subtask_obj}}
-        )
-        
-        # Send notifications
-        task_title = task.get("task", "Task")
-        task_userid = task.get("userid")
-        
-        # Get assigner name
-        assigner = Mongo.Users.find_one({"_id": ObjectId(assigned_by)}) if ObjectId.is_valid(assigned_by) else None
-        assigner_name = assigner.get("name", "Manager") if assigner else "Manager"
-        
-        if task_userid:
-            Mongo.create_notification(
-                userid=task_userid,
-                title="Subtask Added",
-                message=f"{assigner_name} added a new subtask '{subtask_text}' to your task '{task_title}'.",
-                notification_type="task",
-                priority="medium",
-                action_url=Mongo.get_role_based_action_url(task_userid, "task"),
-                related_id=taskid,
-                metadata={
-                    "task_title": task_title,
-                    "action": "Subtask Added",
-                    "subtask_text": subtask_text,
-                    "assigned_by": assigned_by
-                }
-            )
-        
-        return {"message": "Subtask added successfully", "subtask_id": subtask_obj["id"]}
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.post("/tasks/trigger-deadline-reminders")
-async def trigger_deadline_reminders():
-    """Manually trigger deadline reminder checks"""
-    try:
-        import asyncio
-        from notification_automation import check_upcoming_deadlines, check_and_notify_overdue_tasks
-        
-        # Check upcoming deadlines
-        upcoming_result = await check_upcoming_deadlines()
-        
-        # Check overdue tasks
-        overdue_result = await check_and_notify_overdue_tasks()
-        
-        return {
-            "message": "Deadline reminder checks completed",
-            "upcoming_deadlines": upcoming_result,
-            "overdue_tasks": overdue_result,
-            "timestamp": datetime.now().isoformat()
-        }
-        
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/get_user/{userid}")
 def get_user(userid: str):
     print("Searching user ID:", userid)
@@ -2707,8 +2481,6 @@ async def fetch_managers():
  return result
 
 
-
-
 @app.get("/get_admin/{userid}")
 def get_admin(userid: str):
     result = Mongo.get_admin_information(userid)
@@ -2770,14 +2542,6 @@ async def fetch_manager_hr_tasks(userid: str, date: str = None):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/get_hr_self_tasks/{userid}")
-async def fetch_hr_self_tasks(userid: str, date: str = None):
-    try:
-        tasks = get_hr_self_assigned_tasks(userid, date)
-        return tasks
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
 @app.get("/get_assigned_task")
 def get_assigned_tasks(TL: str = Query(..., alias="TL"), userid: str | None = Query(None, alias = "userid")):
     result = assigned_task(TL, userid)
@@ -2815,19 +2579,24 @@ async def create_notification_endpoint(notification: NotificationModel):
 @app.get("/notifications/{userid}")
 async def get_user_notifications(
     userid: str,
-    type: str = None,
-    priority: str = None,
-    is_read: bool = None,
-    limit: int = 50
+    # type: str = None,
+    # priority: str = None,
+    # is_read: bool = None,
+    # limit: int = 50
+
+    # type: Optional[str] = Query(None),
+    # priority: Optional[str] = Query(None),
+    # is_read: Optional[bool] = Query(None),
+    # limit: int = Query(50)
 ):
     """Get notifications for a user with optional filters"""
     try:
         notifications = get_notifications(
             userid=userid,
-            notification_type=type,
-            priority=priority,
-            is_read=is_read,
-            limit=limit
+            # notification_type=type,
+            # priority=priority,
+            # is_read=is_read,
+            # limit=limit
         )
         return {"notifications": notifications}
     except Exception as e:
@@ -3227,10 +2996,20 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
                 
                 if recipient_id and message_text:
                     try:
-                        # Get sender info
-                        sender = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else Users.find_one({"userid": userid})
-                        sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
-                        
+                        # Get sender info from Users or admin collection
+                        sender = None
+                        sender_name = "Unknown User"
+                        if ObjectId.is_valid(userid):
+                            sender = Users.find_one({"_id": ObjectId(userid)})
+                            if not sender:
+                                sender = admin.find_one({"_id": ObjectId(userid)})
+                        else:
+                            sender = Users.find_one({"userid": userid})
+                            if not sender:
+                                sender = admin.find_one({"userid": userid})
+                        if sender:
+                            sender_name = sender.get("name", "Admin") if sender.get("name") else "Admin"
+
                         # Create direct chat notification
                         await Mongo.create_direct_chat_notification(
                             sender_id=userid,
@@ -3321,7 +3100,6 @@ async def get_user_groups(user_id: str):
     groups_json = jsonable_encoder(groups)
 
     return JSONResponse(content=groups_json)
-
 
 
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef, useMemo, useCallback, memo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { FaTrashAlt, FaEdit, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaChartLine, FaChevronDown, FaChevronUp } from "react-icons/fa";
+import { FaTrashAlt, FaEdit, FaEye, FaCheckCircle, FaRegCircle, FaTimes, FaPaperclip, FaDownload, FaUser, FaFlag, FaExclamationTriangle, FaClock, FaChartLine, FaChevronDown, FaChevronUp } from "react-icons/fa";
 import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
@@ -265,12 +265,6 @@ const TaskPage = () => {
           ? `${ipadr}/get_manager_hr_tasks/${userId}?date=${selectedDate}`
           : `${ipadr}/get_manager_hr_tasks/${userId}`;
       }
-      // else if (LS.get("position") === "HR") {
-      //   // HR → only self-assigned tasks
-      //   endpoint = selectedDate
-      //     ? `${ipadr}/get_hr_self_tasks/${userId}?date=${selectedDate}`
-      //     : `${ipadr}/get_hr_self_tasks/${userId}`;
-      // }
 
       const response = await fetch(endpoint);
 
@@ -613,6 +607,20 @@ const TaskPage = () => {
             )}
           </div>
         </div>
+
+        <div className="flex items-center justify-between mt-3 pt-2 border-t">
+                  <div className="flex items-center gap-2">
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        openTaskDetails(task);
+                      }}
+                      className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 hover:bg-blue-50 px-2 py-1 rounded transition-colors"
+                    >
+                      <FaEye /> View Details
+                    </button>
+                  </div>
+                </div>
       </div>
     );
   };

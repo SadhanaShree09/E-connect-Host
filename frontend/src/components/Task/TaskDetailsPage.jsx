@@ -135,9 +135,6 @@ const mapStatusToColumn = (status) => {
       endpoint = `${ipadr}/get_manager_tasks/${userId}?date=${date}`;
     } else if (LS.get("position") === "Manager") {
       endpoint = `${ipadr}/get_manager_hr_tasks/${userId}?date=${date}`;}
-    //  else if (LS.get("position") === "HR") {
-    //   endpoint = `${ipadr}/get_hr_self_tasks/${userId}?date=${date}`;
-    // }
 
     const response = await fetch(endpoint);
     if (!response.ok) {

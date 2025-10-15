@@ -315,7 +315,8 @@ def Clockin(userid, name, time):
                 {'$set': {
                     'clockin': clockin_dt.isoformat(),
                     'status': status,
-                    'userid': userid
+                    'userid': userid,
+                    'remark': 'N/A'  # Reset remark to N/A on new clock-in
                 }}
             )
         else:
@@ -326,7 +327,7 @@ def Clockin(userid, name, time):
                 'name': name,
                 'clockin': clockin_dt.isoformat(),
                 'status': status,
-                'remark': ''
+                'remark': 'N/A'  # Default remark until clock-out
             }
             
             # Add bonus leave field for Sunday
@@ -358,7 +359,7 @@ def auto_clockout():
     """
     Automatic clock-out function that runs at end of day.
     Clocks out all users who haven't clocked out yet with default time.
-    - Runs at scheduled time (e.g., 9:30 PM)
+    - Runs at scheduled time ( 9:30 PM)
     - Caps work duration at 24 hours
     - Sends notifications to affected users
     """
@@ -3519,29 +3520,6 @@ def assigned_task(manager_name, userid=None):
 }
         task_list.append(task_data)  
     return task_list
-
-def get_hr_assigned_tasks(hr_name: str, userid: str = None, date: str = None):
-    query = {"assigned_by": hr_name}
-    if userid:
-        query["userid"] = userid
-    if date:
-        query["date"] = date  
-
-    tasks = list(Tasks.find(query))
-    task_list = []
-    for task in tasks:
-        task_data = {
-            "task": task.get("task"),
-            "status": task.get("status"),
-            "date": task.get("date"),
-            "due_date": task.get("due_date"),
-            "userid": task.get("userid"),
-            "assigned_by": task.get("assigned_by", "self"),
-            "priority": task.get("priority", "Medium"),
-            "verified": task.get("verified", False),
-            "taskid": str(task.get("_id"))
-        }
-        task_list.append(task_data)
 
     return task_list
 def get_manager_hr_assigned_tasks(userid: str, date: str = None):
@@ -6708,11 +6686,7 @@ async def create_chat_message_notification(sender_id, receiver_id, sender_name, 
             return None
         
         receiver_name = receiver.get("name", "User")
-        
-        # # Truncate message preview
-        # if len(message_preview) > 50:
-        #     message_preview = message_preview[:47] + "..."
-        
+
         title = f"New Message from {sender_name}"
         message = f"Hi {receiver_name}, {sender_name} sent you a message"
         
@@ -6771,25 +6745,30 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
         
         notifications_sent = []
         
-        # Truncate message preview
-        if len(message_preview) > 50:
-            message_preview = message_preview[:47] + "..."
         
         for member_id in member_ids:
             # Don't send notification to the sender
             if member_id == sender_id:
                 continue
-            
-            # Get member info
-            member = Users.find_one({"_id": ObjectId(member_id)}) if ObjectId.is_valid(member_id) else Users.find_one({"userid": member_id})
+
+            # Get member info from Users or admin collection
+            member = None
+            if ObjectId.is_valid(member_id):
+                member = Users.find_one({"_id": ObjectId(member_id)})
+                if not member:
+                    member = admin.find_one({"_id": ObjectId(member_id)})
+            else:
+                member = Users.find_one({"userid": member_id})
+                if not member:
+                    member = admin.find_one({"userid": member_id})
             if not member:
                 continue
-            
-            member_name = member.get("name", "User")
-            
+
+            member_name = member.get("name", "Admin") if member.get("name") else "Admin"
+
             title = f"New Message in {group_name}"
-            message = f"Hi {member_name}, {sender_name} posted in {group_name}: '{message_preview}'"
-            
+            message = f"Hi {member_name}, {sender_name} posted in {group_name}"
+
             # Create notification with WebSocket support
             notification_id = await create_notification_with_websocket(
                 userid=member_id,
@@ -6808,7 +6787,7 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
                     "chat_type": "group"
                 }
             )
-            
+
             notifications_sent.append(notification_id)
         
         print(f"✅ Group chat notifications sent to {len(notifications_sent)} members")
@@ -6837,21 +6816,26 @@ async def create_direct_chat_notification(sender_id, recipient_id, sender_name, 
         if sender_id == recipient_id:
             return None
         
-        # Get recipient info
-        recipient = Users.find_one({"_id": ObjectId(recipient_id)}) if ObjectId.is_valid(recipient_id) else Users.find_one({"userid": recipient_id})
+        # Get recipient info from Users or admin collection
+        recipient = None
+        if ObjectId.is_valid(recipient_id):
+            recipient = Users.find_one({"_id": ObjectId(recipient_id)})
+            if not recipient:
+                recipient = admin.find_one({"_id": ObjectId(recipient_id)})
+        else:
+            recipient = Users.find_one({"userid": recipient_id})
+            if not recipient:
+                recipient = admin.find_one({"userid": recipient_id})
         if not recipient:
             print(f"⚠️ Recipient {recipient_id} not found")
             return None
-        
-        recipient_name = recipient.get("name", "User")
-        
-        # Truncate message preview
-        if len(message_preview) > 50:
-            message_preview = message_preview[:47] + "..."
-        
+
+        recipient_name = recipient.get("name", "Admin") if recipient.get("name") else "Admin"
+
+
         title = f"New Message from {sender_name}"
-        message = f"Hi {recipient_name}, {sender_name} sent you a message: '{message_preview}'"
-        
+        message = f"Hi {recipient_name}, {sender_name} sent you a message"
+
         # Create notification with WebSocket support
         notification_id = await create_notification_with_websocket(
             userid=recipient_id,
@@ -6868,10 +6852,10 @@ async def create_direct_chat_notification(sender_id, recipient_id, sender_name, 
                 "chat_type": "direct"
             }
         )
-        
+
         if notification_id:
             print(f"✅ Direct chat notification sent to {recipient_name} from {sender_name}")
-        
+
         return notification_id
         
     except Exception as e:

@@ -4287,7 +4287,7 @@ async def notify_leave_approved(userid, leave_type, leave_id=None):
     """Send real-time notification when leave is approved"""
     return await create_notification_with_websocket(
         userid=userid,
-        title="Leave Request Approved ✅",
+        title="Leave Request Approved ",
         message=f"Your {leave_type} leave request has been approved",
         notification_type="leave_approved",
         priority="high",
@@ -4301,7 +4301,7 @@ async def notify_leave_rejected(userid, leave_type, leave_id=None, reason=None):
     reason_text = f". Reason: {reason}" if reason else ""
     return await create_notification_with_websocket(
         userid=userid,
-        title="Leave Request Rejected ❌",
+        title="Leave Request Rejected ",
         message=f"Your {leave_type} leave request has been rejected{reason_text}",
         notification_type="leave_rejected",
         priority="high",
@@ -4314,7 +4314,7 @@ async def notify_leave_recommended(userid, leave_type, approver_name, leave_id=N
     """Send real-time notification when leave is recommended by manager or admin"""
     return await create_notification_with_websocket(
         userid=userid,
-        title="Leave Request Recommended 👍",
+        title="Leave Request Recommended ",
         message=f"Your {leave_type} leave request has been recommended by {approver_name} and forwarded for HR review",
         notification_type="leave_recommended",
         priority="medium",
@@ -4342,7 +4342,7 @@ async def notify_wfh_approved(userid, request_date=None, wfh_id=None):
     date_text = f" for {request_date}" if request_date else ""
     return await create_notification_with_websocket(
         userid=userid,
-        title="WFH Request Approved ✅",
+        title="WFH Request Approved ",
         message=f"Your work from home request{date_text} has been approved",
         notification_type="wfh_approved",
         priority="high",
@@ -4357,7 +4357,7 @@ async def notify_wfh_rejected(userid, request_date=None, wfh_id=None, reason=Non
     reason_text = f". Reason: {reason}" if reason else ""
     return await create_notification_with_websocket(
         userid=userid,
-        title="WFH Request Rejected ❌",
+        title="WFH Request Rejected ",
         message=f"Your work from home request{date_text} has been rejected{reason_text}",
         notification_type="wfh_rejected",
         priority="high",
@@ -4547,7 +4547,7 @@ async def create_overdue_task_notification(userid, task_title, due_date, task_id
             unread_count = get_unread_notification_count(userid)
             await notification_manager.send_unread_count_update(userid, unread_count)
             
-            print(f"🚨 Overdue task notification sent to {user_name} for task: {task_title}")
+            print(f"Overdue task notification sent to {user_name} for task: {task_title}")
         
         return notification_id
     except Exception as e:

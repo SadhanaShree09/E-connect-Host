@@ -3520,29 +3520,6 @@ def assigned_task(manager_name, userid=None):
         task_list.append(task_data)  
     return task_list
 
-def get_hr_assigned_tasks(hr_name: str, userid: str = None, date: str = None):
-    query = {"assigned_by": hr_name}
-    if userid:
-        query["userid"] = userid
-    if date:
-        query["date"] = date  
-
-    tasks = list(Tasks.find(query))
-    task_list = []
-    for task in tasks:
-        task_data = {
-            "task": task.get("task"),
-            "status": task.get("status"),
-            "date": task.get("date"),
-            "due_date": task.get("due_date"),
-            "userid": task.get("userid"),
-            "assigned_by": task.get("assigned_by", "self"),
-            "priority": task.get("priority", "Medium"),
-            "verified": task.get("verified", False),
-            "taskid": str(task.get("_id"))
-        }
-        task_list.append(task_data)
-
     return task_list
 def get_manager_hr_assigned_tasks(userid: str, date: str = None):
     # Manager should only see tasks assigned by HR, not self-assigned

@@ -295,8 +295,8 @@ console.log("filter data:",filteredData);
                         <div className="font-medium text-center">{row.reason}</div>
                       </td>
                       <td className="p-2">
-                      {
-                        LS.get('department')==="HR" ?(
+                        {LS.get('department') === "HR" ? (
+                          // HR sees recommended requests and can Approve/Reject
                           row.status === "Approved" ? (
                             <p className="text-green-500 font-inter text-center">Approved</p>
                           ) : row.status === "Rejected" ? (
@@ -306,83 +306,82 @@ console.log("filter data:",filteredData);
                               <button
                                 style={{ backgroundColor: "#34D399" }}
                                 className="h-8 w-8 rounded-full text-white mr-4"
-                                onClick={() => updateStatus(row.userid, "Approved",row.id)}
+                                onClick={() => updateStatus(row.userid, "Approved", row.id)}
                               >
                                 ✓
                               </button>
                               <button
                                 style={{ backgroundColor: "#EF4444" }}
                                 className="h-8 w-8 rounded-full text-white"
-                                onClick={() => updateStatus(row.userid, "Rejected",row.id)}
+                                onClick={() => updateStatus(row.userid, "Rejected", row.id)}
                               >
                                 ✗
                               </button>
                             </div>
                           )
-
-                        ):  LS.get('position')==='Manager' ?(
-                          row.status === "Recommend" ? (
-                            <p className="text-green-500 font-inter text-center">Recommend</p>
-                          ) : row.status === "Not_Recommend" ? (
-                            <p className="text-red-500 font-inter text-center">Not Recommend</p>
-                          ) : (
-                            <div className="flex justify-center">
-                              <button
-                                style={{ backgroundColor: "#34D399" }}
-                                className="h-8 w-8 rounded-full text-white mr-4"
-                                onClick={() => updateStatus(row.userid, "Recommend",row.id)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-check-fill" viewBox="0 0 16 16">
-                                        <path fillRule="evenodd" d="M15.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L12.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
-                                        <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
-                                      </svg>
-                              </button>
-                              <button
-                                style={{ backgroundColor: "#EF4444" }}
-                                className="h-8 w-8 rounded-full text-white"
-                                onClick={() => updateStatus(row.userid, "Not_Recommend",row.id)}
-                              >
-                                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-fill-slash" viewBox="0 0 16 16">
-                                        <path d="M13.879 10.414a2.501 2.501 0 0 0-3.465 3.465zm.707.707-3.465 3.465a2.501 2.501 0 0 0 3.465-3.465m-4.56-1.096a3.5 3.5 0 1 1 4.949 4.95 3.5 3.5 0 0 1-4.95-4.95ZM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
-                                      </svg>
-                              </button>
-                            </div>
-                        )
-                      ): isadmin &&(
+                        ) : LS.get('position') === 'Manager' || isadmin ? (
+                          // Check if the request is from a Manager or HR employee
+                          (() => {
+                            const isManagerOrHREmployee = row.position === "Manager" || 
+                                                          row.position === "HR" ||
+                                                          row.employeeDepartment === "HR";
                             
-                        row.Recommendation === "Recommend" ? (
-                          <p className="text-green-500 font-inter text-center">Recommend</p>
-                        ) : row.Recommendation === "Not_Recommend" ? (
-                          <p className="text-red-500 font-inter text-center">Not Recommend</p>
-                        ) : (
-                          <div className="flex justify-center">
-                            <button
-                              style={{ backgroundColor: "#34D399" }}
-                              className="h-8 w-8 rounded-full text-white mr-4"
-                              onClick={() => updateStatus(row.userid, "Recommend",row.id)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-check-fill" viewBox="0 0 16 16">
+                            if (isadmin && isManagerOrHREmployee) {
+                              // Admin handling Manager/HR remote work requests - Direct Approve/Reject
+                              return row.status === "Approved" ? (
+                                <p className="text-green-500 font-inter text-center">Approved</p>
+                              ) : row.status === "Rejected" ? (
+                                <p className="text-red-500 font-inter text-center">Rejected</p>
+                              ) : (
+                                <div className="flex justify-center">
+                                  <button
+                                    style={{ backgroundColor: "#34D399" }}
+                                    className="h-8 w-8 rounded-full text-white mr-4"
+                                    onClick={() => updateStatus(row.userid, "Approved", row.id)}
+                                  >
+                                    ✓
+                                  </button>
+                                  <button
+                                    style={{ backgroundColor: "#EF4444" }}
+                                    className="h-8 w-8 rounded-full text-white"
+                                    onClick={() => updateStatus(row.userid, "Rejected", row.id)}
+                                  >
+                                    ✗
+                                  </button>
+                                </div>
+                              );
+                            } else {
+                              // Manager or Admin handling regular employee remote work requests - Recommend/Not Recommend
+                              return row.status === "Recommend" ? (
+                                <p className="text-green-500 font-inter text-center">Recommend</p>
+                              ) : row.status === "Not_Recommend" ? (
+                                <p className="text-red-500 font-inter text-center">Not Recommend</p>
+                              ) : (
+                                <div className="flex justify-center">
+                                  <button
+                                    style={{ backgroundColor: "#34D399" }}
+                                    className="h-8 w-8 rounded-full text-white mr-4"
+                                    onClick={() => updateStatus(row.userid, "Recommend", row.id)}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-check-fill" viewBox="0 0 16 16">
                                       <path fillRule="evenodd" d="M15.854 5.146a.5.5 0 0 1 0 .708l-3 3a.5.5 0 0 1-.708 0l-1.5-1.5a.5.5 0 0 1 .708-.708L12.5 7.793l2.646-2.647a.5.5 0 0 1 .708 0"/>
                                       <path d="M1 14s-1 0-1-1 1-4 6-4 6 3 6 4-1 1-1 1zm5-6a3 3 0 1 0 0-6 3 3 0 0 0 0 6"/>
                                     </svg>
-                            </button>
-                            <button
-                              style={{ backgroundColor: "#EF4444" }}
-                              className="h-8 w-8 rounded-full text-white"
-                              onClick={() => updateStatus(row.userid, "Not_Recommend",row.id)}
-                            >
-                              <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-fill-slash" viewBox="0 0 16 16">
+                                  </button>
+                                  <button
+                                    style={{ backgroundColor: "#EF4444" }}
+                                    className="h-8 w-8 rounded-full text-white"
+                                    onClick={() => updateStatus(row.userid, "Not_Recommend", row.id)}
+                                  >
+                                    <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-fill-slash" viewBox="0 0 16 16">
                                       <path d="M13.879 10.414a2.501 2.501 0 0 0-3.465 3.465zm.707.707-3.465 3.465a2.501 2.501 0 0 0 3.465-3.465m-4.56-1.096a3.5 3.5 0 1 1 4.949 4.95 3.5 3.5 0 0 1-4.95-4.95ZM11 5a3 3 0 1 1-6 0 3 3 0 0 1 6 0m-9 8c0 1 1 1 1 1h5.256A4.5 4.5 0 0 1 8 12.5a4.5 4.5 0 0 1 1.544-3.393Q8.844 9.002 8 9c-5 0-6 3-6 4"/>
                                     </svg>
-                            </button>
-                          </div>
-
-                      )
-                        
-
-                    )
-                      }
-                      
+                                  </button>
+                                </div>
+                              );
+                            }
+                          })()
+                        ) : null}
                       </td>
                     </tr>
                   ))}

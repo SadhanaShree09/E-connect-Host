@@ -1,4 +1,3 @@
-from Csvhandler import addnewdata,Getcsvdataformat,Deletecsvdata,Updatecsvdata
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
 from fastapi.exceptions import HTTPException
@@ -58,7 +57,6 @@ client = MongoClient(
 db = client["RBG_AI"]
 print(f"DEBUG: MONGODB_URI={mongo_url}")
 print(f"DEBUG: Selected DB name={db.name}")
-print(f"DEBUG: client object before any reassignment: {type(client)}")
 client=client.RBG_AI
 Users=client.Users
 Add=client.Dataset
@@ -75,8 +73,6 @@ groups_collection = client.groups
 users_collection = client.users
 documents_collection = client.document
 assignments_collection = client.assignments
-
-
 messages_collection = client.messages
 Managers = db.managers
 holidays_collection = db["holidays"]
@@ -84,43 +80,7 @@ AttendanceStats = db["attendance_stats"]  # For caching calculated stats
 WorkingDays = db["working_days"]
 
 Notifications = db.notifications
-# Others
-def Adddata(data,id,filename):
-    a=Add.insert_one({'userid':id,'data':data,'filename':filename})
-    return str(a.inserted_id)
 
-def Editdata(data,id,filename):
-    a=Add.update_one({"userid":id},{"$set":{"data":data,'filename':filename}})
-    return "done"
-
-def deletedata(id):
-    a=Add.delete_one({'_id':id})
-    return "done"
-
-def addcsv(name,data,id):
-    old=Add.find_one({'user_id':id})
-    if old:
-        print(id)
-        a=addnewdata(name,data,id)
-        print(a)
-        return 's'
-    else:
-        a=addnewdata(name,data,id)
-        print(a)
-        u=Add.insert_one({'user_id':id,'path':a,'filename':name})
-        return str(u.inserted_id)
-
-def Getcsvdata(id):
-    res=Getcsvdataformat(f'./Csvdata/{id}.csv')
-    return res
-
-def Updatecsv(name,data,id,fileid):
-    res=Updatecsvdata(id=id,data=data,fileid=fileid,name=name)
-    return res
-
-def Deletecsv(id,fileid):
-    res=Deletecsvdata(fileid=fileid,id=id)
-    return res
 
 def Hashpassword(password):
     bytePwd = password.encode('utf-8')
@@ -2755,7 +2715,7 @@ def edit_the_task(
                             notification_id = create_notification(
                                 userid=task_owner_id,
                                 title="Task Verified",
-                                message=f"Your completed task '{task_title}' has been verified by {verifier_title}. Great work!",
+                                message=f"Your completed task '{task_title}' has been verified.Great work!",
                                 notification_type="task",
                                 priority="high",
                                 action_url=get_role_based_action_url(task_owner_id, "task"),
@@ -2780,7 +2740,7 @@ def edit_the_task(
                                     asyncio.create_task(notification_manager.send_personal_notification(task_owner_id, {
                                         "_id": notification_id,
                                         "title": "Task Verified",
-                                        "message": f"Your completed task '{task_title}' has been verified by {verifier_title}. Great work!",
+                                        "message": f"Your completed task '{task_title}' has been verified. Great work!",
                                         "type": "task",
                                         "priority": "high"
                                     }))
@@ -2788,7 +2748,7 @@ def edit_the_task(
                                     loop.run_until_complete(notification_manager.send_personal_notification(task_owner_id, {
                                         "_id": notification_id,
                                         "title": "Task Verified",
-                                        "message": f"Your completed task '{task_title}' has been verified by {verifier_title}. Great work!",
+                                        "message": f"Your completed task '{task_title}' has been verified. Great work!",
                                         "type": "task",
                                         "priority": "high"
                                     }))
@@ -4287,7 +4247,7 @@ async def notify_leave_approved(userid, leave_type, leave_id=None):
     """Send real-time notification when leave is approved"""
     return await create_notification_with_websocket(
         userid=userid,
-        title="Leave Request Approved ✅",
+        title="Leave Request Approved ",
         message=f"Your {leave_type} leave request has been approved",
         notification_type="leave_approved",
         priority="high",
@@ -4301,7 +4261,7 @@ async def notify_leave_rejected(userid, leave_type, leave_id=None, reason=None):
     reason_text = f". Reason: {reason}" if reason else ""
     return await create_notification_with_websocket(
         userid=userid,
-        title="Leave Request Rejected ❌",
+        title="Leave Request Rejected ",
         message=f"Your {leave_type} leave request has been rejected{reason_text}",
         notification_type="leave_rejected",
         priority="high",
@@ -4314,7 +4274,7 @@ async def notify_leave_recommended(userid, leave_type, approver_name, leave_id=N
     """Send real-time notification when leave is recommended by manager or admin"""
     return await create_notification_with_websocket(
         userid=userid,
-        title="Leave Request Recommended 👍",
+        title="Leave Request Recommended ",
         message=f"Your {leave_type} leave request has been recommended by {approver_name} and forwarded for HR review",
         notification_type="leave_recommended",
         priority="medium",
@@ -4342,7 +4302,7 @@ async def notify_wfh_approved(userid, request_date=None, wfh_id=None):
     date_text = f" for {request_date}" if request_date else ""
     return await create_notification_with_websocket(
         userid=userid,
-        title="WFH Request Approved ✅",
+        title="WFH Request Approved ",
         message=f"Your work from home request{date_text} has been approved",
         notification_type="wfh_approved",
         priority="high",
@@ -4357,7 +4317,7 @@ async def notify_wfh_rejected(userid, request_date=None, wfh_id=None, reason=Non
     reason_text = f". Reason: {reason}" if reason else ""
     return await create_notification_with_websocket(
         userid=userid,
-        title="WFH Request Rejected ❌",
+        title="WFH Request Rejected ",
         message=f"Your work from home request{date_text} has been rejected{reason_text}",
         notification_type="wfh_rejected",
         priority="high",
@@ -4547,7 +4507,7 @@ async def create_overdue_task_notification(userid, task_title, due_date, task_id
             unread_count = get_unread_notification_count(userid)
             await notification_manager.send_unread_count_update(userid, unread_count)
             
-            print(f"🚨 Overdue task notification sent to {user_name} for task: {task_title}")
+            print(f"Overdue task notification sent to {user_name} for task: {task_title}")
         
         return notification_id
     except Exception as e:

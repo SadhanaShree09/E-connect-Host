@@ -282,14 +282,14 @@ const Remote_details = () => {
                       <td
                         scope="col"
                         className={`p-2 font-poppins text-center ${
-                          RemoteWork.status === "Approved"
+                          RemoteWork.status || RemoteWork.Recommendation === "Approved"
                             ? "text-green-500"
-                            : RemoteWork.status === "Rejected"
+                            : RemoteWork.status || RemoteWork.Recommendation === "Rejected"
                             ? "text-red-500"
                             : ""
                         }`}
                       >
-                        {RemoteWork.status || "Pending"}
+                        {RemoteWork.status || RemoteWork.Recommendation || "Pending"}
                       </td>
                     </tr>
                   ))}

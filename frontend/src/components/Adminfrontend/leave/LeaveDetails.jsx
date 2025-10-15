@@ -478,7 +478,7 @@ const LeaveDetails = () => {
             )}
             {userRole === 'manager' && leaveData.manager_info && (
               <span className="ml-4 text-gray-800">
-                Manager: <strong>{leaveData.manager_info.manager_name}</strong>
+                TL: <strong>{leaveData.manager_info.manager_name}</strong>
               </span>
             )}
           </div>

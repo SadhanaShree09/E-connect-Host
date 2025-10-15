@@ -40,7 +40,7 @@ const RemoteDetails = () => {
     direction: 'asc'
   });
 
-  // User info from localStorage
+  // User info from memory
   const userId = LS.get('userid');
   const userPosition = LS.get('position');
   const userName = LS.get('name');
@@ -56,6 +56,11 @@ const RemoteDetails = () => {
   };
 
   const userRole = getUserRole();
+
+  // Helper function to get status from either status or Recommendation field
+  const getRecordStatus = (record) => {
+    return record.status || record.Recommendation || 'Pending';
+  };
 
   // Convert date format helper
   const convertDateFormat = (dateString) => {
@@ -98,13 +103,22 @@ const RemoteDetails = () => {
         throw new Error('Failed to fetch remote work data');
       }
       const data = await response.json();
-      setRemoteData(data);
+      
+      // Normalize the data structure - handle both Remote_History and remote_work_details
+      let remoteWorkDetails = [];
+      if (data.Remote_History) {
+        remoteWorkDetails = data.Remote_History;
+      } else if (data.remote_work_details) {
+        remoteWorkDetails = data.remote_work_details;
+      }
+      
+      setRemoteData({ ...data, remote_work_details: remoteWorkDetails });
       
       // Apply date range filter if set
       if (dateRange[0].startDate && dateRange[0].endDate) {
-        filterDataByDateRange(data.remote_work_details || [], dateRange[0].startDate, dateRange[0].endDate);
+        filterDataByDateRange(remoteWorkDetails, dateRange[0].startDate, dateRange[0].endDate);
       } else {
-        setFilteredData(data.remote_work_details || []);
+        setFilteredData(remoteWorkDetails);
       }
       
     } catch (err) {
@@ -194,6 +208,12 @@ const RemoteDetails = () => {
         let aValue = a[sortConfig.column];
         let bValue = b[sortConfig.column];
         
+        // Handle status sorting - check both fields
+        if (sortConfig.column === 'status') {
+          aValue = getRecordStatus(a);
+          bValue = getRecordStatus(b);
+        }
+        
         if (sortConfig.column === 'requestDate' || sortConfig.column === 'fromDate') {
           aValue = new Date(convertDateFormat(aValue));
           bValue = new Date(convertDateFormat(bValue));
@@ -241,16 +261,19 @@ const RemoteDetails = () => {
       : <ArrowDown className="inline ml-1 w-4 h-4" />;
   };
 
-  // Calculate summary stats - ADDED: Not_Recommend count
+  // Calculate summary stats
   const getSummaryStats = () => {
     const records = filteredData;
     return {
       total: records.length,
-      approved: records.filter(r => r.status === 'Approved').length,
-      pending: records.filter(r => !r.status || r.status === 'Pending').length,
-      rejected: records.filter(r => r.status === 'Rejected').length,
-      recommended: records.filter(r => r.status === 'Recommend').length,
-      notRecommended: records.filter(r => r.status === 'Not_Recommend').length, // ADDED
+      approved: records.filter(r => getRecordStatus(r) === 'Approved').length,
+      pending: records.filter(r => {
+        const status = getRecordStatus(r);
+        return !status || status === 'Pending';
+      }).length,
+      rejected: records.filter(r => getRecordStatus(r) === 'Rejected').length,
+      recommended: records.filter(r => getRecordStatus(r) === 'Recommend').length,
+      notRecommended: records.filter(r => getRecordStatus(r) === 'Not_Recommend').length,
     };
   };
 
@@ -295,7 +318,7 @@ const RemoteDetails = () => {
           </div>
         </div>
 
-        {/* Summary Cards - ADDED: Not Recommended card */}
+        {/* Summary Cards */}
         <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6 mb-6">
           <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
             <div className="text-center">
@@ -332,7 +355,6 @@ const RemoteDetails = () => {
             </div>
           </div>
 
-          {/* ADDED: Not Recommended card */}
           <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
             <div className="text-center">
               <p className="text-sm text-gray-600">Not Recommended</p>
@@ -346,7 +368,7 @@ const RemoteDetails = () => {
           {/* Filters Header */}
           <header className="flex flex-wrap justify-between items-center px-5 py-4 border-b border-gray-200 gap-4">
             <div className="flex flex-wrap items-center gap-4">
-              {/* Status Filter - ADDED: Not_Recommend option */}
+              {/* Status Filter */}
               <select
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm"
                 value={statusFilter}
@@ -454,7 +476,7 @@ const RemoteDetails = () => {
             )}
             {userRole === 'manager' && remoteData.manager_info && (
               <span className="ml-4 text-gray-800">
-                Manager: <strong>{remoteData.manager_info.manager_name}</strong>
+                TL: <strong>{remoteData.manager_info.manager_name}</strong>
               </span>
             )}
           </div>
@@ -500,73 +522,76 @@ const RemoteDetails = () => {
                       </td>
                     </tr>
                   ) : currentItems.length > 0 ? (
-                    currentItems.map((record, index) => (
-                      <tr key={record._id || index} className="hover:bg-gray-50">
-                        <td className="p-2 whitespace-nowrap w-fit">
-                          <div className="font-medium text-start w-fit">
-                            {indexOfFirstItem + index + 1}.
-                          </div>
-                        </td>
-                        <td className="p-2 whitespace-nowrap">
-                          <div className="font-medium text-start">
-                            {record.employeeName}
-                          </div>
-                          <div className="text-xs text-gray-500">{record.email}</div>
-                        </td>
-                        <td className="p-2 whitespace-nowrap">
-                          <div className="font-medium text-start">
-                            {record.fromDate}
-                          </div>
-                          {record.toDate && record.toDate !== record.fromDate && (
-                            <div className="text-xs text-gray-500">to {record.toDate}</div>
+                    currentItems.map((record, index) => {
+                      const recordStatus = getRecordStatus(record);
+                      return (
+                        <tr key={record._id || record.userid || index} className="hover:bg-gray-50">
+                          <td className="p-2 whitespace-nowrap w-fit">
+                            <div className="font-medium text-start w-fit">
+                              {indexOfFirstItem + index + 1}.
+                            </div>
+                          </td>
+                          <td className="p-2 whitespace-nowrap">
+                            <div className="font-medium text-start">
+                              {record.employeeName}
+                            </div>
+                            <div className="text-xs text-gray-500">{record.email}</div>
+                          </td>
+                          <td className="p-2 whitespace-nowrap">
+                            <div className="font-medium text-start">
+                              {record.fromDate}
+                            </div>
+                            {record.toDate && record.toDate !== record.fromDate && (
+                              <div className="text-xs text-gray-500">to {record.toDate}</div>
+                            )}
+                          </td>
+                          <td className="p-2 whitespace-nowrap">
+                            <div className="font-medium text-start">
+                              {record.time}
+                            </div>
+                          </td>
+                          <td className="p-2 whitespace-nowrap w-fit">
+                            <div className="font-medium text-start w-fit">
+                              {record.requestDate}
+                            </div>
+                          </td>
+                          <td className="p-2 whitespace-normal">
+                            <div className="font-medium text-start" title={record.reason}>
+                              {record.reason}
+                            </div>
+                          </td>
+                          <td className="p-2 whitespace-nowrap">
+                            <div className="font-medium text-start text-xs">
+                              {record.ip}
+                            </div>
+                          </td>
+                          {(userRole === 'admin' || userRole === 'hr') && (
+                            <>
+                              <td className="p-2 whitespace-nowrap">
+                                <div className="font-medium text-start">
+                                  {record.department || 'N/A'}
+                                </div>
+                              </td>
+                              <td className="p-2 whitespace-nowrap">
+                                <div className="font-medium text-start">
+                                  {record.position || 'N/A'}
+                                </div>
+                              </td>
+                              <td className="p-2 whitespace-nowrap">
+                                <div className="font-medium text-start">
+                                  {record.teamLeader || 'N/A'}
+                                </div>
+                              </td>
+                            </>
                           )}
-                        </td>
-                        <td className="p-2 whitespace-nowrap">
-                          <div className="font-medium text-start">
-                            {record.time}
-                          </div>
-                        </td>
-                        <td className="p-2 whitespace-nowrap w-fit">
-                          <div className="font-medium text-start w-fit">
-                            {record.requestDate}
-                          </div>
-                        </td>
-                        <td className="p-2 whitespace-normal">
-                          <div className="font-medium text-start" title={record.reason}>
-                            {record.reason}
-                          </div>
-                        </td>
-                        <td className="p-2 whitespace-nowrap">
-                          <div className="font-medium text-start text-xs">
-                            {record.ip}
-                          </div>
-                        </td>
-                        {(userRole === 'admin' || userRole === 'hr') && (
-                          <>
-                            <td className="p-2 whitespace-nowrap">
-                              <div className="font-medium text-start">
-                                {record.department || 'N/A'}
-                              </div>
-                            </td>
-                            <td className="p-2 whitespace-nowrap">
-                              <div className="font-medium text-start">
-                                {record.position || 'N/A'}
-                              </div>
-                            </td>
-                            <td className="p-2 whitespace-nowrap">
-                              <div className="font-medium text-start">
-                                {record.teamLeader || 'N/A'}
-                              </div>
-                            </td>
-                          </>
-                        )}
-                        <td className="p-2 whitespace-nowrap">
-                          <div className={`font-medium text-start ${getStatusColor(record.status || 'Pending')}`}>
-                            {record.status || 'Pending'}
-                          </div>
-                        </td>
-                      </tr>
-                    ))
+                          <td className="p-2 whitespace-nowrap">
+                            <div className={`font-medium text-start ${getStatusColor(recordStatus)}`}>
+                              {recordStatus}
+                            </div>
+                          </td>
+                        </tr>
+                      );
+                    })
                   ) : (
                     <tr>
                       <td colSpan={(userRole === 'admin' || userRole === 'hr') ? "11" : "8"} className="p-2 whitespace-nowrap">

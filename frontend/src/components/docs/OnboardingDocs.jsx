@@ -234,80 +234,74 @@ const filteredDocs = useMemo(() => {
 };
 
   return (
-    <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full  shadow-black rounded-xl justify-center items-center relative jsonback  ml-10 rounded-md">
-      <div className="mr-8 p-10 bg-white ...">
-  <ToastContainer position="top-right" autoClose={4000} />
-  {/* rest of your dashboard */}
-</div>
+  <div className="mx-10 my-6 p-8 bg-white min-h-[75vh] w-full shadow-md rounded-xl relative">
+    <ToastContainer position="top-right" autoClose={4000} />
 
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-        <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">  My Documentation</h1>
-        <button
-          onClick={fetchAssignedDocs}
-          disabled={loading || !userid}
-          className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 my-2 mt-10"
-        >
-          <RefreshCcw size={18} />
-          {loading ? "Refreshing..." : "Refresh"}
-        </button>
+    {/* Header */}
+    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
+      <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">
+        My Documentation
+      </h1>
+      <button
+        onClick={fetchAssignedDocs}
+        disabled={loading || !userid}
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
+      >
+        <RefreshCcw size={18} />
+        {loading ? "Refreshing..." : "Refresh"}
+      </button>
+    </div>
+
+    {/* Status Summary */}
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
+      <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
+        <FileClock className="text-yellow-500 mb-2" size={28} />
+        <p className="text-yellow-600 font-bold text-xl">{statusCounts.pending}</p>
+        <p className="text-gray-600">Pending</p>
       </div>
-
-      {/* Status Summary */}
-      <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8 my-2 mt-10">
-        <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
-          <FileClock className="text-yellow-500 mb-2" size={28} />
-          <p className="text-yellow-600 font-bold text-xl">{statusCounts.pending}</p>
-          <p className="text-gray-600">Pending</p>
-        </div>
-        <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
-          <FileUp className="text-blue-600 mb-2" size={28} />
-          <p className="text-blue-600 font-bold text-xl">{statusCounts.uploaded}</p>
-          <p className="text-gray-600">Uploaded</p>
-        </div>
-        <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
-          <FileCheck className="text-green-600 mb-2" size={28} />
-          <p className="text-green-600 font-bold text-xl">{statusCounts.verified}</p>
-          <p className="text-gray-600">Verified</p>
-        </div>
+      <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
+        <FileUp className="text-blue-600 mb-2" size={28} />
+        <p className="text-blue-600 font-bold text-xl">{statusCounts.uploaded}</p>
+        <p className="text-gray-600">Uploaded</p>
       </div>
+      <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
+        <FileCheck className="text-green-600 mb-2" size={28} />
+        <p className="text-green-600 font-bold text-xl">{statusCounts.verified}</p>
+        <p className="text-gray-600">Verified</p>
+      </div>
+    </div>
 
-      {/* Search */}
-      <div className="sticky top-0 z-10 bg-gray-50 pb-4 flex flex-col sm:flex-row gap-3 my-2 mt-10">
-  {/* Search Input */}
-  <input
-    type="text"
-    placeholder=" Search documents..."
-    value={searchTerm}
-    onChange={(e) => {
-      setSearchTerm(e.target.value);
-      setCurrentPage(1);
-    }}
-    className="flex-1 px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200 shadow-sm"
-  />
+    {/* Search + Filter */}
+    <div className="flex flex-col sm:flex-row gap-3 mb-4">
+      <input
+        type="text"
+        placeholder="Search documents..."
+        value={searchTerm}
+        onChange={(e) => {
+          setSearchTerm(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="flex-1 px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200 shadow-sm"
+      />
 
-  {/* Status Filter Dropdown */}
-  <select
-    value={statusFilter}
-    onChange={(e) => {
-      setStatusFilter(e.target.value);
-      setCurrentPage(1);
-    }}
-    className="px-3 py-2 border rounded-lg bg-white shadow-sm"
-  >
-    <option value="all">All</option>
-    <option value="pending">Pending</option>
-    <option value="uploaded">Uploaded</option>
-    <option value="verified">Verified</option>
-  </select>
-</div>
+      <select
+        value={statusFilter}
+        onChange={(e) => {
+          setStatusFilter(e.target.value);
+          setCurrentPage(1);
+        }}
+        className="px-3 py-2 border rounded-lg bg-white shadow-sm"
+      >
+        <option value="all">All</option>
+        <option value="pending">Pending</option>
+        <option value="uploaded">Uploaded</option>
+        <option value="verified">Verified</option>
+      </select>
+    </div>
 
-
-      {/* Documents Table */}
-      <div className="overflow-hidden flex-1 flex flex-col">
-    {/* Table Header */}
+    {/* Documents Table (no internal scroll) */}
     <table className="w-full border-collapse table-fixed">
-      <thead className="bg-gray-100 text-sm sticky top-0 z-10">
+      <thead className="bg-gray-100 text-sm">
         <tr className="text-left text-gray-600">
           <th className="p-4">Document</th>
           <th className="p-4">Status</th>
@@ -315,56 +309,49 @@ const filteredDocs = useMemo(() => {
           <th className="p-4">Assigned At</th>
         </tr>
       </thead>
+      <tbody>
+        {loading ? (
+          <tr>
+            <td colSpan="4" className="p-6 text-center text-gray-400">
+              <div className="flex justify-center items-center gap-2">
+                <span className="animate-spin border-2 border-gray-300 border-t-blue-600 rounded-full w-5 h-5"></span>
+                Loading documents...
+              </div>
+            </td>
+          </tr>
+        ) : paginatedDocs.length === 0 ? (
+          <tr>
+            <td colSpan="4" className="p-6 text-center text-gray-400">
+              No documents found.
+            </td>
+          </tr>
+        ) : (
+          paginatedDocs.map((doc, index) => (
+            <tr
+              key={`${doc.fileId || index}-${doc.docName}`}
+              className="border-t hover:bg-gray-50 transition"
+            >
+              <td className="p-4 font-medium text-gray-800">{doc.docName}</td>
+              <td className="p-4">
+                <StatusBadge status={doc.status} fileUrl={doc.fileUrl} />
+              </td>
+              <td className="p-4">
+                <ActionButtons doc={doc} />
+              </td>
+              <td className="p-4 text-gray-500">
+                {doc.assignedAt
+                  ? new Date(doc.assignedAt).toLocaleString()
+                  : "—"}
+              </td>
+            </tr>
+          ))
+        )}
+      </tbody>
     </table>
 
-    {/* Scrollable Table Body */}
-    <div className="overflow-y-auto flex-1 max-h-[60vh]">
-      <table className="w-full border-collapse table-fixed">
-        <tbody>
-          {loading ? (
-            <tr>
-              <td colSpan="4" className="p-6 text-center text-gray-400">
-                <div className="flex justify-center items-center gap-2">
-                  <span className="animate-spin border-2 border-gray-300 border-t-blue-600 rounded-full w-5 h-5"></span>
-                  Loading documents...
-                </div>
-              </td>
-            </tr>
-          ) : paginatedDocs.length === 0 ? (
-            <tr>
-              <td colSpan="4" className="p-6 text-center text-gray-400">
-                No documents found.
-              </td>
-            </tr>
-          ) : (
-            paginatedDocs.map((doc, index) => (
-              <tr
-                key={`${doc.fileId || index}-${doc.docName}`}
-                className="border-t hover:bg-gray-50 transition"
-              >
-                <td className="p-4 font-medium text-gray-800">{doc.docName}</td>
-                <td className="p-4">
-                  <StatusBadge status={doc.status} fileUrl={doc.fileUrl} />
-                </td>
-                <td className="p-4">
-                  <ActionButtons doc={doc} />
-                </td>
-                <td className="p-4 text-gray-500">
-                  {doc.assignedAt
-                    ? new Date(doc.assignedAt).toLocaleString()
-                    : "—"}
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
-    </div>
-
-        {/* Pagination */}
-         {/* Pagination (fixed under table) */}
+    {/* Pagination */}
     {totalPages > 1 && (
-      <div className="flex justify-end gap-2 p-4 border-t bg-gray-50 text-sm">
+      <div className="flex justify-end gap-2 p-4 border-t bg-gray-50 text-sm mt-2">
         <button
           onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
           disabled={currentPage === 1}
@@ -383,45 +370,43 @@ const filteredDocs = useMemo(() => {
           Next
         </button>
       </div>
-   
+    )}
 
-        )}
+    {/* File Upload Modal */}
+    {openUploader && selectedDoc && (
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg relative">
+          <button
+            className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
+            onClick={() => setOpenUploader(false)}
+          >
+            <X size={20} />
+          </button>
+          <Fileuploader
+            userid={userid}
+            docName={selectedDoc.docName}
+            onUpload={(uploadedFile) => {
+              setAssignedDocs((prev) =>
+                prev.map((doc) =>
+                  doc.docName === uploadedFile.docName
+                    ? {
+                        ...doc,
+                        fileUrl: uploadedFile.fileUrl,
+                        fileId: uploadedFile.fileId,
+                        status: "uploaded",
+                      }
+                    : doc
+                )
+              );
+              setOpenUploader(false);
+              toast.success("File uploaded and sent to admin!");
+            }}
+            onClose={() => setOpenUploader(false)}
+          />
+        </div>
       </div>
-
-      {/* Modal File Uploader */}
-      {openUploader && selectedDoc && (
-  <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
-    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-lg relative">
-      <button
-        className="absolute top-3 right-3 text-gray-500 hover:text-gray-800"
-        onClick={() => setOpenUploader(false)}
-      >
-        <X size={20} />
-      </button>
-      <Fileuploader
-  userid={userid}
-  docName={selectedDoc.docName}
-  onUpload={(uploadedFile) => {
-    setAssignedDocs((prev) =>
-      prev.map((doc) =>
-        doc.docName === uploadedFile.docName
-          ? {
-              ...doc,
-              fileUrl: uploadedFile.fileUrl,
-              fileId: uploadedFile.fileId,
-              status: "uploaded",
-            }
-          : doc
-      )
-    );
-    setOpenUploader(false);
-    toast.success("File uploaded and sent to admin!");
-  }}
-  onClose={() => setOpenUploader(false)}
-/>
-    </div>
+    )}
   </div>
-)}
-    </div>
-  );
+);
+
 }

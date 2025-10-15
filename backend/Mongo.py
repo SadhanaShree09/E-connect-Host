@@ -58,7 +58,6 @@ client = MongoClient(
 db = client["RBG_AI"]
 print(f"DEBUG: MONGODB_URI={mongo_url}")
 print(f"DEBUG: Selected DB name={db.name}")
-print(f"DEBUG: client object before any reassignment: {type(client)}")
 client=client.RBG_AI
 Users=client.Users
 Add=client.Dataset
@@ -75,8 +74,6 @@ groups_collection = client.groups
 users_collection = client.users
 documents_collection = client.document
 assignments_collection = client.assignments
-
-
 messages_collection = client.messages
 Managers = db.managers
 holidays_collection = db["holidays"]

@@ -66,10 +66,13 @@ const WorkFromHome = () => {
   const remoteworkrequestapi = (newRequest) => {
     const userid = LS.get("userid");
     const employeeName = LS.get("name");
+    
+    // ✅ Clean employee name - remove special characters like ()
+    const cleanedName = employeeName ? employeeName.replace(/[()]/g, '').trim() : '';
 
     const payload = {
       userid,
-      employeeName,
+      employeeName: cleanedName,
       ...newRequest,
     };
 
@@ -80,48 +83,71 @@ const WorkFromHome = () => {
         const { success, status, message, details } = response.data;
         console.log("API Response:", response.data);
         
-        // ✅ FIX 1: Check for success (boolean) instead of status === "success"
-        if (success === true || status === "submitted") {
-          // ✅ FIX 2: Use toast.success for green color
+        // ✅ Handle SUCCESS cases
+        if (success === true) {
           toast.success(message || "Remote work request submitted successfully!", {
             position: "top-right",
             autoClose: 3000,
+            hideProgressBar: false,
+            closeOnClick: true,
+            pauseOnHover: true,
           });
-          
-          // ✅ FIX 3: Reset form immediately after success
           handleCancel();
         } 
-        // Handle conflict case
-        else if (success === false && status === "conflict") {
-          toast.warning(message || "Scheduling conflict detected", {
+        // ✅ Handle CONFLICT case
+        else if (status === "conflict") {
+          const conflictMsg = details 
+            ? `${message}: ${details}` 
+            : message || "A scheduling conflict was detected with your request.";
+          
+          toast.warning(conflictMsg, {
             position: "top-right",
-            autoClose: 4000,
+            autoClose: 5000,
+            hideProgressBar: false,
           });
-          if (details) {
-            console.log("Conflict details:", details);
-          }
         }
-        // Handle validation errors
-        else if (success === false && status === "validation_error") {
-          toast.error(message || "Validation failed", {
+        // ✅ Handle VALIDATION ERROR case
+        else if (status === "validation_error") {
+          // Map backend errors to user-friendly messages
+          let userMessage = message || "Please check your input and try again.";
+          
+          if (details) {
+            if (details.toLowerCase().includes("employee name")) {
+              userMessage = "There was an issue with your profile. Please contact HR.";
+            } else if (details.toLowerCase().includes("date")) {
+              userMessage = "Invalid date range. Please check your dates.";
+            } else if (details.toLowerCase().includes("ip")) {
+              userMessage = "Invalid IP address format. Please check and try again.";
+            } else {
+              userMessage = `${message}: ${details}`;
+            }
+          }
+          
+          toast.error(userMessage, {
             position: "top-right",
-            autoClose: 4000,
+            autoClose: 5000,
+            hideProgressBar: false,
           });
-          if (details) {
-            console.log("Validation error details:", details);
-          }
         }
-        // Fallback for any other response
+        // ✅ Fallback for unknown responses
         else {
-          toast.warning(message || "Something went wrong!", {
+          toast.warning(message || "Something unexpected happened. Please try again.", {
             position: "top-right",
+            autoClose: 4000,
           });
         }
       })
       .catch((err) => {
         console.error("API Error:", err);
-        toast.error("Failed to submit request. Please try again.", {
+        
+        // ✅ Handle network/server errors
+        const errorMsg = err.response?.data?.message 
+          || err.message 
+          || "Failed to submit request. Please check your connection and try again.";
+        
+        toast.error(errorMsg, {
           position: "top-right",
+          autoClose: 5000,
         });
       })
       .finally(() => {

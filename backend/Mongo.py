@@ -6686,11 +6686,7 @@ async def create_chat_message_notification(sender_id, receiver_id, sender_name, 
             return None
         
         receiver_name = receiver.get("name", "User")
-        
-        # # Truncate message preview
-        # if len(message_preview) > 50:
-        #     message_preview = message_preview[:47] + "..."
-        
+
         title = f"New Message from {sender_name}"
         message = f"Hi {receiver_name}, {sender_name} sent you a message"
         
@@ -6749,9 +6745,6 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
         
         notifications_sent = []
         
-        # Truncate message preview
-        if len(message_preview) > 50:
-            message_preview = message_preview[:47] + "..."
         
         for member_id in member_ids:
             # Don't send notification to the sender
@@ -6774,7 +6767,7 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
             member_name = member.get("name", "Admin") if member.get("name") else "Admin"
 
             title = f"New Message in {group_name}"
-            message = f"Hi {member_name}, {sender_name} posted in {group_name}: '{message_preview}'"
+            message = f"Hi {member_name}, {sender_name} posted in {group_name}"
 
             # Create notification with WebSocket support
             notification_id = await create_notification_with_websocket(
@@ -6839,12 +6832,9 @@ async def create_direct_chat_notification(sender_id, recipient_id, sender_name, 
 
         recipient_name = recipient.get("name", "Admin") if recipient.get("name") else "Admin"
 
-        # Truncate message preview
-        if len(message_preview) > 50:
-            message_preview = message_preview[:47] + "..."
 
         title = f"New Message from {sender_name}"
-        message = f"Hi {recipient_name}, {sender_name} sent you a message: '{message_preview}'"
+        message = f"Hi {recipient_name}, {sender_name} sent you a message"
 
         # Create notification with WebSocket support
         notification_id = await create_notification_with_websocket(

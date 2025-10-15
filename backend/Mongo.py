@@ -1,4 +1,3 @@
-from Csvhandler import addnewdata,Getcsvdataformat,Deletecsvdata,Updatecsvdata
 from apscheduler.schedulers.background import BackgroundScheduler
 from datetime import datetime, timedelta, date
 from fastapi.exceptions import HTTPException
@@ -81,43 +80,7 @@ AttendanceStats = db["attendance_stats"]  # For caching calculated stats
 WorkingDays = db["working_days"]
 
 Notifications = db.notifications
-# Others
-def Adddata(data,id,filename):
-    a=Add.insert_one({'userid':id,'data':data,'filename':filename})
-    return str(a.inserted_id)
 
-def Editdata(data,id,filename):
-    a=Add.update_one({"userid":id},{"$set":{"data":data,'filename':filename}})
-    return "done"
-
-def deletedata(id):
-    a=Add.delete_one({'_id':id})
-    return "done"
-
-def addcsv(name,data,id):
-    old=Add.find_one({'user_id':id})
-    if old:
-        print(id)
-        a=addnewdata(name,data,id)
-        print(a)
-        return 's'
-    else:
-        a=addnewdata(name,data,id)
-        print(a)
-        u=Add.insert_one({'user_id':id,'path':a,'filename':name})
-        return str(u.inserted_id)
-
-def Getcsvdata(id):
-    res=Getcsvdataformat(f'./Csvdata/{id}.csv')
-    return res
-
-def Updatecsv(name,data,id,fileid):
-    res=Updatecsvdata(id=id,data=data,fileid=fileid,name=name)
-    return res
-
-def Deletecsv(id,fileid):
-    res=Deletecsvdata(fileid=fileid,id=id)
-    return res
 
 def Hashpassword(password):
     bytePwd = password.encode('utf-8')

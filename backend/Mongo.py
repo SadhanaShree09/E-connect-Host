@@ -5633,7 +5633,11 @@ def calculate_user_attendance_stats(userid: str, year: int = None):
         "selectedDate": {
             "$gte": datetime(year, 1, 1),
             "$lte": datetime(year, 12, 31)
-        }
+        },
+        "$or": [
+            {"leaveType": {"$ne": "Other Leave"}},
+            {"ToDate": {"$exists": False}}
+        ]
     })
     
     # Calculate multi-day leaves (LOP/Other Leave)

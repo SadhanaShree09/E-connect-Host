@@ -2752,7 +2752,7 @@ def edit_the_task(
                             notification_id = create_notification(
                                 userid=task_owner_id,
                                 title="Task Verified",
-                                message=f"Your completed task '{task_title}' has been verified by {verifier_title}. Great work!",
+                                message=f"Your completed task '{task_title}' has been verified.Great work!",
                                 notification_type="task",
                                 priority="high",
                                 action_url=get_role_based_action_url(task_owner_id, "task"),
@@ -2777,7 +2777,7 @@ def edit_the_task(
                                     asyncio.create_task(notification_manager.send_personal_notification(task_owner_id, {
                                         "_id": notification_id,
                                         "title": "Task Verified",
-                                        "message": f"Your completed task '{task_title}' has been verified by {verifier_title}. Great work!",
+                                        "message": f"Your completed task '{task_title}' has been verified. Great work!",
                                         "type": "task",
                                         "priority": "high"
                                     }))
@@ -2785,7 +2785,7 @@ def edit_the_task(
                                     loop.run_until_complete(notification_manager.send_personal_notification(task_owner_id, {
                                         "_id": notification_id,
                                         "title": "Task Verified",
-                                        "message": f"Your completed task '{task_title}' has been verified by {verifier_title}. Great work!",
+                                        "message": f"Your completed task '{task_title}' has been verified. Great work!",
                                         "type": "task",
                                         "priority": "high"
                                     }))

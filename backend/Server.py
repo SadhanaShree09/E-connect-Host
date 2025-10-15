@@ -481,42 +481,6 @@ def read_root():
 def test_connection():
     return {"status": "Backend is connected", "timestamp": datetime.now().isoformat()}
 
-@app.post('/addjson',dependencies=[Depends(JWTBearer())])
-def Addjson(item:Item4):
-    a=Mongo.Adddata(item.data,item.id,item.filename)
-    return {'data':a}
-
-@app.post('/Editjson',dependencies=[Depends(JWTBearer())])
-def editjson(item:Item4):
-    a=Mongo.Editdata(item.data,item.id,item.filename)
-    return {'data':a}
-
-@app.post('/deljson',dependencies=[Depends(JWTBearer())])
-def Deljson(item:Item3):
-    a=Mongo.deletedata(item.id)
-    return{'data':'Successfully Deleted'}
-
-@app.post('/Addcsvjson')
-async def Addcsvjson(Data:Csvadd):
-    a=Mongo.addcsv(name=Data.name,data=Data.data,id=Data.fileid)
-    return a
-
-@app.post('/Getcsvjson')
-async def Getcsvjson(item:Item3):
-    a=Mongo.Getcsvdata(item.id)
-    return a
-
-@app.post('/Updatecsvjson')
-async def Updatecsvjson(item:Csvedit):
-    print(item)
-    a=Mongo.Updatecsv(data=item.data,id=item.id,fileid=item.fileid,name=item.name)
-    return a
-
-@app.post('/deletecsvjson')
-async def Deletecsv(item:Csvdel):
-    a=Mongo.Deletecsv(fileid=item.fileid,id=item.id )
-    return a
-
 @app.post("/signup")
 def Signup(item: Item):
     jwt=Mongo.Signup(item.email,item.password,item.name)

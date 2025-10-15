@@ -45,12 +45,10 @@ export default function Chat() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [groupName, setGroupName] = useState("");
   const [groups, setGroups] = useState([]);
-
-const [editingGroup, setEditingGroup] = useState(null); 
-const [showGroupMembers, setShowGroupMembers] = useState(false);
-const [currentGroupMembers, setCurrentGroupMembers] = useState([]);
-const [currentGroupName, setCurrentGroupName] = useState("");
-
+  const [editingGroup, setEditingGroup] = useState(null); 
+  const [showGroupMembers, setShowGroupMembers] = useState(false);
+  const [currentGroupMembers, setCurrentGroupMembers] = useState([]);
+  const [currentGroupName, setCurrentGroupName] = useState("");
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
   const ws = useRef(null);
@@ -59,7 +57,7 @@ const [currentGroupName, setCurrentGroupName] = useState("");
   const isDepart = LS.get("department");
   const userid = LS.get("userid"); 
   const username = LS.get("username"); 
-const isAdmin = LS.get("isadmin");  
+  const isAdmin = LS.get("isadmin");  
 
   const buildChatId = (a, b) => [a, b].sort().join("_");
 
@@ -67,12 +65,13 @@ const isAdmin = LS.get("isadmin");
   const groups = {};
   messages.forEach((msg) => {
     const dateObj = new Date(msg.timestamp);
-    const dateKey = dateObj.toDateString(); // group by same day
+    const dateKey = dateObj.toDateString(); 
     if (!groups[dateKey]) groups[dateKey] = [];
     groups[dateKey].push(msg);
   });
   return groups;
 };
+
   // Fetch contacts
   useEffect(() => {
 
@@ -95,6 +94,7 @@ const isAdmin = LS.get("isadmin");
     fetchUsers();
   }, [userid, isManager, isDepart, isAdmin]);
 
+
   // Fetch groups
   useEffect(() => {
     const fetchGroups = async () => {
@@ -108,6 +108,7 @@ const isAdmin = LS.get("isadmin");
     };
     fetchGroups();
   }, [userid]);
+
 
   // Scroll to bottom on new messages
   useEffect(() => {
@@ -137,6 +138,7 @@ const isAdmin = LS.get("isadmin");
     ws.current.onmessage = (event) => {
   try {
     const payload = JSON.parse(event.data);
+
 
     //  THREAD messages
     if (payload.type === "thread") {
@@ -179,6 +181,7 @@ const isAdmin = LS.get("isadmin");
   }
 };
   };
+
   // Fetch thread messages
   useEffect(() => {
     if (!selectedThread) return;
@@ -373,7 +376,7 @@ const isAdmin = LS.get("isadmin");
 
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
-      {/* Sidebar */}
+{/* Sidebar */}
 <div className="w-80 bg-gray-100 flex flex-col shadow-lg">
   {/* Header */}
   <div className="p-5 flex justify-between items-center border-b border-gray-300">
@@ -572,105 +575,117 @@ const isAdmin = LS.get("isadmin");
     </div>
   )}
 
-        {/* Messages & Thread */}
+{/* Messages & Thread */}
 <div className="flex flex-1 overflow-hidden">
   {/* Messages */}
-  <div className="flex-1 flex flex-col">
-    <div className="flex-1 p-6 overflow-y-auto space-y-4 bg-gradient-to-b from-white to-gray-50">
-  {Object.entries(groupMessagesByDate(activeMessages)).map(([dateKey, dayMessages]) => {
-    const dateObj = new Date(dateKey);
-    const today = new Date();
-    const yesterday = new Date();
-    yesterday.setDate(today.getDate() - 1);
+<div className="flex-1 flex flex-col">
+  <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-white to-gray-50">
+    {Object.entries(groupMessagesByDate(activeMessages)).map(([dateKey, dayMessages]) => {
+      const dateObj = new Date(dateKey);
+      const today = new Date();
+      const yesterday = new Date();
+      yesterday.setDate(today.getDate() - 1);
 
-    const dateLabel =
-      dateObj.toDateString() === today.toDateString()
-        ? "Today"
-        : dateObj.toDateString() === yesterday.toDateString()
-        ? "Yesterday"
-        : dateObj.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
+      const dateLabel =
+        dateObj.toDateString() === today.toDateString()
+          ? "Today"
+          : dateObj.toDateString() === yesterday.toDateString()
+          ? "Yesterday"
+          : dateObj.toLocaleDateString([], { month: "short", day: "numeric", year: "numeric" });
 
-    return (
-      <div key={dateKey}>
-        {/* Centered Date Divider */}
-        <div className="flex justify-center my-4">
-          <span className="bg-gray-200 text-gray-700 text-xs px-3 py-1 rounded-full shadow-sm">
-            {dateLabel}
-          </span>
-        </div>
+      return (
+        <div key={dateKey} className="space-y-3">
+          {/* Centered Date Divider */}
+          <div className="flex justify-center my-4">
+            <span className="bg-gray-200 text-gray-700 text-xs px-3 py-1 rounded-full shadow-sm">
+              {dateLabel}
+            </span>
+          </div>
 
-        {/* Messages of that date */}
-        {dayMessages.map((m) => {
-          const isSender = m.from_user === userid;
-          const msgId = m.id || m.tempId;
-          const threadCount = getThreadCount(msgId);
+          {/* Messages for that date */}
+          {dayMessages.map((m, i) => {
+            const isSender = m.from_user === userid;
+            const msgId = m.id || m.tempId;
+            const threadCount = getThreadCount(msgId);
 
-          let displayName = isSender ? "You" : (contacts.find((c) => c.id === m.from_user)?.name || m.from_user);
-          const textHtml = (m.text || "").replace(/@(\w+)/g, '<span class="text-accent font-semibold">@$1</span>');
+            let displayName = "Unknown";
+            if (isSender) {
+              displayName = "You";
+            } else {
+              const contact = contacts.find((c) => c.id === m.from_user);
+              displayName = contact ? contact.name : m.from_user;
+            }
 
-          return (
-            <div
-              key={msgId}
-              className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-                isSender ? "justify-end" : "justify-start"
-              }`}
-            >
+            const textHtml = (m.text || "").replace(
+              /@(\w+)/g,
+              '<span class="text-accent font-semibold">@$1</span>'
+            );
+
+            const prev = dayMessages[i - 1];
+            const sameSenderAsPrev = prev && prev.from_user === m.from_user;
+
+            return (
               <div
-                className={`max-w-xl p-4 rounded-2xl break-words shadow-md relative transition-all duration-300 hover:shadow-lg ${
-                  isSender
-                    ? "bg-gradient-to-br from-blue-100 to-blue-200 text-primary-foreground rounded-br-sm"
-                    : "bg-gray-100 text-gray-800 rounded-bl-sm border border-gray-200"
-                }`}
+                key={msgId}
+                className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                  isSender ? "justify-end" : "justify-start"
+                } ${sameSenderAsPrev ? "mb-1" : "mb-3"}`}
               >
-                <div className="flex items-center justify-between mb-2">
-                  <span className="font-medium text-sm">{displayName}</span>
-                  <span
-                    className={`text-xs ${
-                      isSender ? "text-primary-foreground/70" : "text-gray-400"
-                    }`}
-                  >
-                    {formatTime(m.timestamp)}
-                  </span>
-                </div>
-
                 <div
-                  className="text-sm leading-relaxed"
-                  dangerouslySetInnerHTML={{ __html: textHtml }}
-                />
-
-                <div className="flex items-center gap-3 mt-3 pt-2 border-t border-current/10">
-                  <button
-                    onClick={() => setSelectedThread(m)}
-                    className={`text-xs font-medium hover:underline transition-all flex items-center gap-1 ${
-                      isSender
-                        ? "text-primary-foreground/80 hover:text-primary-foreground"
-                        : "text-gray-500 hover:text-gray-700"
-                    }`}
-                  >
-                    <FiMessageSquare size={12} />
-                    Reply
-                  </button>
-
-                  {threadCount > 0 && (
-                    <div
-                      className={`text-xs ml-auto ${
+                  className={`max-w-xl p-4 rounded-2xl break-words shadow-md relative transition-all duration-300 hover:shadow-lg ${
+                    isSender
+                      ? "bg-gradient-to-br from-blue-100 to-blue-200 text-primary-foreground rounded-br-sm"
+                      : "bg-gray-100 text-gray-800 rounded-bl-sm border border-gray-200"
+                  }`}
+                >
+                  <div className="flex items-center justify-between mb-2">
+                    <span className="font-medium text-sm">{displayName}</span>
+                    <span
+                      className={`text-xs ${
                         isSender ? "text-primary-foreground/70" : "text-gray-400"
                       }`}
                     >
-                      {threadCount} {threadCount === 1 ? "reply" : "replies"}
-                    </div>
-                  )}
+                      {formatTime(m.timestamp)}
+                    </span>
+                  </div>
+
+                  <div
+                    className="text-sm leading-relaxed"
+                    dangerouslySetInnerHTML={{ __html: textHtml }}
+                  />
+
+                  <div className="flex items-center gap-3 mt-3 pt-2 border-t border-current/10">
+                    <button
+                      onClick={() => setSelectedThread(m)}
+                      className={`text-xs font-medium hover:underline transition-all flex items-center gap-1 ${
+                        isSender
+                          ? "text-primary-foreground/80 hover:text-primary-foreground"
+                          : "text-gray-500 hover:text-gray-700"
+                      }`}
+                    >
+                      <FiMessageSquare size={12} />
+                      Reply
+                    </button>
+
+                    {threadCount > 0 && (
+                      <div
+                        className={`text-xs ml-auto ${
+                          isSender ? "text-primary-foreground/70" : "text-gray-400"
+                        }`}
+                      >
+                        {threadCount} {threadCount === 1 ? "reply" : "replies"}
+                      </div>
+                    )}
+                  </div>
                 </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-    );
-  })}
-  <div ref={chatEndRef}></div>
-</div>
-
+            );
+          })}
+        </div>
+      );
+    })}
+    <div ref={chatEndRef}></div>
+  </div>
 
             {/* Input */}
             {activeChat.id && (
@@ -950,9 +965,6 @@ const isAdmin = LS.get("isadmin");
     </div>
   </div>
 )}
-
-
-
 
       <ToastContainer position="top-right" autoClose={4000} />
     </div>

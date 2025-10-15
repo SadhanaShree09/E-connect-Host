@@ -2906,33 +2906,6 @@ async def get_team_member_attendance(team_leader: str, userid: str, year: int = 
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Manager Level Endpoints
-@app.get("/attendance/manager/{manager_userid}")
-async def get_manager_attendance_overview(manager_userid: str, year: int = Query(None)):
-    """Manager can see all teams under them"""
-    try:
-        if year is None:
-            year = date.today().year
-       
-        manager_stats = get_manager_team_attendance(manager_userid, year)
-        return manager_stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/attendance/department/{department}")
-async def get_department_attendance(department: str, year: int = Query(None)):
-    """Manager can see department-wise attendance"""
-    try:
-        if year is None:
-            year = date.today().year
-       
-        dept_stats = get_department_attendance_stats(department, year)
-        return dept_stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 # Admin Level Endpoints (Highest Level - Can See Everything)
 @app.get("/attendance/admin/overview")
 async def get_admin_attendance_overview(year: int = Query(None)):
@@ -2946,68 +2919,6 @@ async def get_admin_attendance_overview(year: int = Query(None)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-
-# Utility Endpoints
-@app.post("/attendance/refresh-stats")
-async def refresh_attendance_stats():
-    """Manually trigger attendance statistics refresh (Admin only)"""
-    try:
-        updated_count = update_daily_attendance_stats()
-        return {"message": f"Successfully updated attendance stats for {updated_count} users"}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/attendance/summary/{userid}")
-async def get_attendance_summary(userid: str):
-    """Get a quick summary of user's attendance (for dashboard cards)"""
-    try:
-        current_year = date.today().year
-        stats = calculate_user_attendance_stats(userid, current_year)
-       
-        return {
-            "userid": userid,
-            "current_year": current_year,
-            "attendance_percentage": stats["attendance_percentage"],
-            "present_days": stats["present_days"],
-            "total_working_days": stats["total_working_days"],
-            "leave_days_taken": stats["leave_days_taken"],
-            "leave_percentage": stats["leave_percentage"]
-        }
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-# Role-based access endpoint
-@app.get("/attendance/dashboard/{userid}")
-async def get_role_based_attendance_dashboard(userid: str, year: int = Query(None)):
-    """Get attendance dashboard based on user's role"""
-    try:
-        if year is None:
-            year = date.today().year
-       
-        # Get user info to determine role
-        user = Users.find_one({"_id": ObjectId(userid)})
-        if not user:
-            raise HTTPException(status_code=404, detail="User not found")
-       
-        position = user.get("position", "User").lower()
-       
-        if position == "admin":
-            return await get_admin_attendance_overview(year)
-        elif position == "hr":
-            # Placeholder: HR analytics not implemented, return empty or basic stats
-            return {"message": "HR attendance analytics not implemented", "year": year}
-        elif position == "manager":
-            return await get_manager_attendance_overview(userid, year)
-        elif position == "tl" or position == "team lead":
-            team_leader_name = user.get("name")
-            return await get_team_attendance(team_leader_name, year)
-        else:  # Regular user
-            return await get_user_attendance(userid)
-           
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.websocket("/ws/notify/{user_id}")

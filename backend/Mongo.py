@@ -6757,17 +6757,25 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
             # Don't send notification to the sender
             if member_id == sender_id:
                 continue
-            
-            # Get member info
-            member = Users.find_one({"_id": ObjectId(member_id)}) if ObjectId.is_valid(member_id) else Users.find_one({"userid": member_id})
+
+            # Get member info from Users or admin collection
+            member = None
+            if ObjectId.is_valid(member_id):
+                member = Users.find_one({"_id": ObjectId(member_id)})
+                if not member:
+                    member = admin.find_one({"_id": ObjectId(member_id)})
+            else:
+                member = Users.find_one({"userid": member_id})
+                if not member:
+                    member = admin.find_one({"userid": member_id})
             if not member:
                 continue
-            
-            member_name = member.get("name", "User")
-            
+
+            member_name = member.get("name", "Admin") if member.get("name") else "Admin"
+
             title = f"New Message in {group_name}"
             message = f"Hi {member_name}, {sender_name} posted in {group_name}: '{message_preview}'"
-            
+
             # Create notification with WebSocket support
             notification_id = await create_notification_with_websocket(
                 userid=member_id,
@@ -6786,7 +6794,7 @@ async def create_group_chat_notification(sender_id, group_id, sender_name, group
                     "chat_type": "group"
                 }
             )
-            
+
             notifications_sent.append(notification_id)
         
         print(f"✅ Group chat notifications sent to {len(notifications_sent)} members")
@@ -6815,21 +6823,29 @@ async def create_direct_chat_notification(sender_id, recipient_id, sender_name, 
         if sender_id == recipient_id:
             return None
         
-        # Get recipient info
-        recipient = Users.find_one({"_id": ObjectId(recipient_id)}) if ObjectId.is_valid(recipient_id) else Users.find_one({"userid": recipient_id})
+        # Get recipient info from Users or admin collection
+        recipient = None
+        if ObjectId.is_valid(recipient_id):
+            recipient = Users.find_one({"_id": ObjectId(recipient_id)})
+            if not recipient:
+                recipient = admin.find_one({"_id": ObjectId(recipient_id)})
+        else:
+            recipient = Users.find_one({"userid": recipient_id})
+            if not recipient:
+                recipient = admin.find_one({"userid": recipient_id})
         if not recipient:
             print(f"⚠️ Recipient {recipient_id} not found")
             return None
-        
-        recipient_name = recipient.get("name", "User")
-        
+
+        recipient_name = recipient.get("name", "Admin") if recipient.get("name") else "Admin"
+
         # Truncate message preview
         if len(message_preview) > 50:
             message_preview = message_preview[:47] + "..."
-        
+
         title = f"New Message from {sender_name}"
         message = f"Hi {recipient_name}, {sender_name} sent you a message: '{message_preview}'"
-        
+
         # Create notification with WebSocket support
         notification_id = await create_notification_with_websocket(
             userid=recipient_id,
@@ -6846,10 +6862,10 @@ async def create_direct_chat_notification(sender_id, recipient_id, sender_name, 
                 "chat_type": "direct"
             }
         )
-        
+
         if notification_id:
             print(f"✅ Direct chat notification sent to {recipient_name} from {sender_name}")
-        
+
         return notification_id
         
     except Exception as e:

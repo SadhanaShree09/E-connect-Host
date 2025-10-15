@@ -357,7 +357,7 @@ const NotificationDashboard = () => {
               targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
             } else {
               // For other task notifications, navigate to main task page
-              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/Todo';
+              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
             }
           } else {
             // Fallback to main task page
@@ -393,7 +393,7 @@ const NotificationDashboard = () => {
           if (isAdminLevel) {
             targetUrl = '/admin/LeaveManage/leaveapproval';
           } else {
-            targetUrl = '/User/Leave';
+            targetUrl = '/User/LeaveManage';
           }
           break;
 

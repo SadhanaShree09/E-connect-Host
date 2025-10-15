@@ -47,7 +47,7 @@ import Chat from './components/Chat';
 import OnboardingDocs from './components/docs/OnboardingDocs';
 import AdminDocsReview from './components/Adminfrontend/AdminDocsReview';
 
-import Fileuploader from './components/docs/Fileuploader';
+import Fileuploader from './components/docs/file/Fileuploader';
 import GlobalNotificationToast from './components/notifications/GlobalNotificationToast';
 
 
@@ -216,7 +216,7 @@ const router = createBrowserRouter([
         
       },
       {
-          path: 'docs/fileuploader',
+          path: 'docs/file/fileuploader',
           element:<Fileuploader/>,
         },
 { path: "LeaveManage/leave_details", element: <LeaveDetails /> },

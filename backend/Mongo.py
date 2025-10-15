@@ -315,7 +315,8 @@ def Clockin(userid, name, time):
                 {'$set': {
                     'clockin': clockin_dt.isoformat(),
                     'status': status,
-                    'userid': userid
+                    'userid': userid,
+                    'remark': 'N/A'  # Reset remark to N/A on new clock-in
                 }}
             )
         else:
@@ -326,7 +327,7 @@ def Clockin(userid, name, time):
                 'name': name,
                 'clockin': clockin_dt.isoformat(),
                 'status': status,
-                'remark': ''
+                'remark': 'N/A'  # Default remark until clock-out
             }
             
             # Add bonus leave field for Sunday
@@ -358,7 +359,7 @@ def auto_clockout():
     """
     Automatic clock-out function that runs at end of day.
     Clocks out all users who haven't clocked out yet with default time.
-    - Runs at scheduled time (e.g., 9:30 PM)
+    - Runs at scheduled time ( 9:30 PM)
     - Caps work duration at 24 hours
     - Sends notifications to affected users
     """

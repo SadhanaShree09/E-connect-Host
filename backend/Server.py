@@ -317,8 +317,10 @@ class ConnectionManager:
 manager = ConnectionManager()
 
 
-# Initialize APScheduler for background tasks
-scheduler = BackgroundScheduler()
+# Initialize APScheduler for background tasks with IST timezone
+# CRITICAL: Must use IST timezone to ensure jobs run at correct India time
+ist_tz = pytz.timezone("Asia/Kolkata")
+scheduler = BackgroundScheduler(timezone=ist_tz)
 
 # Import notification automation
 from notification_automation import (
@@ -331,7 +333,7 @@ from notification_automation import (
 
 # Schedule the auto-clockout task to run daily at 9:30 PM (21:30 IST)
 # This ensures employees who forget to clock out are automatically clocked out at end of day
-scheduler.add_job(auto_clockout, 'cron', hour=21, minute=30, id='auto_clockout')
+scheduler.add_job(auto_clockout, 'cron', hour=21, minute=30, timezone=ist_tz, id='auto_clockout')
 
 # Define sync wrapper functions for async tasks
 def sync_check_upcoming_deadlines():
@@ -380,47 +382,48 @@ def sync_check_pending_approvals():
         print(f"Error in sync_check_pending_approvals: {e}")
 
 # Schedule notification automation tasks
-# Morning checks at 8:00 AM (upcoming deadlines, missed attendance)
+# Morning checks at 8:00 AM IST (upcoming deadlines, missed attendance)
 scheduler.add_job(
     sync_check_upcoming_deadlines,
-    'cron', hour=8, minute=0, id='morning_deadline_check'
+    'cron', hour=8, minute=0, timezone=ist_tz, id='morning_deadline_check'
 )
 
 scheduler.add_job(
     sync_check_missed_attendance,
-    'cron', hour=10, minute=0, id='missed_attendance_check'
+    'cron', hour=10, minute=0, timezone=ist_tz, id='missed_attendance_check'
 )
 
-# Midday overdue tasks check at 12:00 PM
+# Midday overdue tasks check at 12:00 PM IST
 scheduler.add_job(
     sync_check_and_notify_overdue_tasks,
-    'cron', hour=12, minute=0, id='midday_overdue_check'
+    'cron', hour=12, minute=0, timezone=ist_tz, id='midday_overdue_check'
 )
 
-# Evening comprehensive check at 6:00 PM
+# Evening comprehensive check at 6:00 PM IST
 scheduler.add_job(
     sync_run_all_automated_checks,
-    'cron', hour=18, minute=0, id='evening_comprehensive_check'
+    'cron', hour=18, minute=0, timezone=ist_tz, id='evening_comprehensive_check'
 )
 
-# Pending approvals check twice daily (10 AM and 3 PM)
+# Pending approvals check twice daily (10 AM and 3 PM IST)
 scheduler.add_job(
     sync_check_pending_approvals,
-    'cron', hour=10, minute=30, id='morning_approvals_check'
+    'cron', hour=10, minute=30, timezone=ist_tz, id='morning_approvals_check'
 )
 
 scheduler.add_job(
     sync_check_pending_approvals,
-    'cron', hour=15, minute=0, id='afternoon_approvals_check'
+    'cron', hour=15, minute=0, timezone=ist_tz, id='afternoon_approvals_check'
 )
 
 
-# Add new job for daily attendance stats update
+# Add new job for daily attendance stats update at 11:59 PM IST
 scheduler.add_job(
     update_daily_attendance_stats,
     'cron',
     hour=23,
     minute=59,  # Run at 11:59 PM daily
+    timezone=ist_tz,
     id='daily_attendance_update'
 )
 
@@ -3227,10 +3230,20 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
                 
                 if recipient_id and message_text:
                     try:
-                        # Get sender info
-                        sender = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else Users.find_one({"userid": userid})
-                        sender_name = sender.get("name", "Unknown User") if sender else "Unknown User"
-                        
+                        # Get sender info from Users or admin collection
+                        sender = None
+                        sender_name = "Unknown User"
+                        if ObjectId.is_valid(userid):
+                            sender = Users.find_one({"_id": ObjectId(userid)})
+                            if not sender:
+                                sender = admin.find_one({"_id": ObjectId(userid)})
+                        else:
+                            sender = Users.find_one({"userid": userid})
+                            if not sender:
+                                sender = admin.find_one({"userid": userid})
+                        if sender:
+                            sender_name = sender.get("name", "Admin") if sender.get("name") else "Admin"
+
                         # Create direct chat notification
                         await Mongo.create_direct_chat_notification(
                             sender_id=userid,

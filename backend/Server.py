@@ -472,15 +472,6 @@ async def shutdown_event():
     except Exception as e:
         print(f"⚠️ Error shutting down scheduler: {e}")
 
-
-@app.get("/")
-def read_root():
-    return {"Hello": "World"}
-
-@app.get("/test")
-def test_connection():
-    return {"status": "Backend is connected", "timestamp": datetime.now().isoformat()}
-
 @app.post("/signup")
 def Signup(item: Item):
     jwt=Mongo.Signup(item.email,item.password,item.name)
@@ -512,12 +503,6 @@ async def Signup(item: Item5):
         print(f"Error in /Gsignin: {str(e)}")
         traceback.print_exc()
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
-
-# Userid
-@app.post('/id',dependencies=[Depends(JWTBearer())])
-def userbyid(item:Item3):
-    a=Mongo.Userbyid(item.id)
-    return {'data': a}
 
 # Time Management
 @app.post('/Clockin')
@@ -560,11 +545,6 @@ def clockout(Data: CT):
     result = Mongo.Clockout(userid=Data.userid, name=Data.name, time=time_str)
     return {"message": result}
 
-@app.post('/PreviousDayClockout')
-def previous_day_clockout(Data: CT):
-    result = PreviousDayClockout(userid=Data.userid, name=Data.name)
-    return {"message": result}
-
 # Clockin Details
 @app.get("/clock-records/{userid}")  
 async def get_clock_records(userid: str = Path(..., title="The name of the user whose clock records you want to fetch")):
@@ -595,7 +575,6 @@ async def fetch_attendance_by_date(date: str = Query(None)):
         print(f"Error fetching attendance: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Error fetching attendance data: {str(e)}")
 
-
 # Employee ID
 @app.get("/get_EmployeeId/{name}")
 async def get_employee_id(name: str = Path(..., title="The username of the user")):
@@ -607,7 +586,6 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
             raise HTTPException(status_code=404, detail="User not found")
     except Exception as e:
         raise HTTPException(500, str(e))
-
 
 #Leave-request
 @app.post('/leave-request')
@@ -1205,13 +1183,6 @@ async def update_remote_work_request_status(userid: str = Form(...), status: str
             return {"message": "Failed to update recommend status"}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-   
-
-# Admin ID
-@app.post('/id',dependencies=[Depends(JWTBearer())])
-def adminid(item:Item3):
-    a=Mongo.adminbyid(item.id)
-    return {'data': a}
 
 @app.post("/admin_signup")
 def adminid_Signup(item: Item):
@@ -1579,7 +1550,13 @@ async def get_user_remote_work_details(
         
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
+    
+@app.get("/ip-info")
+def fetch_ip_info():
+    return {
+        "public_ip": get_public_ip(),
+        "local_ip": get_local_ip()
+}
 
 # =========all
 @app.get("/manager/leave_details/{user_id}")
@@ -2511,56 +2488,17 @@ def get_assigned_tasks(TL: str = Query(..., alias="TL"), userid: str | None = Qu
     result = assigned_task(TL, userid)
     return result
 
-@app.get("/ip-info")
-def fetch_ip_info():
-    return {
-        "public_ip": get_public_ip(),
-        "local_ip": get_local_ip()
-}
 
 # Notification System Endpoints
-@app.post("/notifications/create")
-async def create_notification_endpoint(notification: NotificationModel):
-    """Create a new notification"""
-    try:
-        result = create_notification(
-            userid=notification.userid,
-            title=notification.title,
-            message=notification.message,
-            notification_type=notification.type,
-            priority=notification.priority,
-            action_url=notification.action_url,
-            related_id=notification.related_id,
-            metadata=notification.metadata
-        )
-        if result:
-            return {"message": "Notification created successfully", "notification_id": result}
-        else:
-            raise HTTPException(status_code=500, detail="Failed to create notification")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/notifications/{userid}")
 async def get_user_notifications(
     userid: str,
-    # type: str = None,
-    # priority: str = None,
-    # is_read: bool = None,
-    # limit: int = 50
-
-    # type: Optional[str] = Query(None),
-    # priority: Optional[str] = Query(None),
-    # is_read: Optional[bool] = Query(None),
-    # limit: int = Query(50)
 ):
     """Get notifications for a user with optional filters"""
     try:
         notifications = get_notifications(
             userid=userid,
-            # notification_type=type,
-            # priority=priority,
-            # is_read=is_read,
-            # limit=limit
         )
         return {"notifications": notifications}
     except Exception as e:
@@ -2608,14 +2546,6 @@ async def delete_notification_endpoint(notification_id: str):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.get("/notifications/{userid}/type/{notification_type}")
-async def get_notifications_by_type_endpoint(userid: str, notification_type: str):
-    """Get notifications by type for a user"""
-    try:
-        notifications = get_notifications_by_type(userid, notification_type)
-        return {"notifications": notifications}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
 # WebSocket endpoint for real-time notifications
 @app.websocket("/ws/notifications/{userid}")
@@ -2667,62 +2597,6 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
     finally:
         # Ensure cleanup happens
         notification_manager.disconnect(websocket, userid)
-
-@app.get("/debug/admin-data")
-async def debug_admin_data():
-    """Debug endpoint to check admin user data and potential issues"""
-    try:
-        results = {}
-        
-        # Check admin collection
-        admin_users = list(Mongo.admin.find({}, {"_id": 1, "name": 1, "email": 1}))
-        results["admin_collection"] = {
-            "count": len(admin_users),
-            "users": admin_users[:5]  # Show first 5 for debugging
-        }
-        
-        # Check Users collection for admin positions
-        admin_position_users = list(Mongo.Users.find(
-            {"position": {"$in": ["Admin", "Administrator", "CEO", "Director"]}}, 
-            {"_id": 1, "name": 1, "position": 1, "email": 1}
-        ))
-        results["users_collection_admins"] = {
-            "count": len(admin_position_users),
-            "users": admin_position_users[:5]  # Show first 5 for debugging
-        }
-        
-        # Check all positions in Users collection
-        all_positions = list(Mongo.Users.distinct("position"))
-        results["all_positions"] = all_positions
-        
-        # Test admin ID retrieval
-        admin_ids = await Mongo.get_admin_user_ids()
-        results["retrieved_admin_ids"] = admin_ids
-        
-        # Check for pending manager leaves
-        manager_users = list(Mongo.Users.find({"position": "Manager"}, {"_id": 1, "name": 1}))
-        manager_ids = [str(manager["_id"]) for manager in manager_users]
-        
-        pending_manager_leaves = list(Mongo.Leave.find({
-            "userid": {"$in": manager_ids},
-            "Recommendation": {"$exists": False},
-            "status": {"$exists": False}
-        }, {"_id": 1, "employeeName": 1, "leaveType": 1, "selectedDate": 1}))
-        
-        results["manager_data"] = {
-            "manager_count": len(manager_users),
-            "pending_leaves_count": len(pending_manager_leaves),
-            "sample_pending_leaves": pending_manager_leaves[:3]
-        }
-        
-        return {
-            "success": True,
-            "debug_results": results
-        }
-        
-    except Exception as e:
-        print(f"Error in admin debug: {e}")
-        return {"success": False, "error": str(e)}
 
 if __name__ == "__main__":
     # Get port from environment variable (Railway sets this)
@@ -2779,8 +2653,6 @@ def get_holidays_for_year(year: int):
         holiday_doc["_id"] = str(holiday_doc["_id"])
    
     return holiday_doc
-
-
 
 
 @app.get("/working-days/{year}")

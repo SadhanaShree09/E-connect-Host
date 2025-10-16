@@ -1,5 +1,5 @@
 from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
-from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter
+from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
 from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
@@ -2481,24 +2481,49 @@ async def get_user_notifications(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
-@app.put("/notifications/{notification_id}/read")
-async def mark_notification_as_read(notification_id: str, update: NotificationUpdate):
-    """Mark a notification as read/unread"""
+@app.put("/notifications/manage")
+async def manage_notifications(data: NotificationManage):
+    """
+    Endpoint to manage notifications .
+    Actions: mark_read, mark_all_read, delete
+    """
     try:
-        success = mark_notification_read(notification_id, update.is_read)
-        if success:
-            return {"message": "Notification updated successfully"}
+        action = data.action
+        userid = data.userid
+        notification_id = data.notification_id
+        notification_ids = data.notification_ids or []
+        is_read = data.is_read
+        
+        # Action: Mark single notification as read/unread
+        if action == "mark_read":
+            if not notification_id:
+                raise HTTPException(status_code=400, detail="notification_id is required")
+            success = mark_notification_read(notification_id, is_read)
+            if success:
+                return {"status": "success", "message": "Notification updated successfully"}
+            else:
+                raise HTTPException(status_code=404, detail="Notification not found")
+        
+        # Action: Mark all notifications as read for a user
+        elif action == "mark_all_read":
+            if not userid:
+                raise HTTPException(status_code=400, detail="userid is required")
+            count = mark_all_notifications_read(userid)
+            return {"status": "success", "message": f"Marked {count} notifications as read", "count": count}
+        
+        # Action: Delete single notification
+        elif action == "delete":
+            if not notification_id:
+                raise HTTPException(status_code=400, detail="notification_id is required")
+            success = delete_notification(notification_id)
+            if success:
+                return {"status": "success", "message": "Notification deleted successfully"}
+            else:
+                raise HTTPException(status_code=404, detail="Notification not found")
+        
         else:
-            raise HTTPException(status_code=404, detail="Notification not found")
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.put("/notifications/{userid}/mark-all-read")
-async def mark_all_user_notifications_read(userid: str):
-    """Mark all notifications as read for a user"""
-    try:
-        count = mark_all_notifications_read(userid)
-        return {"message": f"Marked {count} notifications as read"}
+            raise HTTPException(status_code=400, detail=f"Invalid action: {action}")
+            
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -2508,18 +2533,6 @@ async def get_user_unread_count(userid: str):
     try:
         count = get_unread_notification_count(userid)
         return {"unread_count": count}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.delete("/notifications/{notification_id}")
-async def delete_notification_endpoint(notification_id: str):
-    """Delete a notification"""
-    try:
-        success = delete_notification(notification_id)
-        if success:
-            return {"message": "Notification deleted successfully"}
-        else:
-            raise HTTPException(status_code=404, detail="Notification not found")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 

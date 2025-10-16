@@ -251,6 +251,13 @@ class NotificationModel(BaseModel):
 class NotificationUpdate(BaseModel):
     is_read: bool
 
+class NotificationManage(BaseModel):
+    action: str  # mark_read, mark_all_read, delete, delete_multiple
+    userid: Optional[str] = None
+    notification_id: Optional[str] = None
+    notification_ids: Optional[List[str]] = None
+    is_read: Optional[bool] = True
+
 class NotificationFilter(BaseModel):
     userid: Optional[str] = None
     type: Optional[str] = None

@@ -45,17 +45,21 @@ export const useNotificationAPI = () => {
     }
   }, [userid]);
 
-  // Mark notification as read/unread
-  const markNotification = useCallback(async (notificationId, isRead) => {
-    if (!userid || !notificationId) return false;
+  // Unified notification management function
+  const manageNotification = useCallback(async (action, payload) => {
+    if (!userid) return false;
     
     try {
-      const response = await fetch(`${ipadr}/notifications/${notificationId}/read`, {
+      const response = await fetch(`${ipadr}/notifications/manage`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ is_read: !isRead })
+        body: JSON.stringify({
+          userid,
+          action,
+          ...payload
+        })
       });
 
       if (!response.ok) {
@@ -65,79 +69,60 @@ export const useNotificationAPI = () => {
       const data = await response.json();
       
       if (data.status === 'success') {
-        toast.success(isRead ? 'Marked as unread' : 'Marked as read');
-        return true;
+        return { success: true, data };
       } else {
-        throw new Error(data.message || 'Failed to update notification');
+        throw new Error(data.message || 'Operation failed');
       }
     } catch (error) {
-      console.error('Error marking notification:', error);
+      console.error('Error managing notification:', error);
+      return { success: false, error: error.message };
+    }
+  }, [userid]);
+
+  // Mark notification as read/unread
+  const markNotification = useCallback(async (notificationId, isRead) => {
+    const result = await manageNotification('mark_read', {
+      notification_id: notificationId,
+      is_read: !isRead
+    });
+    
+    if (result.success) {
+      toast.success(isRead ? 'Marked as unread' : 'Marked as read');
+      return true;
+    } else {
       toast.error('Failed to update notification');
       return false;
     }
-  }, [userid]);
+  }, [manageNotification]);
+
 
   // Mark all notifications as read
   const markAllAsRead = useCallback(async () => {
-    if (!userid) return false;
+    const result = await manageNotification('mark_all_read', {});
     
-    try {
-      const response = await fetch(`${ipadr}/notifications/${userid}/mark-all-read`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'success') {
-        toast.success('All notifications marked as read');
-        return true;
-      } else {
-        throw new Error(data.message || 'Failed to mark all as read');
-      }
-    } catch (error) {
-      console.error('Error marking all as read:', error);
+    if (result.success) {
+      toast.success(`All notifications marked as read`);
+      return true;
+    } else {
       toast.error('Failed to mark all as read');
       return false;
     }
-  }, [userid]);
-
+  }, [manageNotification]);
+  
   // Delete notification
   const deleteNotification = useCallback(async (notificationId) => {
-    if (!userid || !notificationId) return false;
+    const result = await manageNotification('delete', {
+      notification_id: notificationId
+    });
     
-    try {
-      const response = await fetch(`${ipadr}/notifications/${notificationId}`, {
-        method: 'DELETE',
-        headers: {
-          'Content-Type': 'application/json',
-        }
-      });
-
-      if (!response.ok) {
-        throw new Error(`HTTP error! status: ${response.status}`);
-      }
-
-      const data = await response.json();
-      
-      if (data.status === 'success') {
-        toast.success('Notification deleted');
-        return true;
-      } else {
-        throw new Error(data.message || 'Failed to delete notification');
-      }
-    } catch (error) {
-      console.error('Error deleting notification:', error);
+    if (result.success) {
+      toast.success('Notification deleted');
+      return true;
+    } else {
       toast.error('Failed to delete notification');
       return false;
     }
-  }, [userid]);
+  }, [manageNotification]);
 
   // Get notification statistics
   const getNotificationStats = useCallback(async () => {
@@ -219,6 +204,7 @@ export const useNotificationAPI = () => {
     loading,
     error,
     fetchNotifications,
+    manageNotification,       // NEW: unified function
     markNotification,
     markAllAsRead,
     deleteNotification,

@@ -2769,123 +2769,129 @@ def add_holidays(year: int, body: HolidayYear):
 
 
 @app.get("/api/holidays/{year}")
-def get_holidays_for_year(year: int):
+def get_holidays_for_year(year: int, include_working_days: bool = False):
+    """
+    Get holidays and working days for a year
+    
+    Parameters:
+    - year: The year to get holidays for
+    - include_working_days: If True, includes working days calculation (default: False)
+    """
     holiday_doc = get_holidays(year)
+    
     if not holiday_doc:
-        return {"year": year, "holidays": []}
-   
-    # Convert ObjectId to string if exists
+        return {
+            "year": year,
+            "holidays": [],
+            "totalWorkingDays": None,
+            "workingDays": None
+        } if include_working_days else {"year": year, "holidays": []}
+    
     if "_id" in holiday_doc:
         holiday_doc["_id"] = str(holiday_doc["_id"])
-   
-    return holiday_doc
-
-
-
-
-@app.get("/working-days/{year}")
-def get_working_days(year: int):
-    """Get working days calculation for a year"""
-    holiday_doc = get_holidays(year)
-    if not holiday_doc:
-        raise HTTPException(status_code=404, detail=f"No holidays defined for {year}")
-   
-    holidays = holiday_doc["holidays"]
-    working_days = calculate_working_days(year, holidays)
-   
-    return {
-        "year": year,
-        "totalWorkingDays": len(working_days),
-        "workingDays": working_days,
-        "holidays": holidays
-    }
-
-@app.get("/attendance/user/{userid}/year/{year}")
-async def get_user_attendance_by_year(userid: str, year: int):
-    """User can see their attendance stats for a specific year"""
-    try:
-        stats = calculate_user_attendance_stats(userid, year)
-        user = Users.find_one({"_id": ObjectId(userid)}, {"name": 1, "email": 1})
+    
+    if include_working_days:
+        holidays = holiday_doc["holidays"]
+        working_days = calculate_working_days(year, holidays)
         
         return {
-            "user_info": {
-                "userid": userid,
-                "name": user.get("name", "Unknown") if user else "Unknown",
-                "email": user.get("email", "") if user else ""
-            },
-            "attendance_stats": stats,
-            "year": year
+            **holiday_doc,
+            "totalWorkingDays": len(working_days),
+            "workingDays": working_days
         }
+    
+    return holiday_doc
+
+@app.get("/attendance/user/{userid}")
+async def get_user_attendance(
+    userid: str, 
+    year: int = Query(None)
+):
+    """
+    Get user attendance statistics for a specific year or dashboard view
+    - If year is provided: returns stats for that year
+    - If year is None: returns dashboard data (current year overview)
+    """
+    try:
+        if year is None:
+            # Dashboard view - no year specified
+            dashboard_data = get_user_attendance_dashboard(userid)
+            return dashboard_data
+        else:
+            # Specific year view
+            stats = calculate_user_attendance_stats(userid, year)
+            user = Users.find_one({"_id": ObjectId(userid)}, {"name": 1, "email": 1})
+            
+            return {
+                "user_info": {
+                    "userid": userid,
+                    "name": user.get("name", "Unknown") if user else "Unknown",
+                    "email": user.get("email", "") if user else ""
+                },
+                "attendance_stats": stats,
+                "year": year
+            }
     except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e)) 
+        raise HTTPException(status_code=500, detail=str(e))
 
 
 @app.get("/attendance/team/{team_leader}")
-async def get_team_attendance(team_leader: str, year: int = Query(None)):
-    """Team Leader can see their team members' attendance"""
+async def get_team_attendance(
+    team_leader: str, 
+    year: int = Query(None),
+    member_id: str = Query(None)
+):
+    """
+    Get team attendance statistics
+    - If member_id is None: returns all team members' attendance
+    - If member_id is provided: returns specific team member's detailed attendance
+    """
     try:
         if year is None:
             year = date.today().year
         
-        team_stats = get_team_attendance_stats(team_leader, year)
-        return team_stats
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-        
-# User Level Endpoints (Lowest Level - Own Data Only)
-@app.get("/attendance/user/{userid}")
-async def get_user_attendance(userid: str):
-    """User can see only their own attendance statistics"""
-    try:
-        dashboard_data = get_user_attendance_dashboard(userid)
-        return dashboard_data
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
-@app.get("/attendance/team/{team_leader}/member/{userid}")
-async def get_team_member_attendance(team_leader: str, userid: str, year: int = Query(None)):
-    """Team Leader can see specific team member's attendance"""
-    try:
-        if year is None:
-            year = date.today().year
-       
-        # Verify that the user belongs to this team leader
-        user = Users.find_one({"_id": ObjectId(userid), "TL": team_leader})
-        if not user:
-            raise HTTPException(status_code=403, detail="User is not in your team")
-       
-        stats = calculate_user_attendance_stats(userid, year)
-        stats["user_info"] = {
-            "name": user.get("name"),
-            "email": user.get("email"),
-            "department": user.get("department"),
-            "position": user.get("position")
-        }
-       
-        return {
-            "team_leader": team_leader,
-            "member_stats": stats,
-            "year": year
-        }
+        if member_id is None:
+            # Get all team members' attendance
+            team_stats = get_team_attendance_stats(team_leader, year)
+            return team_stats
+        else:
+            # Get specific team member's attendance
+            # Verify that the user belongs to this team leader
+            user = Users.find_one({"_id": ObjectId(member_id), "TL": team_leader})
+            if not user:
+                raise HTTPException(status_code=403, detail="User is not in your team")
+            
+            stats = calculate_user_attendance_stats(member_id, year)
+            
+            return {
+                "team_leader": team_leader,
+                "member_stats": {
+                    **stats,
+                    "user_info": {
+                        "userid": member_id,
+                        "name": user.get("name"),
+                        "email": user.get("email"),
+                        "department": user.get("department"),
+                        "position": user.get("position")
+                    }
+                },
+                "year": year
+            }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
 
-# Admin Level Endpoints (Highest Level - Can See Everything)
 @app.get("/attendance/admin/overview")
 async def get_admin_attendance_overview(year: int = Query(None)):
     """Admin can see company-wide attendance statistics"""
     try:
         if year is None:
             year = date.today().year
-       
-        company_stats = get_department_attendance_stats(year=year)  # All departments
+        
+        company_stats = get_department_attendance_stats(year=year)
         return company_stats
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-
 
 
 @app.websocket("/ws/notify/{user_id}")

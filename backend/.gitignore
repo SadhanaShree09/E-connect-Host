@@ -15,6 +15,7 @@ uploads/
 Csvdata/
 *.pyc
 .env
+.env.example
 *.key
 *.pem
 

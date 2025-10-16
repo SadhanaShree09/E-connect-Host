@@ -242,28 +242,33 @@ const NotificationDashboard = () => {
   // Mark notification as read
   const markAsRead = async (notificationId, currentStatus) => {
     try {
-      const response = await fetch(`${ipadr}/notifications/${notificationId}/read`, {
+      const response = await fetch(`${ipadr}/notifications/manage`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
+          userid,
+          action: 'mark_read',
           notification_id: notificationId,
           is_read: !currentStatus
         }),
       });
 
       if (response.ok) {
-        // Update local state
-        const updatedNotifications = notifications.map(notif => 
-          notif._id === notificationId 
-            ? { ...notif, is_read: !currentStatus }
-            : notif
-        );
-        setNotifications(updatedNotifications);
-        applyFilters(updatedNotifications);
-        fetchUnreadCount();
-        toast.success(`Marked as ${!currentStatus ? 'read' : 'unread'}`);
+        const data = await response.json();
+        if (data.status === 'success') {
+          // Update local state
+          const updatedNotifications = notifications.map(notif => 
+            notif._id === notificationId 
+              ? { ...notif, is_read: !currentStatus }
+              : notif
+          );
+          setNotifications(updatedNotifications);
+          applyFilters(updatedNotifications);
+          fetchUnreadCount();
+          toast.success(`Marked as ${!currentStatus ? 'read' : 'unread'}`);
+        }
       } else {
         toast.error('Failed to update notification');
       }
@@ -275,47 +280,68 @@ const NotificationDashboard = () => {
 
   // Mark all as read
   const markAllAsRead = async () => {
-    try {
-      const response = await fetch(`${ipadr}/notifications/${userid}/mark-all-read`, {
-        method: 'PUT',
-      });
+  try {
+    const response = await fetch(`${ipadr}/notifications/manage`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userid,
+        action: 'mark_all_read'
+      }),
+    });
 
-      if (response.ok) {
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'success') {
         const updatedNotifications = notifications.map(notif => ({ ...notif, is_read: true }));
         setNotifications(updatedNotifications);
         applyFilters(updatedNotifications);
         setUnreadCount(0);
         toast.success('All notifications marked as read');
-      } else {
-        toast.error('Failed to mark all as read');
       }
-    } catch (error) {
-      console.error('Error marking all as read:', error);
-      toast.error('Error marking all as read');
+    } else {
+      toast.error('Failed to mark all as read');
     }
-  };
+  } catch (error) {
+    console.error('Error marking all as read:', error);
+    toast.error('Error marking all as read');
+  }
+};
 
   // Delete notification
   const deleteNotification = async (notificationId) => {
-    try {
-      const response = await fetch(`${ipadr}/notifications/${notificationId}`, {
-        method: 'DELETE',
-      });
+  try {
+    const response = await fetch(`${ipadr}/notifications/manage`, {
+      method: 'PUT',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        userid,
+        action: 'delete',
+        notification_id: notificationId
+      }),
+    });
 
-      if (response.ok) {
+    if (response.ok) {
+      const data = await response.json();
+      if (data.status === 'success') {
         const updatedNotifications = notifications.filter(notif => notif._id !== notificationId);
         setNotifications(updatedNotifications);
         applyFilters(updatedNotifications);
         fetchUnreadCount();
         toast.success('Notification deleted');
-      } else {
-        toast.error('Failed to delete notification');
       }
-    } catch (error) {
-      console.error('Error deleting notification:', error);
-      toast.error('Error deleting notification');
+    } else {
+      toast.error('Failed to delete notification');
     }
-  };
+  } catch (error) {
+    console.error('Error deleting notification:', error);
+    toast.error('Error deleting notification');
+  }
+};
 
   // Handle notification click
   const handleNotificationClick = (notification) => {

@@ -145,15 +145,13 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     setLoading(true);
     try {
       const managerName = LS.get("name");
-      const queryParams = new URLSearchParams({
-        manager_name: managerName
-      });
-      const response = await fetch(`${ipadr}/manager_tasks?${queryParams.toString()}`);
+      const response = await fetch(`${ipadr}/tasks?role=manager&manager_name=${managerName}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to fetch task details");
       }
-      const data = await response.json();
+      const result = await response.json();
+      const data = result.data;
       const taskData = data.find(t => String(t.taskid) === String(taskId));
       if (!taskData) {
         throw new Error("Task not found");

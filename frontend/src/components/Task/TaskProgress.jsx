@@ -143,15 +143,13 @@ const TaskProgress = () => {
     setLoading(true);
     try {
       const managerName = LS.get("name");
-      const queryParams = new URLSearchParams({
-        manager_name: managerName
-      });
-      const response = await fetch(`${ipadr}/manager_tasks?${queryParams.toString()}`);
+      const response = await fetch(`${ipadr}/tasks?role=manager&manager_name=${managerName}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to fetch tasks");
       }
-      const data = await response.json();
+      const result = await response.json();
+      const data = result.data;
       // Remove self-assigned tasks
       const filteredData = data.filter(task => task.userid !== userId && task.assigned_to_id !== userId);
       // Group tasks by employee

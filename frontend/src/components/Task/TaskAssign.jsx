@@ -274,26 +274,12 @@ const handlePageChange = (direction) => {
     try {
       let url = '';
       if (isManager) {
-        url = `${ipadr}/get_assigned_task?TL=${LS.get('name')}&manager_id=${LS.get('id')}`;
+        url = `${ipadr}/tasks?role=tl&manager_name=${LS.get('name')}`;
       } else if (isHR) {
-        url = `${ipadr}/get_manager`;
-        const res = await axios.get(url);
-        const managers = Array.isArray(res.data) ? res.data : [res.data];
-        let allTasks = [];
-        for (const manager of managers) {
-          if (!manager.userid) continue;
-          const taskRes = await axios.get(`${ipadr}/get_manager_hr_tasks/${manager.userid}`);
-          if (Array.isArray(taskRes.data)) {
-            allTasks = allTasks.concat(taskRes.data);
-          }
-        }
-        setEmployeeData(allTasks);
-        setFilteredData(allTasks);
-        setLoading(false);
-        return;
+        url = `${ipadr}/tasks?role=hr`;
       }
       const res = await axios.get(url);
-      const data = res.data && Array.isArray(res.data) ? res.data : [];
+      const data = res.data && res.data.data ? res.data.data : [];
       setEmployeeData(data);
       setFilteredData(data);
     } catch (err) {
@@ -318,25 +304,40 @@ const handlePageChange = (direction) => {
     }
   };
 
-  const handleEdit = async (id) => {
-    try {
-      const response = await axios.get(`${ipadr}/get_single_task/${id}`);
-      const taskdetails = response.data;
-      let actualTaskData = Array.isArray(taskdetails) ? taskdetails[0] : (taskdetails.task || taskdetails);
-      if (actualTaskData.verified) {
-        return toast.error('This task is verified and cannot be edited.');
-      }
-      SetEditmodel([{ 
-        ...actualTaskData, 
+ const handleEdit = async (id) => {
+  try {
+    const response = await axios.get(`${ipadr}/tasks`, { params: { taskid: id } });
+    console.log("🔍 Edit API Response:", response.data);
+
+    const taskdetails = response.data?.data;
+    // Handle nested 'task' object if present
+    const actualTaskData = taskdetails?.task ? taskdetails.task : taskdetails;
+
+    if (!actualTaskData) {
+      toast.error("Task data not found.");
+      return;
+    }
+
+    if (actualTaskData.verified) {
+      return toast.error("This task is verified and cannot be edited.");
+    }
+
+    SetEditmodel([
+      {
+        ...actualTaskData,
         subtasks: normalizeSubtasks(actualTaskData.subtasks || []),
         comments: actualTaskData.comments || [],
-        files: actualTaskData.files || []
-      }]);
-      setModalOpen(true);
-    } catch (error) {
-      toast.error("Error fetching task details");
-    }
-  };
+        files: actualTaskData.files || [],
+      },
+    ]);
+
+    console.log("🟩 Final Task Loaded for Edit:", actualTaskData);
+    setModalOpen(true);
+  } catch (error) {
+    console.error("Error fetching task details:", error);
+    toast.error("Error fetching task details");
+  }
+};
 
   const normalizeSubtasks = (subtasks) => (Array.isArray(subtasks) ? subtasks.map((s, idx) => ({ id: s.id || `subtask_${Date.now()}_${idx}_${Math.random()}`, title: s.title || s.text || "", text: s.text || s.title || "", completed: s.completed ?? s.done ?? false, done: s.done ?? s.completed ?? false })) : []);
 

@@ -2111,38 +2111,6 @@ async def add_task(item: Tasklist):
     result = add_task_list(item.task, item.userid, item.date, item.due_date, assigned_by="self", priority=item.priority, subtasks=[subtask.dict() for subtask in item.subtasks])
     return {"task_id": result, "message": "Task added successfully"}
 
-from typing import Optional
-
-from datetime import datetime
-
-@app.get("/manager_tasks")
-def get_manager_tasks(manager_name: str, userid: Optional[str] = None):
-    try:
-        tasks = Mongo.assigned_task(manager_name, userid)
-        
-        for t in tasks:
-            # Attach employee name
-            user = Mongo.get_user_info(t["userid"])
-            if user:
-                t["employee_name"] = user.get("name", "Unknown")
-            
-            # ✅ Normalize created_date
-            if "created_date" not in t or not t["created_date"]:
-                raw_date = t.get("date")
-                if raw_date:
-                    try:
-                        # If it's in DD-MM-YYYY format
-                        parsed = datetime.strptime(raw_date, "%d-%m-%Y")
-                        t["created_date"] = parsed.strftime("%Y-%m-%d")  # ISO-like string
-                    except Exception:
-                        # fallback: keep original
-                        t["created_date"] = str(raw_date)
-
-        return tasks
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-
 @app.put("/edit_task")
 def edit_task(request: Taskedit):
     try:
@@ -2182,15 +2150,126 @@ async def task_delete(taskid: str):
     result = delete_a_task(taskid)
     return {"result": result}
 
-@app.get("/get_manager_tasks/{userid}")
-async def fetch_manager_tasks(userid: str, date: str = None):
+@app.post("/task_assign_to_multiple_members") 
+async def task_assign(item: Taskassign):
+    print(item.Task_details)
+    # Add assigned_by field and get assigner name
+    assigner_name = None
+    for t in item.Task_details:
+        if "assigned_by" not in t:
+            t["assigned_by"] = t.get("TL", "Manager")
+        # Get assigner name from first item
+        if not assigner_name and t.get("assigned_by"):
+            assigner_name = t.get("assigned_by")
+        elif not assigner_name and t.get("TL"):
+            assigner_user = Users.find_one({"_id": ObjectId(t["TL"])}) if ObjectId.is_valid(t["TL"]) else None
+            if not assigner_user:
+                assigner_user = Users.find_one({"name": t["TL"]})
+            assigner_name = assigner_user.get("name", t["TL"]) if assigner_user else t["TL"]
+    
+    # ✅ FIX: Actually insert the tasks into database with notifications
+    result = await task_assign_to_multiple_users_with_notification(
+        task_details=item.Task_details, 
+        assigner_name=assigner_name
+    )
+    
+    return {
+        "message": "Tasks assigned successfully",
+        "task_ids": result,
+        "count": len(result)
+    }
+
+@app.get("/tasks")
+async def get_tasks(
+    role: Optional[str] = Query(None, description="Role: HR, Manager, or Employee"),  # made optional
+    manager_name: Optional[str] = None,
+    userid: Optional[str] = None,
+    taskid: Optional[str] = None,
+    date: Optional[str] = None,
+):
+    """
+    Unified Task Fetch Endpoint:
+    Handles all task retrieval scenarios for HR, Manager/TL, and Employee.
+    """
+
     try:
-        tasks = Mongo.get_manager_only_tasks(userid, date)
-        for t in tasks:
-            t["subtasks"] = t.get("subtasks", [])
-            t["comments"] = t.get("comments", [])   # NEW
-            t["files"] = t.get("files", [])         # NEW
-        return tasks
+        # 1️⃣ Fetch a single task by ID
+        if taskid:
+            result = get_single_task(taskid)
+            if not result:
+                raise HTTPException(status_code=404, detail="Task not found")
+            return {"type": "single_task", "data": result}
+
+        # 2️⃣ Role must be provided for other views
+        if not role:
+            raise HTTPException(status_code=400, detail="role query param is required when taskid is not provided")
+
+        # 3️⃣ HR → Get tasks assigned to a specific manager or all managers
+        if role.lower() == "hr":
+            all_tasks = []
+
+            if userid:  # specific manager
+                tasks = get_manager_hr_assigned_tasks(userid)
+                if tasks:
+                    all_tasks.extend(tasks)
+            else:  # all managers
+                managers = get_managers()  # all users with role="Manager"
+                for manager in managers:
+                    if manager.get("userid"):
+                        tasks = get_manager_hr_assigned_tasks(manager["userid"])
+                        if tasks:
+                            all_tasks.extend(tasks)
+
+            # Optional date filter
+            if date:
+                all_tasks = [t for t in all_tasks if t.get("date") == date]
+
+            return {"type": "hr_tasks", "data": all_tasks}
+
+        # 4️⃣ Manager (also TL)
+        elif role.lower() in ["manager", "tl"]:
+            if not manager_name:
+                raise HTTPException(status_code=400, detail="Manager view requires manager_name")
+
+            tasks = Mongo.assigned_task(manager_name, userid)
+
+            if userid:
+                user_info = Mongo.get_user_info(userid)
+                if user_info and user_info.get("tl_name") != manager_name:
+                    raise HTTPException(status_code=403, detail="Employee not under this manager")
+
+            if date:
+                tasks = [t for t in tasks if t.get("date") == date]
+
+            for t in tasks:
+                user = Mongo.get_user_info(t["userid"])
+                if user:
+                    t["employee_name"] = user.get("name", "Unknown")
+                if "created_date" not in t or not t["created_date"]:
+                    raw_date = t.get("date")
+                    if raw_date:
+                        try:
+                            parsed = datetime.strptime(raw_date, "%d-%m-%Y")
+                            t["created_date"] = parsed.strftime("%Y-%m-%d")
+                        except Exception:
+                            t["created_date"] = str(raw_date)
+
+            return {"type": "manager_tasks", "data": tasks}
+
+        # 5️⃣ Employee
+        elif role.lower() == "employee":
+            if not userid:
+                raise HTTPException(status_code=400, detail="Employee view requires userid")
+            tasks = Mongo.get_manager_only_tasks(userid, date)
+            for t in tasks:
+                t.setdefault("subtasks", [])
+                t.setdefault("comments", [])
+                t.setdefault("files", [])
+            return {"type": "employee_tasks", "data": tasks}
+
+        else:
+            raise HTTPException(status_code=400, detail="Invalid role provided")
+
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
@@ -2205,18 +2284,9 @@ def get_manager():
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/tasks/{taskid}")
-async def get_task(taskid: str):
-    task = get_single_task(taskid)   # ← your DB function
-    if not task:
-        raise HTTPException(status_code=404, detail="Task not found")
-    return task
-
-@app.get("/get_single_task/{taskid}")
-async def get_task(taskid : str):
-    result = get_single_task(taskid)
-    if not result:
-        return {"message": "No tasks found for the given task id"}
+@app.get("/get_team_members")
+def get_members(TL: str = Query(..., alias="TL")):
+    result = get_team_members(TL)
     return result
 
 @app.post("/task/{taskid}/files")
@@ -2416,53 +2486,6 @@ def add_employee(item:AddEmployee):
 @app.get("/auto_approve_manager_leaves")
 async def trigger_auto_approval():
     result = auto_approve_manager_leaves()
-    return result
-
-@app.get("/get_team_members")
-def get_members(TL: str = Query(..., alias="TL")):
-    result = get_team_members(TL)
-    return result
-
-@app.post("/task_assign_to_multiple_members") 
-async def task_assign(item: Taskassign):
-    print(item.Task_details)
-    # Add assigned_by field and get assigner name
-    assigner_name = None
-    for t in item.Task_details:
-        if "assigned_by" not in t:
-            t["assigned_by"] = t.get("TL", "Manager")
-        # Get assigner name from first item
-        if not assigner_name and t.get("assigned_by"):
-            assigner_name = t.get("assigned_by")
-        elif not assigner_name and t.get("TL"):
-            assigner_user = Users.find_one({"_id": ObjectId(t["TL"])}) if ObjectId.is_valid(t["TL"]) else None
-            if not assigner_user:
-                assigner_user = Users.find_one({"name": t["TL"]})
-            assigner_name = assigner_user.get("name", t["TL"]) if assigner_user else t["TL"]
-    
-    # ✅ FIX: Actually insert the tasks into database with notifications
-    result = await task_assign_to_multiple_users_with_notification(
-        task_details=item.Task_details, 
-        assigner_name=assigner_name
-    )
-    
-    return {
-        "message": "Tasks assigned successfully",
-        "task_ids": result,
-        "count": len(result)
-    }
-
-@app.get("/get_manager_hr_tasks/{userid}")
-async def fetch_manager_hr_tasks(userid: str, date: str = None):
-    try:
-        tasks = get_manager_hr_assigned_tasks(userid, date)
-        return tasks
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
-
-@app.get("/get_assigned_task")
-def get_assigned_tasks(TL: str = Query(..., alias="TL"), userid: str | None = Query(None, alias = "userid")):
-    result = assigned_task(TL, userid)
     return result
 
 

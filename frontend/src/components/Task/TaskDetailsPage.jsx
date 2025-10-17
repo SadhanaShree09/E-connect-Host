@@ -132,17 +132,19 @@ const mapStatusToColumn = (status) => {
     
     let endpoint;
     if (LS.get("position") === "Employee") {
-      endpoint = `${ipadr}/get_manager_tasks/${userId}?date=${date}`;
+      endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${date}`;
     } else if (LS.get("position") === "Manager") {
-      endpoint = `${ipadr}/get_manager_hr_tasks/${userId}?date=${date}`;}
+      endpoint = `${ipadr}/tasks?role=HR&userid=${userId}&date=${date}`;
+    }
 
     const response = await fetch(endpoint);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(errorData.detail || "Failed to fetch task details");
     }
-    
-    const data = await response.json();
+
+    const result = await response.json();
+    const data = result.data;
  
     const foundTask = data.find(t => String(t.taskid || t.id) === String(taskId));
     if (foundTask) {

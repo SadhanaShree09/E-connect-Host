@@ -258,12 +258,12 @@ const TaskPage = () => {
 
       // Employees → only manager-assigned tasks
       if (LS.get("position") === "Employee") {
-        endpoint = `${ipadr}/get_manager_tasks/${userId}?date=${selectedDate}`;
+        endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${selectedDate}`;
       } else if (LS.get("position") === "Manager") {
         // Managers → only HR-assigned tasks, no self-assigned
         endpoint = selectedDate
-          ? `${ipadr}/get_manager_hr_tasks/${userId}?date=${selectedDate}`
-          : `${ipadr}/get_manager_hr_tasks/${userId}`;
+          ? `${ipadr}/tasks?role=HR&userid=${userId}&date=${selectedDate}`
+          : `${ipadr}/tasks?role=HR&userid=${userId}`;
       }
 
       const response = await fetch(endpoint);
@@ -273,7 +273,8 @@ const TaskPage = () => {
         throw new Error(errorData.detail || "Failed to fetch tasks");
       }
 
-      const data = await response.json();
+      const result = await response.json();
+      const data = result.data;
 
       if (data.message) {
         setTasks([]);

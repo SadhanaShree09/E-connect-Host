@@ -5626,19 +5626,30 @@ def calculate_user_attendance_stats(userid: str, year: int = None):
         "status": {"$in": ["Present", "Late"]}
     })
     
-    # Count leave days taken (approved leaves)
-    leave_days = Leave.count_documents({
+    # Count regular leave days (non-Permission, non-Other Leave)
+    regular_leave_days = Leave.count_documents({
         "userid": userid,
         "status": "Approved",
         "selectedDate": {
             "$gte": datetime(year, 1, 1),
             "$lte": datetime(year, 12, 31)
         },
-        "$or": [
-            {"leaveType": {"$ne": "Other Leave"}},
-            {"ToDate": {"$exists": False}}
-        ]
+        "leaveType": {"$nin": ["Permission", "Other Leave"]},
+        "ToDate": {"$exists": False}
     })
+    
+    # Count permission leaves (each counts as 0.5 days)
+    permission_count = Leave.count_documents({
+        "userid": userid,
+        "status": "Approved",
+        "selectedDate": {
+            "$gte": datetime(year, 1, 1),
+            "$lte": datetime(year, 12, 31)
+        },
+        "leaveType": "Permission"
+    })
+    
+    permission_days = permission_count * 0.5
     
     # Calculate multi-day leaves (LOP/Other Leave)
     multi_day_leaves = Leave.find({
@@ -5663,7 +5674,8 @@ def calculate_user_attendance_stats(userid: str, year: int = None):
                     additional_leave_days += 1
                 current += timedelta(days=1)
     
-    total_leave_days = leave_days + additional_leave_days
+    # Total leave days = regular leaves + permission days (0.5 each) + multi-day leaves
+    total_leave_days = regular_leave_days + permission_days + additional_leave_days
     
     # Calculate percentages
     attendance_percentage = round((present_days / total_working_days) * 100, 2) if total_working_days > 0 else 0

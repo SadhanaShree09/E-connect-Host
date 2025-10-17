@@ -86,7 +86,7 @@ const AddLeave = () => {
     setWorkingDaysError(null);
     
     try {
-      const response = await fetch(`${API_BASE_URL}/working-days/${year}`);
+      const response = await fetch(`${API_BASE_URL}/api/holidays/${year}?include_working_days=true`);
       if (response.ok) {
         const data = await response.json();
         setWorkingDays(data);

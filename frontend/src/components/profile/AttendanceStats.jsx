@@ -4,7 +4,7 @@ import { LS, ipadr } from "../../Utils/Resuse";
 
 const API_BASE_URL = `${ipadr}`;
 
-const AttendanceStats = ({ onClose }) => {
+const AttendanceStats = ({ onClose = () => {} }) => {
   const userid = LS.get("userid");
   
   // Generate available years dynamically (current year and previous 2 years)
@@ -65,7 +65,8 @@ const AttendanceStats = ({ onClose }) => {
     setError(null);
 
     try {
-      const response = await fetch(`${API_BASE_URL}/attendance/user/${userid}/year/${year}`);
+      // Updated to use query parameter instead of path parameter
+      const response = await fetch(`${API_BASE_URL}/attendance/user/${userid}?year=${year}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -81,7 +82,9 @@ const AttendanceStats = ({ onClose }) => {
   };
 
   useEffect(() => {
-    fetchAttendanceData(selectedYear);
+    if (userid) {
+      fetchAttendanceData(selectedYear);
+    }
   }, [selectedYear, userid]);
 
   const handleYearChange = (year) => {

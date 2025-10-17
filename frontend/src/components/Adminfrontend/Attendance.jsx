@@ -1,9 +1,19 @@
 import React, { useState, useEffect } from 'react';
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome';
-import {faCalendarCheck, faUsers, faUserTie, faChartBar, faClock, faPercentage, faCalendarDays, faBuilding, faSearch, faTimes} from '@fortawesome/free-solid-svg-icons';
-import { LS, ipadr} from '../../Utils/Resuse';
-import * as XLSX from "xlsx";
-import { faDownload } from "@fortawesome/free-solid-svg-icons";
+import {
+  faCalendarCheck,
+  faUsers,
+  faUserTie,
+  faChartBar,
+  faPercentage,
+  faCalendarDays,
+  faBuilding,
+  faSearch,
+  faTimes,
+  faDownload
+} from '@fortawesome/free-solid-svg-icons';
+import { LS, ipadr } from '../../Utils/Resuse';
+import * as XLSX from 'xlsx';
 
 const Attendance = () => {
   const [attendanceData, setAttendanceData] = useState(null);
@@ -13,9 +23,8 @@ const Attendance = () => {
   const [selectedDepartment, setSelectedDepartment] = useState('all');
   const [searchTerm, setSearchTerm] = useState('');
 
-  const API_BASE_URL = `${ipadr}`
+  const API_BASE_URL = `${ipadr}`;
 
-  const userId = LS.get('userid');
   const userPosition = LS.get('position');
   const userName = LS.get('name');
   const isAdmin = LS.get('isadmin');
@@ -24,7 +33,7 @@ const Attendance = () => {
     if (isAdmin) return 'admin';
     if (userPosition === 'HR') return 'hr';
     if (userPosition === 'Manager') return 'manager';
-    return 'user';
+    return null; // No access for regular users
   };
 
   const userRole = getUserRole();
@@ -32,25 +41,20 @@ const Attendance = () => {
   const fetchAttendanceData = async (year) => {
     setLoading(true);
     setError(null);
-    
+
     try {
       let url = '';
-      
+
       switch (userRole) {
         case 'admin':
-          url = `${API_BASE_URL}/attendance/admin/overview?year=${year}`;
-          break;
         case 'hr':
           url = `${API_BASE_URL}/attendance/admin/overview?year=${year}`;
           break;
         case 'manager':
-          url = `${API_BASE_URL}/attendance/user/${userId}`;
-          break;
-        case 'user':
-          url = `${API_BASE_URL}/attendance/user/${userId}`;
+          url = `${API_BASE_URL}/attendance/team/${userName}?year=${year}`;
           break;
         default:
-          throw new Error('Unknown user role');
+          throw new Error('Access denied');
       }
 
       const response = await fetch(url);
@@ -59,15 +63,6 @@ const Attendance = () => {
       }
       const data = await response.json();
       setAttendanceData(data);
-
-      if (userRole === 'manager') {
-        const teamResponse = await fetch(`${API_BASE_URL}/attendance/team/${userName}?year=${year}`);
-        if (teamResponse.ok) {
-          const teamData = await teamResponse.json();
-          setAttendanceData(prev => ({ ...prev, teamData }));
-        }
-      }
-      
     } catch (err) {
       setError(err.message);
     } finally {
@@ -76,7 +71,9 @@ const Attendance = () => {
   };
 
   useEffect(() => {
-    fetchAttendanceData(selectedYear);
+    if (userRole) {
+      fetchAttendanceData(selectedYear);
+    }
   }, [selectedYear, userRole]);
 
   const getYearOptions = () => {
@@ -96,16 +93,17 @@ const Attendance = () => {
   const getFilteredEmployees = () => {
     if (!attendanceData) return [];
 
-    let employees = selectedDepartment === 'all' 
-      ? attendanceData.all_employee_stats 
-      : attendanceData.department_wise_stats[selectedDepartment]?.employees || [];
+    let employees =
+      selectedDepartment === 'all'
+        ? attendanceData.all_employee_stats
+        : attendanceData.department_wise_stats[selectedDepartment]?.employees || [];
 
     if (searchTerm.trim()) {
       const searchLower = searchTerm.toLowerCase().trim();
-      employees = employees.filter(employee => {
-        const nameLower = employee.username.toLowerCase();
+      employees = employees.filter((employee) => {
+        const nameLower = (employee.username || '').toLowerCase();
         const searchWords = searchLower.split(/\s+/);
-        return searchWords.every(word => nameLower.includes(word));
+        return searchWords.every((word) => nameLower.includes(word));
       });
     }
 
@@ -118,232 +116,122 @@ const Attendance = () => {
 
   const downloadExcel = () => {
     if (!attendanceData) {
-      alert("No data available to download.");
+      alert('No data available to download.');
       return;
     }
 
     let exportData = [];
 
-    if (userRole === "admin" || userRole === "hr") {
+    if (userRole === 'admin' || userRole === 'hr') {
       const employees = getFilteredEmployees();
       exportData = employees.map((emp) => ({
         Name: emp.username,
-        Email: emp.user_info?.email || "N/A",
-        Department: emp.user_info?.department || "N/A",
-        Position: emp.user_info?.position || "N/A",
+        Email: emp.user_info?.email || 'N/A',
+        Department: emp.user_info?.department || 'N/A',
+        Position: emp.user_info?.position || 'N/A',
         Present_Days: emp.present_days,
         Leave_Days: emp.leave_days_taken,
-        Attendance_Percentage: emp.attendance_percentage?.toFixed(1) + "%",
+        Attendance_Percentage: emp.attendance_percentage?.toFixed(1) + '%',
       }));
-    } else if (userRole === "manager" && attendanceData?.teamData?.team_stats) {
-      const filteredTeamMembers = attendanceData.teamData.team_stats.filter(member => {
+    } else if (userRole === 'manager' && attendanceData?.team_stats) {
+      const filteredTeamMembers = attendanceData.team_stats.filter((member) => {
         if (!searchTerm.trim()) return true;
-        
+
         const searchLower = searchTerm.toLowerCase().trim();
-        const nameLower = member.username.toLowerCase();
+        const nameLower = (member.username || '').toLowerCase();
         const searchWords = searchLower.split(/\s+/);
-        return searchWords.every(word => nameLower.includes(word));
+        return searchWords.every((word) => nameLower.includes(word));
       });
-      
+
       exportData = filteredTeamMembers.map((member) => ({
         Name: member.username,
-        Email: member.user_info?.email || "N/A",
-        Department: member.user_info?.department || "N/A",
+        Email: member.user_info?.email || 'N/A',
+        Department: member.user_info?.department || 'N/A',
         Present_Days: member.present_days,
-        Attendance_Percentage: member.attendance_percentage?.toFixed(1) + "%",
+        Attendance_Percentage: member.attendance_percentage?.toFixed(1) + '%',
       }));
-    } else if (userRole === "user") {
-      const stats = attendanceData.attendance_stats;
-      exportData = [
-        {
-          Name: attendanceData.user_info?.name || "N/A",
-          Email: attendanceData.user_info?.email || "N/A",
-          Working_Days: stats?.total_working_days || 0,
-          Present_Days: stats?.present_days || 0,
-          Leave_Days: stats?.leave_days_taken || 0,
-          Attendance_Percentage: stats?.attendance_percentage?.toFixed(1) + "%",
-        },
-      ];
     }
 
     if (exportData.length === 0) {
-      alert("No data available to export.");
+      alert('No data available to export.');
       return;
     }
 
     const worksheet = XLSX.utils.json_to_sheet(exportData);
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceData");
+    XLSX.utils.book_append_sheet(workbook, worksheet, 'AttendanceData');
 
-    const fileName = searchTerm 
+    const fileName = searchTerm
       ? `attendance_${userRole}_${searchTerm}_${selectedYear}.xlsx`
       : `attendance_${userRole}_${selectedYear}.xlsx`;
     XLSX.writeFile(workbook, fileName);
   };
 
-  const renderUserAttendance = () => {
-    if (!attendanceData) return null;
-
-    const { user_info, attendance_stats } = attendanceData;
-
-    return (
-      <div className="space-y-4">
-        <div className="bg-white rounded-lg p-4 shadow border">
-          <div className="flex items-center justify-between mb-4">
-            <h2 className="text-xl font-bold text-gray-800 flex items-center">
-              <FontAwesomeIcon icon={faUserTie} className="mr-2 text-blue-600" />
-              Personal Attendance
-            </h2>
-            <div className="text-right">
-              <p className="text-sm text-gray-600">Year {selectedYear}</p>
-              <p className="text-base font-semibold text-blue-600">{user_info?.name}</p>
-            </div>
-          </div>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-              <div className="flex items-start">
-                <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600 text-xl mt-1 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Working Days</p>
-                  <p className="text-2xl font-bold text-blue-600">{attendance_stats?.total_working_days || 0}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-              <div className="flex items-start">
-                <FontAwesomeIcon icon={faCalendarCheck} className="text-blue-600 text-xl mt-1 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Present Days</p>
-                  <p className="text-2xl font-bold text-blue-600">{attendance_stats?.present_days || 0}</p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-              <div className="flex items-start">
-                <FontAwesomeIcon icon={faPercentage} className="text-blue-600 text-xl mt-1 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Attendance %</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {attendance_stats?.attendance_percentage?.toFixed(1) || 0}%
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-              <div className="flex items-start">
-                <FontAwesomeIcon icon={faClock} className="text-blue-600 text-xl mt-1 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Leave Days</p>
-                  <p className="text-2xl font-bold text-blue-600">{attendance_stats?.leave_days_taken || 0}</p>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="bg-white rounded-lg p-4 shadow-lg border">
-          <h3 className="text-base font-semibold text-gray-800 mb-3">Attendance Status</h3>
-          <div className="flex items-center justify-between">
-            <div className={`inline-flex px-3 py-1.5 rounded-full text-sm font-semibold ${
-              attendance_stats?.attendance_percentage >= 90 
-                ? 'bg-green-100 text-green-800' 
-                : attendance_stats?.attendance_percentage >= 75 
-                ? 'bg-yellow-100 text-yellow-800' 
-                : 'bg-red-100 text-red-800'
-            }`}>
-              {attendance_stats?.attendance_percentage >= 90 ? 'Excellent Attendance' : 
-               attendance_stats?.attendance_percentage >= 75 ? 'Good Attendance' : 'Needs Improvement'}
-            </div>
-            <p className="text-xs text-gray-500">
-              Last Updated: {new Date(attendance_stats?.last_updated).toLocaleDateString("en-GB")}
-            </p>
-          </div>
-        </div>
-      </div>
-    );
-  };
-
   const renderManagerView = () => {
     if (!attendanceData) return null;
 
-    const { user_info, attendance_stats, teamData } = attendanceData;
+    const { team_leader, team_stats = [], team_size, average_attendance, year } = attendanceData;
 
-    const filteredTeamMembers = teamData?.team_stats?.filter(member => {
+    const filteredTeamMembers = team_stats.filter((member) => {
       if (!searchTerm.trim()) return true;
-      
+
       const searchLower = searchTerm.toLowerCase().trim();
-      const nameLower = member.username.toLowerCase();
+      const nameLower = (member.username || '').toLowerCase();
       const searchWords = searchLower.split(/\s+/);
-      return searchWords.every(word => nameLower.includes(word));
-    }) || [];
+      return searchWords.every((word) => nameLower.includes(word));
+    });
 
     return (
       <div className="space-y-4">
         <div className="bg-white rounded-lg p-4 shadow border">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
             <FontAwesomeIcon icon={faUserTie} className="mr-2 text-blue-600" />
-            Manager Dashboard - {user_info?.name}
+            Manager Dashboard - {team_leader || userName}
           </h2>
-          
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-              <div className="flex items-start">
-                <FontAwesomeIcon icon={faPercentage} className="text-blue-600 text-xl mt-1 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Your Attendance</p>
-                  <p className="text-2xl font-bold text-blue-600">
-                    {attendance_stats?.attendance_percentage?.toFixed(1) || 0}%
-                  </p>
-                </div>
-              </div>
-            </div>
-            
-            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
-              <div className="flex items-start">
-                <FontAwesomeIcon icon={faCalendarCheck} className="text-blue-600 text-xl mt-1 mr-3" />
-                <div>
-                  <p className="text-sm text-gray-600 mb-1">Present Days</p>
-                  <p className="text-2xl font-bold text-blue-600">{attendance_stats?.present_days || 0}</p>
-                </div>
-              </div>
-            </div>
-            
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-start">
                 <FontAwesomeIcon icon={faUsers} className="text-blue-600 text-xl mt-1 mr-3" />
                 <div>
                   <p className="text-sm text-gray-600 mb-1">Team Size</p>
-                  <p className="text-2xl font-bold text-blue-600">{teamData?.team_size || 0}</p>
+                  <p className="text-2xl font-bold text-blue-600">{team_size || 0}</p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-start">
                 <FontAwesomeIcon icon={faChartBar} className="text-blue-600 text-xl mt-1 mr-3" />
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Team Avg</p>
+                  <p className="text-sm text-gray-600 mb-1">Team Avg Attendance</p>
                   <p className="text-2xl font-bold text-blue-600">
-                    {teamData?.average_attendance?.toFixed(1) || 0}%
+                    {average_attendance?.toFixed(1) || 0}%
                   </p>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
+              <div className="flex items-start">
+                <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600 text-xl mt-1 mr-3" />
+                <div>
+                  <p className="text-sm text-gray-600 mb-1">Year</p>
+                  <p className="text-2xl font-bold text-blue-600">{year}</p>
                 </div>
               </div>
             </div>
           </div>
         </div>
 
-        {teamData && teamData.team_stats && teamData.team_stats.length > 0 && (
-          <div className="bg-white rounded-lg p-4 shadow-lg border">
+        {team_stats && team_stats.length > 0 && (
+          <div className="bg-white rounded-lg p-4 shadow border">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <h3 className="text-lg font-semibold text-gray-800 flex items-center">
                 <FontAwesomeIcon icon={faUsers} className="mr-2 text-blue-600" />
                 Team Members Attendance
               </h3>
-              
+
               <div className="flex items-center gap-2 w-full sm:w-auto">
                 <div className="relative flex-1 sm:flex-none">
                   <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
@@ -357,10 +245,7 @@ const Attendance = () => {
                     className="pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-56"
                   />
                   {searchTerm && (
-                    <button
-                      onClick={clearSearch}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
+                    <button onClick={clearSearch} className="absolute inset-y-0 right-0 pr-3 flex items-center">
                       <FontAwesomeIcon icon={faTimes} className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     </button>
                   )}
@@ -371,30 +256,35 @@ const Attendance = () => {
                   className="px-3 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center whitespace-nowrap"
                 >
                   <FontAwesomeIcon icon={faDownload} className="mr-1" />
-                  <span className="hidden sm:inline">Download Excel</span>
+                  <span className="hidden sm:inline">Download</span>
                 </button>
               </div>
             </div>
-            
+
             <div className="mb-2 text-xs text-gray-600">
-              Showing {filteredTeamMembers.length} of {teamData.team_stats.length} team members
-              {searchTerm && (
-                <span className="ml-2 text-blue-600">
-                  (Search to download specific member's attendance)
-                </span>
-              )}
+              Showing {filteredTeamMembers.length} of {team_stats.length} team members
             </div>
-            
+
             <div className="overflow-x-auto">
               <div className="max-h-[calc(100vh-420px)] overflow-y-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50 sticky top-0 z-10">
                     <tr>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Name</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Present Days</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Attendance %</th>
-                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Name
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Department
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Present Days
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Attendance %
+                      </th>
+                      <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                        Status
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
@@ -402,28 +292,33 @@ const Attendance = () => {
                       filteredTeamMembers.map((member, index) => (
                         <tr key={index} className="hover:bg-gray-50">
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <div className="text-sm font-medium text-gray-900">{member.username}</div>
-                            <div className="text-xs text-gray-500">{member.user_info?.email}</div>
+                            <div className="text-sm font-medium text-gray-900">{member.username || 'N/A'}</div>
+                            <div className="text-xs text-gray-500">{member.user_info?.email || 'N/A'}</div>
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-600">
                             {member.user_info?.department || 'N/A'}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm text-gray-900">
-                            {member.present_days}
+                            {member.present_days || 0}
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap text-sm font-medium text-gray-900">
-                            {member.attendance_percentage?.toFixed(1)}%
+                            {member.attendance_percentage?.toFixed(1) || 0}%
                           </td>
                           <td className="px-4 py-3 whitespace-nowrap">
-                            <span className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
-                              member.attendance_percentage >= 90 
-                                ? 'bg-green-100 text-green-800' 
-                                : member.attendance_percentage >= 75 
-                                ? 'bg-yellow-100 text-yellow-800' 
-                                : 'bg-red-100 text-red-800'
-                            }`}>
-                              {member.attendance_percentage >= 90 ? 'Excellent' : 
-                               member.attendance_percentage >= 75 ? 'Good' : 'Poor'}
+                            <span
+                              className={`inline-flex px-2 py-1 text-xs font-semibold rounded-full ${
+                                (member.attendance_percentage || 0) >= 90
+                                  ? 'bg-green-100 text-green-800'
+                                  : (member.attendance_percentage || 0) >= 75
+                                  ? 'bg-yellow-100 text-yellow-800'
+                                  : 'bg-red-100 text-red-800'
+                              }`}
+                            >
+                              {(member.attendance_percentage || 0) >= 90
+                                ? 'Excellent'
+                                : (member.attendance_percentage || 0) >= 75
+                                ? 'Good'
+                                : 'Poor'}
                             </span>
                           </td>
                         </tr>
@@ -431,7 +326,9 @@ const Attendance = () => {
                     ) : (
                       <tr>
                         <td colSpan="5" className="px-4 py-6 text-center text-gray-500 text-sm">
-                          {searchTerm ? `No team members found matching "${searchTerm}"` : 'No team members found'}
+                          {searchTerm
+                            ? `No team members found matching "${searchTerm}"`
+                            : 'No team members found'}
                         </td>
                       </tr>
                     )}
@@ -455,7 +352,7 @@ const Attendance = () => {
         <div className="bg-white rounded-lg p-4 shadow border">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold text-gray-800 flex items-center">
-              <FontAwesomeIcon icon={faChartBar} className="mr-2 text-indigo-600" />
+              <FontAwesomeIcon icon={faChartBar} className="mr-2 text-blue-600" />
               Company Attendance Overview
             </h2>
             <select
@@ -464,12 +361,14 @@ const Attendance = () => {
               className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
             >
               <option value="all">All Departments</option>
-              {getDepartments().map(dept => (
-                <option key={dept} value={dept}>{dept}</option>
+              {getDepartments().map((dept) => (
+                <option key={dept} value={dept}>
+                  {dept}
+                </option>
               ))}
             </select>
           </div>
-          
+
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-start">
@@ -480,19 +379,19 @@ const Attendance = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-start">
                 <FontAwesomeIcon icon={faPercentage} className="text-blue-600 text-xl mt-1 mr-3" />
                 <div>
-                  <p className="text-sm text-gray-600 mb-1">Overall Company Average</p>
+                  <p className="text-sm text-gray-600 mb-1">Company Average</p>
                   <p className="text-2xl font-bold text-blue-600">
                     {attendanceData.overall_average_attendance?.toFixed(1)}%
                   </p>
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-start">
                 <FontAwesomeIcon icon={faBuilding} className="text-blue-600 text-xl mt-1 mr-3" />
@@ -502,7 +401,7 @@ const Attendance = () => {
                 </div>
               </div>
             </div>
-            
+
             <div className="bg-white rounded-lg p-4 border-l-4 border-blue-500 shadow-sm">
               <div className="flex items-start">
                 <FontAwesomeIcon icon={faCalendarDays} className="text-blue-600 text-xl mt-1 mr-3" />
@@ -515,13 +414,11 @@ const Attendance = () => {
           </div>
         </div>
 
-        <div className="bg-white rounded-lg shadow-lg border overflow-hidden">
+        <div className="bg-white rounded-lg shadow border overflow-hidden">
           <div className="px-4 py-3 bg-gray-50 border-b">
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
               <h3 className="text-base font-semibold text-gray-800">
-                {selectedDepartment === 'all'
-                  ? 'All Employees'
-                  : `${selectedDepartment} Department`} 
+                {selectedDepartment === 'all' ? 'All Employees' : `${selectedDepartment} Department`}{' '}
                 Attendance Details
               </h3>
 
@@ -538,10 +435,7 @@ const Attendance = () => {
                     className="pl-10 pr-10 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent w-full sm:w-56"
                   />
                   {searchTerm && (
-                    <button
-                      onClick={clearSearch}
-                      className="absolute inset-y-0 right-0 pr-3 flex items-center"
-                    >
+                    <button onClick={clearSearch} className="absolute inset-y-0 right-0 pr-3 flex items-center">
                       <FontAwesomeIcon icon={faTimes} className="h-4 w-4 text-gray-400 hover:text-gray-600" />
                     </button>
                   )}
@@ -552,23 +446,20 @@ const Attendance = () => {
                   className="px-3 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 flex items-center whitespace-nowrap"
                 >
                   <FontAwesomeIcon icon={faDownload} className="mr-1" />
-                  <span className="hidden sm:inline">Download Excel</span>
+                  <span className="hidden sm:inline">Download</span>
                 </button>
               </div>
             </div>
 
             <div className="text-xs text-gray-600">
-              Showing {filteredEmployees.length} of {
-                selectedDepartment === 'all' 
-                  ? attendanceData.all_employee_stats?.length || 0
-                  : attendanceData.department_wise_stats[selectedDepartment]?.employees?.length || 0
-              } employees
+              Showing {filteredEmployees.length} of{' '}
+              {selectedDepartment === 'all'
+                ? attendanceData.all_employee_stats?.length || 0
+                : attendanceData.department_wise_stats[selectedDepartment]?.employees?.length || 0}{' '}
+              employees
               {searchTerm && (
                 <span className="ml-2">
                   matching "<span className="text-blue-600 font-medium">{searchTerm}</span>"
-                  <span className="ml-1 text-blue-600">
-                    (Download exports searched results)
-                  </span>
                 </span>
               )}
             </div>
@@ -579,13 +470,27 @@ const Attendance = () => {
               <table className="min-w-full w-full">
                 <thead className="bg-gray-50 sticky top-0 z-10">
                   <tr>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Employee</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Department</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Position</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Present</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Attend %</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Leave</th>
-                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">Status</th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Employee
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Department
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Position
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Present
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Attend %
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Leave
+                    </th>
+                    <th className="px-4 py-2 text-left text-xs font-medium text-gray-500 uppercase">
+                      Status
+                    </th>
                   </tr>
                 </thead>
 
@@ -648,10 +553,18 @@ const Attendance = () => {
   };
 
   const renderContent = () => {
+    if (!userRole) {
+      return (
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
+          <strong>Access Denied:</strong> You do not have permission to view this page.
+        </div>
+      );
+    }
+
     if (loading) {
       return (
         <div className="flex justify-center items-center py-12">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-indigo-500"></div>
+          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500"></div>
           <span className="ml-3 text-gray-600">Loading attendance data...</span>
         </div>
       );
@@ -667,40 +580,43 @@ const Attendance = () => {
 
     switch (userRole) {
       case 'admin':
+      case 'hr':
         return renderAdminView();
       case 'manager':
         return renderManagerView();
-      case 'hr':
-        return renderAdminView();
-      case 'user':
-        return renderUserAttendance();
       default:
-        return <div>Access denied</div>;
+        return (
+          <div className="text-center text-red-600 py-8">
+            Access denied. This page is only accessible to Admin, HR, and Manager roles.
+          </div>
+        );
     }
   };
 
   return (
-    <div className="min-h-screen bg-white-50 py-4 px-3 sm:py-6 sm:px-6">
+    <div className="min-h-screen bg-white-50 pt-8 pb-6 px-3 sm:pt-10 sm:pb-8 sm:px-8">
       <div className="max-w-7xl mx-auto">
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">
-              Attendance Dashboard
-            </h1>
-            <div className="flex items-center gap-3">
-              <select
-                value={selectedYear}
-                onChange={(e) => setSelectedYear(parseInt(e.target.value))}
-                className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-indigo-500 text-sm"
-              >
-                {getYearOptions().map(year => (
-                  <option key={year} value={year}>{year}</option>
-                ))}
-              </select>
-              <div className="text-xs sm:text-sm text-gray-600">
-                Role: <span className="font-semibold capitalize">{userRole}</span>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Attendance Dashboard</h1>
+            {userRole && (
+              <div className="flex items-center gap-3">
+                <select
+                  value={selectedYear}
+                  onChange={(e) => setSelectedYear(parseInt(e.target.value))}
+                  className="px-3 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  {getYearOptions().map((year) => (
+                    <option key={year} value={year}>
+                      {year}
+                    </option>
+                  ))}
+                </select>
+                <div className="text-xs sm:text-sm text-gray-600">
+                  Role: <span className="font-semibold capitalize">{userRole}</span>
+                </div>
               </div>
-            </div>
+            )}
           </div>
           <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
         </div>

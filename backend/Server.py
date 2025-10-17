@@ -2273,21 +2273,25 @@ async def get_tasks(
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
     
-@app.get("/get_manager")
-def get_manager():
+@app.get("/list_users")
+def get_users(role: Optional[str] = Query(None, description="Role: 'Manager' or 'TeamMembers'"),
+              TL: Optional[str] = Query(None, description="Team Lead name, required if role is TeamMembers")):
     try:
-        result = get_user_by_position("Manager")
-        if result:
+        if role == "Manager":
+            result = get_user_by_position("Manager")
+            if result:
+                return result
+            else:
+                raise HTTPException(status_code=404, detail="Manager not found")
+        elif role == "TeamMembers":
+            if not TL:
+                raise HTTPException(status_code=400, detail="TL parameter is required for TeamMembers")
+            result = get_team_members(TL)
             return result
         else:
-            raise HTTPException(status_code=404, detail="Manager not found")
+            raise HTTPException(status_code=400, detail="Invalid role. Use 'Manager' or 'TeamMembers'")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
-    
-@app.get("/get_team_members")
-def get_members(TL: str = Query(..., alias="TL")):
-    result = get_team_members(TL)
-    return result
 
 @app.post("/task/{taskid}/files")
 async def upload_task_file(

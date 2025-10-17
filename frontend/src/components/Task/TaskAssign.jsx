@@ -247,22 +247,32 @@ const handlePageChange = (direction) => {
   }
 };
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        if (isManager) {
-          const res = await axios.get(`${ipadr}/get_team_members?TL=${LS.get('name')}`);
-          SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
-        } else if (isHR) {
-          const res = await axios.get(`${ipadr}/get_manager`);
-          SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
-        }
-      } catch {
-        SetOptions([]);
+useEffect(() => {
+  const fetchOptions = async () => {
+    try {
+      let res;
+      if (isManager) {
+    
+        res = await axios.get(`${ipadr}/list_users`, {
+          params: { role: "TeamMembers", TL: LS.get("name") }
+        });
+      } else if (isHR) {
+       
+        res = await axios.get(`${ipadr}/list_users`, {
+          params: { role: "Manager" }
+        });
       }
-    };
-    fetchOptions();
-  }, [isManager, isHR]);
+
+      SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      SetOptions([]);
+    }
+  };
+
+  fetchOptions();
+}, [isManager, isHR]);
+
 
   useEffect(() => {
     fetchTasks();

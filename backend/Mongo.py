@@ -3355,18 +3355,19 @@ async def task_assign_to_multiple_users_with_notification(task_details, assigner
     user_tasks = {}  # Group tasks by user for single notification option
     
     for item in task_details:
-        tasks = item.get("Tasks", [])  # Extracting tasks from Task_details
+        item = item.dict()  # ✅ convert Pydantic model to dict
+
+        tasks = item.get("task", [])
         userid = item["userid"]
         due_date = datetime.strptime(item["due_date"], "%Y-%m-%d").strftime("%d-%m-%Y")
         
-        # Initialize user tasks if not exists
         if userid not in user_tasks:
             user_tasks[userid] = {
                 "tasks": [],
                 "due_date": due_date,
                 "assigner_name": assigner_name or item.get("TL", "Manager")
             }
-        
+
         for task in tasks:
             task_entry = {
                 "task": [task],
@@ -3377,14 +3378,13 @@ async def task_assign_to_multiple_users_with_notification(task_details, assigner
                 "assigned_by": item.get("assigned_by") or "HR",
                 "priority": item.get("priority", "Medium"),
                 "subtasks": item.get("subtasks", []),
-                "comments": item.get("comments", []), 
+                "comments": item.get("comments", []),
                 "files": item.get("files", []),
             }
             result = Tasks.insert_one(task_entry)
             task_id = str(result.inserted_id)
             inserted_ids.append(task_id)
-            
-            # Add task to user's task list
+
             user_tasks[userid]["tasks"].append({
                 "title": task,
                 "task_id": task_id

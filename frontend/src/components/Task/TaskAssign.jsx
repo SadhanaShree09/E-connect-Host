@@ -372,7 +372,7 @@ useEffect(() => {
       if (modeldata.verified) return toast.error('This task is verified and cannot be edited.');
       for (let i = 0; i < selectedUsers.length; i++) {
         const taskdetails = {
-          Tasks: modeldata.task,
+          task: modeldata.task,
           userid: selectedUsers?.[i]?.userid,
           assigned_by: LS.get("name"),
           date: new Date().toISOString().split("T")[0],

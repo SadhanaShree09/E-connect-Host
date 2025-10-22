@@ -2186,26 +2186,24 @@ async def task_delete(taskid: str):
 @app.post("/task_assign_to_multiple_members") 
 async def task_assign(item: Taskassign):
     print(item.Task_details)
-    # Add assigned_by field and get assigner name
     assigner_name = None
     for t in item.Task_details:
-        if "assigned_by" not in t:
-            t["assigned_by"] = t.get("TL", "Manager")
-        # Get assigner name from first item
-        if not assigner_name and t.get("assigned_by"):
-            assigner_name = t.get("assigned_by")
-        elif not assigner_name and t.get("TL"):
-            assigner_user = Users.find_one({"_id": ObjectId(t["TL"])}) if ObjectId.is_valid(t["TL"]) else None
+        if not t.assigned_by:
+            t.assigned_by = t.TL or "Manager"
+
+        if not assigner_name and t.assigned_by:
+            assigner_name = t.assigned_by
+        elif not assigner_name and t.TL:
+            assigner_user = Users.find_one({"_id": ObjectId(t.TL)}) if ObjectId.is_valid(t.TL) else None
             if not assigner_user:
-                assigner_user = Users.find_one({"name": t["TL"]})
-            assigner_name = assigner_user.get("name", t["TL"]) if assigner_user else t["TL"]
+                assigner_user = Users.find_one({"name": t.TL})
+            assigner_name = assigner_user.get("name", t.TL) if assigner_user else t.TL
     
-    # ✅ FIX: Actually insert the tasks into database with notifications
     result = await task_assign_to_multiple_users_with_notification(
         task_details=item.Task_details, 
         assigner_name=assigner_name
     )
-    
+
     return {
         "message": "Tasks assigned successfully",
         "task_ids": result,

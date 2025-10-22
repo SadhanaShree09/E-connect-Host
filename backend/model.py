@@ -131,7 +131,7 @@ class FileRef(BaseModel):
     uploadedAt: str
     uploadedBy: Optional[str] = "Employee"
     path: Optional[str] = None
-
+    
 class Tasklist(BaseModel):
     task: List[str]
     userid: str
@@ -233,8 +233,20 @@ class EditEmployee(BaseModel):
                     skill['level'] = 0
         return v
 
+class TaskDetail(BaseModel):
+    task: List[str]                 
+    userid: str                     
+    date: str                      
+    due_date: str                  
+    TL: Optional[str] = None       
+    assigned_by: Optional[str] = "self"
+    priority: Optional[str] = "Medium"
+    subtasks: List[SubTask] = []
+    comments: List[Comment] = []
+    files: List[FileRef] = []
+
 class Taskassign(BaseModel):
-    Task_details: List[Dict[str, Any]]
+    Task_details: List[TaskDetail]
     
 class Settings(BaseModel):
     authjwt_secret_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJhZG1pbl9pZCIsInJvbGUiOiJhZG1pbiIsImV4cGlyZXMiOjE3MDk3MTM2NjEuMjc5ODk4NH0.DwYyZBkO20Kicz5vvqxpCrxZ7279uHRlLttNDBVO-_E"

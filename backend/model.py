@@ -135,7 +135,7 @@ class FileRef(BaseModel):
     uploadedAt: str
     uploadedBy: Optional[str] = "Employee"
     path: Optional[str] = None
-    
+
 class Tasklist(BaseModel):
     task: List[str]
     userid: str
@@ -170,6 +170,19 @@ class Taskedit(BaseModel):
     comments: Optional[List[Any]] = None
     files: Optional[List[Any]] = None
     verified: Optional[bool] = None 
+
+class TaskEditRequest(BaseModel):
+    taskid: str
+    userid: Optional[str] = None
+    updated_task: Optional[str] = None
+    status: Optional[str] = None
+    due_date: Optional[str] = None
+    priority: Optional[str] = None
+    subtasks: Optional[list] = []
+    comments: Optional[list] = []
+    files: Optional[list] = []
+    verified: Optional[bool] = False
+    action: str  # "edit" or "delete"
 
 class Gettasks(BaseModel):
     userid: str

@@ -354,7 +354,7 @@ const TaskPage = () => {
       timestamp: new Date(c.timestamp).toLocaleString()
     }));
 
-  const updateTaskStatus = async (taskId, newStatus) => {
+ const updateTaskStatus = async (taskId, newStatus) => {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
 
@@ -364,9 +364,9 @@ const TaskPage = () => {
     return;
   }
 
-    // (verification guard handled above)
-    try {
+  try {
     const requestBody = {
+      action: "edit", // 🔹 required by task_actions endpoint
       taskid: taskId,
       userid: userId,
       updated_task: Array.isArray(task.task) ? task.task[0] : task.task,
@@ -376,10 +376,11 @@ const TaskPage = () => {
       subtasks: normalizeSubtasks(task.subtasks),
       comments: normalizeComments(task.comments),
       files: normalizeFiles(task.files),
+      verified: task.verified
     };
 
-    const response = await fetch(`${ipadr}/edit_task`, {
-      method: "PUT",
+    const response = await fetch(`${ipadr}/task_actions`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -391,7 +392,7 @@ const TaskPage = () => {
       throw new Error(data.detail || "Failed to update task status");
     }
 
-    // ✅ Update the local state only if allowed
+    // ✅ Update local state
     setTasks(prevTasks =>
       prevTasks.map(t =>
         t.id === taskId ? { ...t, status: newStatus } : t

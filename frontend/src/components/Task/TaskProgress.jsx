@@ -199,58 +199,10 @@ const TaskProgress = () => {
     }
   }, [userId]);
 
-  const updateTaskStatus = async (taskId, newStatus) => {
-    const allTasks = employeeTasks.flatMap(emp => emp.tasks);
-    const task = allTasks.find(t => t.id === taskId);
-    if (!task) return;
-    // Prevent status changes for verified tasks
-    if (task.verified) {
-      toast.error('This task is verified and cannot be moved. Unverify first to change status.');
-      return;
-    }
-    try {
-      const response = await fetch(`${ipadr}/edit_task`, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          taskid: taskId,
-          userid: task.assigned_to_id,
-          updated_task: task.task,
-          status: mapColumnToStatus(newStatus),
-          due_date: task.due_date,
-          priority: task.priority,
-          subtasks: normalizeSubtasks(task.subtasks),
-          comments: normalizeComments(task.comments),
-          files: normalizeFiles(task.files)
-        }),
-      });
-      const data = await response.json();
-      if (!response.ok) {
-        throw new Error(data.detail || "Failed to update task status");
-      }
-      setEmployeeTasks(prev => prev.map(emp => ({
-        ...emp,
-        tasks: emp.tasks.map(t => 
-          t.id === taskId ? { ...t, status: newStatus } : t
-        ).sort((a, b) => {
-          const dateA = new Date(a.createdDate || a.created_date || a.date);
-          const dateB = new Date(b.createdDate || b.created_date || b.date);
-          return dateB - dateA;
-        })
-      })));
-      toast.success(`Task moved to ${statusColumns.find(col => col.id === newStatus)?.title}`);
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
-
   useEffect(() => {
     fetchEmployeeTasks();
   }, [fetchEmployeeTasks]);
 
-  // Keep a CSS variable with the header height so scrollable areas can account for it
   useEffect(() => {
     const setHeaderVar = () => {
       const h = headerRef.current ? headerRef.current.offsetHeight : 0;

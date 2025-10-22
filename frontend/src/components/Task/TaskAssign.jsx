@@ -301,18 +301,28 @@ useEffect(() => {
     }
   };
 
-  const handleDelete = async (taskId) => {
-    if (!taskId) return toast.error("Invalid task ID");
-    try {
-      const response = await fetch(`${ipadr}/task_delete/${taskId}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Failed to delete task");
-      toast.success("Task deleted successfully!");
+const handleDelete = async (taskId) => {
+  if (!taskId) return toast.error("Invalid task ID");
+
+  try {
+    const response = await axios.post(`${ipadr}/task_actions`, {
+      taskid: taskId,
+      action: "delete"
+    }, {
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (response.status === 200) {
+      toast.success(response.data.message || "Task deleted successfully!");
       fetchTasks();
-    } catch (error) {
-      toast.error(error.message);
+    } else {
+      toast.error(response.data.detail || "Failed to delete task");
     }
-  };
+  } catch (error) {
+    toast.error(error.response?.data?.detail || error.message || "Error deleting task");
+  }
+};
+
 
  const handleEdit = async (id) => {
   try {
@@ -420,22 +430,19 @@ const handleoneditSubmit = async () => {
     };
 
     const updatedetails = {
+      taskid: item._id || item.taskid || item.id,
       updated_task: Array.isArray(item.task) ? item.task[0] : item.task,
       userid: item.userid,
       status: item.status,
       due_date: formatDate(item.due_date),
       priority: item.priority || "Medium",
-      taskid: item._id,
       subtasks: normalizeSubtasks(item.subtasks || []),
-      // Preserve comments and files even if not shown in UI
       comments: item.comments || [],
-      files: item.files || []
+      files: item.files || [],
+      action: "edit"
     };
 
-    const response = await axios({
-      method: 'put',
-      url: `${ipadr}/edit_task`,
-      data: updatedetails,
+    const response = await axios.post(`${ipadr}/task_actions`, updatedetails, {
       headers: { 'Content-Type': 'application/json' }
     });
 
@@ -452,6 +459,7 @@ const handleoneditSubmit = async () => {
     }
   } catch (error) {
     toast.error("Error editing task");
+    console.error(error);
   }
 };
 

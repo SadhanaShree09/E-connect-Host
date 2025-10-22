@@ -12,9 +12,9 @@ export default function Clockdashboard() {
     const fetchData = async () => {
       try {
         const userid = LS.get("userid");
-        const attendanceResponse = await axios.get(`${ipadr}/clock-records/${userid}`);
-        console.log("API Response:", attendanceResponse.data);
-        setAttendanceData(attendanceResponse.data && Array.isArray(attendanceResponse.data.clock_records) ? attendanceResponse.data.clock_records : []);
+  const attendanceResponse = await axios.post(`${ipadr}/attendance/manage`, { userid });
+  console.log("API Response:", attendanceResponse.data);
+  setAttendanceData(attendanceResponse.data && Array.isArray(attendanceResponse.data.attendance) ? attendanceResponse.data.attendance : []);
         setLoading(false);
         setError(null);
       } catch (error) {

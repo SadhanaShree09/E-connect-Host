@@ -5,6 +5,10 @@ from pydantic import BaseModel, validator, ValidationError,Field
 from typing import Any, Optional, List, Dict, Union
 from datetime import date,datetime
 
+class AttendanceManage(BaseModel):
+    userid: Optional[str] = None
+    date: Optional[str] = None
+
 class Item(BaseModel):
     email: str
     # password: str

@@ -1,5 +1,7 @@
+from fastapi import FastAPI
+app = FastAPI()
 from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
-from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage
+from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage, AttendanceManage
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
 from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
@@ -545,35 +547,66 @@ def clockout(Data: CT):
     result = Mongo.Clockout(userid=Data.userid, name=Data.name, time=time_str)
     return {"message": result}
 
-# Clockin Details
-@app.get("/clock-records/{userid}")  
-async def get_clock_records(userid: str = Path(..., title="The name of the user whose clock records you want to fetch")):
-    try:
-        clock_records = attendance_details(userid)
-        return {"clock_records": clock_records}
-    except Exception as e:
-        raise HTTPException(status_code=500, detail=str(e))
 
-# Admin Dashboard Attendance
-@app.get("/attendance/")
-async def fetch_attendance_by_date(date: str = Query(None)):
+
+# Unified Attendance & Clock Records Endpoint (after Clockout)
+@app.post("/attendance/manage")
+async def manage_attendance(data: AttendanceManage):
+    """
+    Endpoint for attendance and clock records management.
+    - If userid is provided: return all records for that user.
+    - If date is provided: return all records for that date.
+    - If both: return records for that user on that date.
+    - If neither : both "" empty fields then displays all records"
+    """
     try:
-        if date:
-            # If date is provided, filter by that date
-            attendance_data = get_attendance_by_date()
-            # Filter by date if needed (the frontend sends date parameter but we return all for now)
-            # You can add date filtering logic here if needed
+        userid = getattr(data, 'userid', None)
+        date = getattr(data, 'date', None)
+        # Treat empty string as not provided
+        if userid == "":
+            userid = None
+        if date == "":
+            date = None
+        from dateutil import parser
+        attendance_data = get_attendance_by_date()
+
+
+        # If neither userid nor date is provided, return all attendance records
+        if not userid and not date:
+            # attendance_data already contains all records from get_attendance_by_date()
+            print('DEBUG neither case attendance_data:', attendance_data)
         else:
-            # If no date provided, return all attendance data
-            attendance_data = get_attendance_by_date()
-        
-        if not attendance_data:
-            return {"attendance": []}
-        
-        return {"attendance": attendance_data}
+            # Filter by userid if provided
+            if userid:
+                attendance_data = [rec for rec in attendance_data if rec.get('userid') == userid]
+
+            # Filter by date if provided
+            if date:
+                try:
+                    filter_date = parser.parse(date).date()
+                except Exception:
+                    filter_date = None
+                if filter_date:
+                    filtered = []
+                    for record in attendance_data:
+                        record_date = record.get('date')
+                        if record_date:
+                            try:
+                                rec_date = parser.parse(record_date).date()
+                                if rec_date == filter_date:
+                                    filtered.append(record)
+                            except Exception:
+                                pass
+                    attendance_data = filtered
+        return {
+            "status": "success",
+            "attendance": attendance_data or []
+        }
+    except HTTPException:
+        raise
     except Exception as e:
-        print(f"Error fetching attendance: {str(e)}")
-        raise HTTPException(status_code=500, detail=f"Error fetching attendance data: {str(e)}")
+        print(f"Error in attendance management: {str(e)}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # Employee ID
 @app.get("/get_EmployeeId/{name}")

@@ -383,7 +383,7 @@ const NotificationDashboard = () => {
               targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
             } else {
               // For other task notifications, navigate to main task page
-              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
+              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/Todo';
             }
           } else {
             // Fallback to main task page
@@ -806,17 +806,12 @@ const NotificationDashboard = () => {
       {/* Scrollable Notifications List - Hidden Scrollbar */}
       <div className="flex-1 overflow-hidden">
         <div 
-          className="h-full overflow-y-auto px-6 pb-6"
+          className="h-full overflow-y-auto px-6 pb-6 hide-scrollbar"
           style={{
             scrollbarWidth: 'none', /* Firefox */
             msOverflowStyle: 'none'  /* IE and Edge */
           }}
         >
-          <style jsx>{`
-            div::-webkit-scrollbar {
-              display: none; /* Chrome, Safari, Opera */
-            }
-          `}</style>
           
           <div className="max-w-7xl mx-auto space-y-4">
           {filteredNotifications.length === 0 ? (

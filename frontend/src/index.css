@@ -193,3 +193,13 @@
 html, body {
   overflow-x: hidden;
 }
+
+/* Hide scrollbar for notification dashboard */
+.hide-scrollbar::-webkit-scrollbar {
+  display: none; /* Chrome, Safari, Opera */
+}
+
+.hide-scrollbar {
+  scrollbar-width: none; /* Firefox */
+  -ms-overflow-style: none; /* IE and Edge */
+}

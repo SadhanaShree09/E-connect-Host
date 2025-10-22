@@ -382,7 +382,7 @@ useEffect(() => {
         };
         taskArr.push(taskdetails);
       }
-      const response = await axios({ method: "post", url: `${ipadr}/task_assign_to_multiple_members`, data: { Task_details: taskArr }, headers: { "Content-Type": "application/json" } });
+      const response = await axios({ method: "post", url: `${ipadr}/assign_tasks`, data: { Task_details: taskArr }, headers: { "Content-Type": "application/json" } });
       if (response.status === 200) {
         toast.success(isManager ? "Task assigned to employee(s)" : "Task assigned to TeamLead(s)");
         setModelData({ task: [""], userid: "", date: "", due_date: "", priority: "Medium", subtasks: [] });

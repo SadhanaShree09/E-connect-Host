@@ -2097,19 +2097,38 @@ async def get_all_users_route():
         else:
             raise HTTPException(status_code=404, detail="No users found")
 
+@app.post("/assign_tasks")
+async def assign_tasks(item: Taskassign):
+    assigner_name = None
+    for t in item.Task_details:
+        if not t.assigned_by:
+            t.assigned_by = t.TL or "Manager"
 
-@app.post("/add_task")
-async def add_task(item: Tasklist):
-    try:
-        # ✅ just validate, don't reformat
-        datetime.strptime(item.date, "%Y-%m-%d")
-        datetime.strptime(item.due_date, "%Y-%m-%d")
-    except ValueError:
-        raise HTTPException(status_code=400, detail="Invalid date format. Use yyyy-mm-dd.")
+        if not assigner_name and t.assigned_by:
+            assigner_name = t.assigned_by
+        elif not assigner_name and t.TL:
+            assigner_user = Users.find_one({"_id": ObjectId(t.TL)}) if ObjectId.is_valid(t.TL) else None
+            if not assigner_user:
+                assigner_user = Users.find_one({"name": t.TL})
+            assigner_name = assigner_user.get("name", t.TL) if assigner_user else t.TL
 
-    # ✅ pass raw, let add_task_list handle formatting
-    result = add_task_list(item.task, item.userid, item.date, item.due_date, assigned_by="self", priority=item.priority, subtasks=[subtask.dict() for subtask in item.subtasks])
-    return {"task_id": result, "message": "Task added successfully"}
+    for t in item.Task_details:
+        try:
+            datetime.strptime(t.date, "%Y-%m-%d")
+            datetime.strptime(t.due_date, "%Y-%m-%d")
+        except ValueError:
+            raise HTTPException(status_code=400, detail=f"Invalid date format for task assigned to {t.userid}. Use yyyy-mm-dd.")
+
+    result = await task_assign_to_multiple_users_with_notification(
+        task_details=item.Task_details,
+        assigner_name=assigner_name
+    )
+
+    return {
+        "message": "Tasks assigned successfully",
+        "task_ids": result,
+        "count": len(result)
+    }
 
 @app.put("/edit_task")
 def edit_task(request: Taskedit):
@@ -2149,33 +2168,6 @@ def edit_task(request: Taskedit):
 async def task_delete(taskid: str):
     result = delete_a_task(taskid)
     return {"result": result}
-
-@app.post("/task_assign_to_multiple_members") 
-async def task_assign(item: Taskassign):
-    print(item.Task_details)
-    assigner_name = None
-    for t in item.Task_details:
-        if not t.assigned_by:
-            t.assigned_by = t.TL or "Manager"
-
-        if not assigner_name and t.assigned_by:
-            assigner_name = t.assigned_by
-        elif not assigner_name and t.TL:
-            assigner_user = Users.find_one({"_id": ObjectId(t.TL)}) if ObjectId.is_valid(t.TL) else None
-            if not assigner_user:
-                assigner_user = Users.find_one({"name": t.TL})
-            assigner_name = assigner_user.get("name", t.TL) if assigner_user else t.TL
-    
-    result = await task_assign_to_multiple_users_with_notification(
-        task_details=item.Task_details, 
-        assigner_name=assigner_name
-    )
-
-    return {
-        "message": "Tasks assigned successfully",
-        "task_ids": result,
-        "count": len(result)
-    }
 
 @app.get("/tasks")
 async def get_tasks(

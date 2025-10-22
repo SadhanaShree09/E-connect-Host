@@ -33,8 +33,6 @@ async def check_and_notify_overdue_tasks():
         current_time = get_current_timestamp_ist()
         current_date = current_time.strftime("%d-%m-%Y")
         
-        print(f"🔍 Checking overdue tasks for date: {current_date}")
-        
         # Find all pending tasks
         overdue_tasks = list(Tasks.find({
             "status": {"$in": ["Pending", "In Progress", "pending", "in progress"]},
@@ -114,14 +112,11 @@ async def check_and_notify_overdue_tasks():
                         notifications_sent += 1
                         
             except Exception as e:
-                print(f"❌ Error processing task {task.get('_id', 'unknown')}: {e}")
                 continue
         
-        print(f"✅ Overdue task check completed: {overdue_count} overdue tasks, {notifications_sent} notifications sent")
         return {"overdue_count": overdue_count, "notifications_sent": notifications_sent}
         
     except Exception as e:
-        print(f"❌ Error in check_and_notify_overdue_tasks: {e}")
         return {"error": str(e)}
 
 async def check_upcoming_deadlines():
@@ -131,8 +126,6 @@ async def check_upcoming_deadlines():
         today = current_time.strftime("%d-%m-%Y")
         tomorrow = (current_time + timedelta(days=1)).strftime("%d-%m-%Y")
         in_3_days = (current_time + timedelta(days=3)).strftime("%d-%m-%Y")
-        
-        print(f"🔍 Checking upcoming deadlines for: {today}, {tomorrow}, {in_3_days}")
         
         # Find tasks due today, tomorrow, or in 3 days
         upcoming_tasks = list(Tasks.find({
@@ -185,27 +178,23 @@ async def check_upcoming_deadlines():
                         notifications_sent += 1
                         
             except Exception as e:
-                print(f"❌ Error processing upcoming task {task.get('_id', 'unknown')}: {e}")
                 continue
         
-        print(f"✅ Upcoming deadline check completed: {notifications_sent} notifications sent")
         return {"notifications_sent": notifications_sent}
         
     except Exception as e:
-        print(f"❌ Error in check_upcoming_deadlines: {e}")
         return {"error": str(e)}
 
 async def check_missed_attendance():
     """Check for employees who haven't clocked in by 10 AM"""
     try:
         current_time = get_current_timestamp_ist()
-        current_date = current_time.strftime("%d-%m-%Y")
+        # Use YYYY-MM-DD format to match Clock collection date format
+        current_date = current_time.strftime("%Y-%m-%d")
         
         # Only check after 10 AM on weekdays
         if current_time.hour < 10 or current_time.weekday() >= 5:  # 0=Monday, 6=Sunday
             return {"message": "Not time for attendance check or weekend"}
-        
-        print(f"🔍 Checking missed attendance for date: {current_date}")
         
         # Get all active users
         all_users = list(Users.find({"status": {"$ne": "inactive"}}))
@@ -217,6 +206,7 @@ async def check_missed_attendance():
                 user_name = user.get("name", "Employee")
                 
                 # Check if user has clocked in today
+                # Clock collection stores date as "YYYY-MM-DD" format
                 attendance_today = Clock.find_one({
                     "userid": userid,
                     "date": current_date,
@@ -241,14 +231,11 @@ async def check_missed_attendance():
                     notifications_sent += 1
                     
             except Exception as e:
-                print(f"❌ Error checking attendance for user {user.get('_id', 'unknown')}: {e}")
                 continue
         
-        print(f"✅ Missed attendance check completed: {notifications_sent} notifications sent")
         return {"notifications_sent": notifications_sent}
         
     except Exception as e:
-        print(f"❌ Error in check_missed_attendance: {e}")
         return {"error": str(e)}
 
 async def check_missed_clock_out():
@@ -264,10 +251,7 @@ async def check_missed_clock_out():
         # Only check after office hours (after 7 PM)
         office_end_time = time(19, 0)  # 7:00 PM
         if current_time.time() < office_end_time:
-            print("⏰ Not yet time to check for missed clock-out")
             return {"message": "Too early for clock-out reminders"}
-        
-        print("🔍 Checking for missed clock-out...")
         
         # Find all users who clocked in today but haven't clocked out
         users_without_clockout = list(Clock.find({
@@ -302,14 +286,11 @@ async def check_missed_clock_out():
                 notifications_sent += 1
                 
             except Exception as e:
-                print(f"❌ Error checking clock-out for user {record.get('userid', 'unknown')}: {e}")
                 continue
         
-        print(f"✅ Missed clock-out check completed: {notifications_sent} notifications sent")
         return {"notifications_sent": notifications_sent}
         
     except Exception as e:
-        print(f"❌ Error in check_missed_clock_out: {e}")
         return {"error": str(e)}
 
 async def check_pending_approvals():
@@ -317,8 +298,6 @@ async def check_pending_approvals():
     try:
         current_time = get_current_timestamp_ist()
         notifications_sent = 0
-        
-        print("🔍 Checking pending approvals...")
         
         # Check pending leave requests
         pending_leaves = list(Leave.find({
@@ -369,7 +348,6 @@ async def check_pending_approvals():
                     notifications_sent += 1
                     
             except Exception as e:
-                print(f"❌ Error processing leave {leave.get('_id', 'unknown')}: {e}")
                 continue
         
         # Check pending WFH requests
@@ -419,22 +397,17 @@ async def check_pending_approvals():
                     notifications_sent += 1
                     
             except Exception as e:
-                print(f"❌ Error processing WFH {wfh.get('_id', 'unknown')}: {e}")
                 continue
         
-        print(f"✅ Pending approvals check completed: {notifications_sent} notifications sent")
         return {"notifications_sent": notifications_sent}
         
     except Exception as e:
-        print(f"❌ Error in check_pending_approvals: {e}")
         return {"error": str(e)}
 
 # Main automation runner
 async def run_all_automated_checks():
     """Run all automated notification checks"""
     try:
-        print("🚀 Starting automated notification checks...")
-        
         results = {}
         
         # Run all checks concurrently
@@ -458,11 +431,9 @@ async def run_all_automated_checks():
             approval_result.get("notifications_sent", 0)
         )
         
-        print(f"✅ Automated checks completed. Total notifications sent: {total_notifications}")
         return results
         
     except Exception as e:
-        print(f"❌ Error in run_all_automated_checks: {e}")
         return {"error": str(e)}
 
 # WFH-specific notification triggers to match leave flow
@@ -489,7 +460,6 @@ async def notify_wfh_submitted_to_manager(employee_name, employee_id, request_da
             }
         )
     except Exception as e:
-        print(f"❌ Error in notify_wfh_submitted_to_manager: {e}")
         return False
 
 async def notify_wfh_recommended_to_hr(employee_name, employee_id, request_date_from, request_date_to, recommended_by, wfh_id=None):
@@ -528,10 +498,8 @@ async def notify_wfh_recommended_to_hr(employee_name, employee_id, request_date_
             )
             notifications_sent += 1
         
-        print(f"✅ HR notifications sent for recommended WFH: {employee_name} ({notifications_sent} notifications)")
         return notifications_sent > 0
     except Exception as e:
-        print(f"❌ Error in notify_wfh_recommended_to_hr: {e}")
         return False
 
 async def notify_wfh_approved_to_employee(userid, employee_name, request_date_from, request_date_to, approved_by, wfh_id=None):
@@ -557,7 +525,6 @@ async def notify_wfh_approved_to_employee(userid, employee_name, request_date_fr
             }
         )
     except Exception as e:
-        print(f"❌ Error in notify_wfh_approved_to_employee: {e}")
         return False
 
 async def notify_wfh_rejected_to_employee(userid, employee_name, request_date_from, request_date_to, rejected_by, reason=None, wfh_id=None):
@@ -585,7 +552,6 @@ async def notify_wfh_rejected_to_employee(userid, employee_name, request_date_fr
             }
         )
     except Exception as e:
-        print(f"❌ Error in notify_wfh_rejected_to_employee: {e}")
         return False
 
 if __name__ == "__main__":

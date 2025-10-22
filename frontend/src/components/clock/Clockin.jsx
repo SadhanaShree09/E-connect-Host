@@ -25,16 +25,18 @@ function Clockin() {
     try {
       setFetchingStatus(true);
       const userId = LS.get("userid");
-      const response = await fetch(`${ipadr}/clock-records/${userId}`);
+      const response = await fetch(`${ipadr}/attendance/manage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid: userId })
+      });
       const data = await response.json();
-      
-      if (data && data.clock_records && Array.isArray(data.clock_records)) {
+      if (data && data.attendance && Array.isArray(data.attendance)) {
         // Get today's date in YYYY-MM-DD format
         const today = new Date();
         const todayStr = today.toISOString().split('T')[0];
-        
         // Find today's record
-        const todayRecord = data.clock_records.find(record => {
+        const todayRecord = data.attendance.find(record => {
           const recordDate = new Date(record.date).toISOString().split('T')[0];
           return recordDate === todayStr;
         });

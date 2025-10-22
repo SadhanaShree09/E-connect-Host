@@ -190,96 +190,82 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   }, [taskId, navigate, dashboardRoute]);
 
   // Add comment
-const addComment = useCallback(async () => {
-  if (!newComment.trim() || !task) return;
-  if (task.verified) return toast.error('This task is verified and cannot be commented on.');
+  const addComment = useCallback(async () => {
+    if (!newComment.trim() || !task) return;
+    if (task.verified) return toast.error('This task is verified and cannot be commented on.');
+    const newEntry = {
+      id: Date.now(),
+      user: `${LS.get("name")}`,
+      text: newComment,
+      timestamp: new Date().toISOString(),
+      isManager: role === 'manager' || role === 'hr'
+    };
+    const updatedTask = {
+      ...task,
+      comments: [...task.comments, newEntry]
+    };
+    setTask(updatedTask);
+    setNewComment("");
+    try {
+      const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: updatedTask.id,
+    userid: task.assigned_to_id || task.userid,
+    comments: normalizeComments(updatedTask.comments),
+    subtasks: normalizeSubtasks(updatedTask.subtasks),
+    files: normalizeFiles(updatedTask.files)
+  })
+});
 
-  const newEntry = {
-    id: Date.now(),
-    user: `${LS.get("name")}`,
-    text: newComment,
-    timestamp: new Date().toISOString(),
-    isManager: role === 'manager' || role === 'hr'
-  };
-
-  const updatedTask = { ...task, comments: [...task.comments, newEntry] };
-  setTask(updatedTask);
-  setNewComment("");
-
-  try {
-    const res = await fetch(`${ipadr}/task_actions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "edit",
-        taskid: updatedTask.id,
-        userid: task.assigned_to_id || task.userid,
-        comments: normalizeComments(updatedTask.comments),
-        subtasks: normalizeSubtasks(updatedTask.subtasks),
-        files: normalizeFiles(updatedTask.files),
-        updated_task: task.task,
-        status: mapColumnToStatus(task.status),
-        priority: task.priority,
-        due_date: task.due_date,
-        verified: task.verified
-      })
-    });
-
-    const resJson = await res.json();
-    if (!res.ok) throw new Error(resJson.detail || "Failed to save comment");
-
-    toast.success(`${commentLabel || role} comment added!`);
-  } catch (err) {
-    toast.error(err.message);
-    fetchTaskDetails();
-  }
-}, [newComment, task, fetchTaskDetails, commentLabel, role]);
-
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.detail || "Failed to save comment");
+      toast.success(`${commentLabel || role} comment added!`);
+    } catch (err) {
+      toast.error(err.message);
+      fetchTaskDetails();
+    }
+  }, [newComment, task, fetchTaskDetails, commentLabel, role]);
 
   // Add subtask
-const addSubtask = useCallback(async () => {
-  if (!newSubtask.trim() || !task) return;
-  if (task.verified) return toast.error('This task is verified and cannot be edited.');
+  const addSubtask = useCallback(async () => {
+    if (!newSubtask.trim() || !task) return;
+    if (task.verified) return toast.error('This task is verified and cannot be edited.');
+    const newEntry = {
+      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      text: newSubtask,
+      completed: false
+    };
+    const updatedTask = {
+      ...task,
+      subtasks: [...task.subtasks, newEntry]
+    };
+    setTask(updatedTask);
+    setNewSubtask("");
+    try {
+      const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: updatedTask.id,
+    userid: task.assigned_to_id || task.userid,
+    subtasks: normalizeSubtasks(updatedTask.subtasks),
+    comments: normalizeComments(updatedTask.comments),
+    files: normalizeFiles(updatedTask.files)
+  })
+});
 
-  const newEntry = {
-    id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-    text: newSubtask,
-    completed: false
-  };
-
-  const updatedTask = { ...task, subtasks: [...task.subtasks, newEntry] };
-  setTask(updatedTask);
-  setNewSubtask("");
-
-  try {
-    const res = await fetch(`${ipadr}/task_actions`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({
-        action: "edit",
-        taskid: updatedTask.id,
-        userid: task.assigned_to_id || task.userid,
-        comments: normalizeComments(updatedTask.comments),
-        subtasks: normalizeSubtasks(updatedTask.subtasks),
-        files: normalizeFiles(updatedTask.files),
-        updated_task: task.task,
-        status: mapColumnToStatus(task.status),
-        priority: task.priority,
-        due_date: task.due_date,
-        verified: task.verified
-      })
-    });
-
-    const resJson = await res.json();
-    if (!res.ok) throw new Error(resJson.detail || "Failed to add subtask");
-
-    toast.success("Subtask added successfully!");
-  } catch (err) {
-    toast.error(err.message);
-    fetchTaskDetails();
-  }
-}, [newSubtask, task, fetchTaskDetails]);
-
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.detail || "Failed to add subtask");
+      toast.success("Subtask added successfully!");
+    } catch (err) {
+      toast.error(err.message);
+      fetchTaskDetails();
+    }
+  }, [newSubtask, task, fetchTaskDetails]);
 
   // Handle file upload
   const handleFileUpload = async () => {
@@ -312,23 +298,90 @@ const addSubtask = useCallback(async () => {
     }
   };
 
+  // Update task status
+  const updateTaskStatus = async (newStatus) => {
+    if (!task) return;
+    // Prevent changing status of verified tasks (unless explicitly unverifying)
+    if (task.verified) {
+      toast.error('This task is verified and cannot be moved. Unverify first to change status.');
+      return;
+    }
+    try {
+      const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: task.id,
+    userid: task.assigned_to_id || task.userid,
+    updated_task: taskEdit.title,
+    priority: taskEdit.priority,
+    due_date: taskEdit.dueDate,
+    status: mapColumnToStatus(task.status),
+    subtasks: normalizeSubtasks(task.subtasks),
+    comments: normalizeComments(task.comments),
+    files: normalizeFiles(task.files)
+  })
+});
+
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.detail || "Failed to update task status");
+      setTask(prev => ({ ...prev, status: newStatus }));
+      toast.success(`Task moved to ${statusColumns.find(col => col.id === newStatus)?.title}`);
+    } catch (error) {
+      toast.error(error.message);
+    }
+  };
+
+  // Update task details
+  const updateTaskDetails = useCallback(async () => {
+    if (!task) return;
+    if (task.verified) return toast.error('This task is verified and cannot be edited.');
+    try {
+     const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: task.id,
+    userid: task.assigned_to_id || task.userid,
+    updated_task: task.task,
+    status: mapColumnToStatus(newStatus),
+    due_date: task.due_date,
+    priority: task.priority,
+    subtasks: normalizeSubtasks(task.subtasks),
+    comments: normalizeComments(task.comments),
+    files: normalizeFiles(task.files)
+  })
+});
+
+      const resJson = await res.json();
+      if (!res.ok) throw new Error(resJson.detail || "Failed to update task");
+      setTask(prev => ({
+        ...prev,
+        task: taskEdit.title,
+        priority: taskEdit.priority,
+        due_date: taskEdit.dueDate
+      }));
+      setTaskEdit(prev => ({ ...prev, isEditing: false }));
+      toast.success("Task updated successfully!");
+    } catch (err) {
+      toast.error(err.message);
+    }
+  }, [task, taskEdit]);
+
   const handleVerifyAction = async (action) => {
   if (!task) return;
   setVerifyProcessing(true);
-
   try {
     const payload = {
-      action: "edit",                 // must be "edit"
+      action: "edit", // use "edit" for updates
       taskid: task.id,
       userid: task.assigned_to_id || task.userid,
-      updated_task: task.task,        // existing task text
-      status: task.status,
-      priority: task.priority,
-      due_date: task.due_date,
-      subtasks: task.subtasks,
-      comments: task.comments,
-      files: task.files,
-      verified: action === 'verify'   // new verification state
+      verified: action === 'verify',
+      subtasks: normalizeSubtasks(task.subtasks),
+      comments: normalizeComments(task.comments),
+      files: normalizeFiles(task.files)
     };
 
     const res = await fetch(`${ipadr}/task_actions`, {
@@ -350,7 +403,6 @@ const addSubtask = useCallback(async () => {
     setVerifyProcessing(false);
   }
 };
-
 
   useEffect(() => {
     if (taskId) {

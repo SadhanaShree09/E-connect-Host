@@ -327,7 +327,6 @@ const handleDelete = async (taskId) => {
  const handleEdit = async (id) => {
   try {
     const response = await axios.get(`${ipadr}/tasks`, { params: { taskid: id } });
-    console.log("🔍 Edit API Response:", response.data);
 
     const taskdetails = response.data?.data;
     // Handle nested 'task' object if present
@@ -350,8 +349,6 @@ const handleDelete = async (taskId) => {
         files: actualTaskData.files || [],
       },
     ]);
-
-    console.log("🟩 Final Task Loaded for Edit:", actualTaskData);
     setModalOpen(true);
   } catch (error) {
     console.error("Error fetching task details:", error);

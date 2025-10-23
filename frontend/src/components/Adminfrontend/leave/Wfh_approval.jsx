@@ -32,30 +32,52 @@ const Wfh = () => {
   const isadmin = LS.get('isadmin');
   const fetchData = async () => {
     try {
-      // Construct URL with query parameters
-      const position = LS.get("position");
-      const Department=LS.get('department');
-      const name = LS.get("name");
-      const isadmin = LS.get('isadmin');
-       let url='';
-      if(isadmin)
-      {
-        url = `${ipadr}/admin_page_remote_work_requests`;
-      }
-      else if (position === "Manager") {
-        url=`${ipadr}/TL_page_remote_work_requests`;
-        url += `?TL=${encodeURIComponent(name)}`;
-      }
-      else if(Department==="HR")
-      {
-        url=`${ipadr}/remote_work_requests`
+      // Determine role based on user info
+      let role = "";
+      if (LS.get("isadmin") === true) {
+        role = "admin";
+      } else if (LS.get("position") === "Manager") {
+        role = "manager";
+      } else if (LS.get("department") === "HR") {
+        role = "hr";
       }
 
-      const response = await axios.get(url);
-      setLeaveData(response.data.remote_work_requests);
-      setFilteredData(response.data.remote_work_requests);
+      // Build request parameters
+      const requestParams = {
+        role: role,
+      };
+
+      // Add TL parameter for managers
+      if (role === "manager") {
+        requestParams.TL = LS.get("name");
+        requestParams.show_processed = false; // Set to true if you want to show history
+      }
+
+      console.log("Remote Work API Request:", requestParams);
+      
+      // Use the new combined endpoint
+      const response = await axios.get(`${ipadr}/remote_work_requests`, { 
+        params: requestParams 
+      });
+      
+      console.log("Remote Work API Response:", response);
+
+      // Check for errors in response
+      if (response.data.error) {
+        console.error("API Error:", response.data.error);
+        setLeaveData([]);
+        setFilteredData([]);
+        return;
+      }
+
+      const remoteWorkData = response.data?.remote_work_requests || [];
+      setLeaveData(remoteWorkData);
+      setFilteredData(remoteWorkData);
+      
     } catch (error) {
       console.error("Error fetching data:", error);
+      setLeaveData([]);
+      setFilteredData([]);
     }
   };
 

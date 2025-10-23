@@ -35,28 +35,32 @@ const LeaveHistory = () => {
     try {
       setLoading(true);
       const userid = LS.get("userid");
-      let endpoint = "";
 
-      switch (selectedOption) {
-        case "Leave":
-          endpoint = `${ipadr}/leave-History/${userid}/?selectedOption=Leave`;
-          break;
-        case "LOP":
-          endpoint = `${ipadr}/Other-leave-history/${userid}/?selectedOption=LOP`;
-          break;
-        case "Permission":
-          endpoint = `${ipadr}/Permission-history/${userid}/?selectedOption=Permission`;
-          break;
-        default:
-          break;
+      const endpoint = `${ipadr}/leave-History/${userid}/`;
+      
+      const params = {
+        selectedOption: selectedOption  // "Leave", "LOP", or "Permission"
+      };
+
+      console.log("Leave History API Request:", endpoint, params);
+      const leaveResponse = await axios.get(endpoint, { params });
+      console.log("Leave History API Response:", leaveResponse);
+
+      if (leaveResponse.data.error) {
+        console.error("API Error:", leaveResponse.data.error);
+        setLeaveData([]);
+        setFilteredData([]);
+        setLoading(false);
+        setError(leaveResponse.data.error);
+        return;
       }
 
-      const leaveResponse = await axios.get(endpoint);
       const responseData = leaveResponse.data && Array.isArray(leaveResponse.data.leave_history)
         ? leaveResponse.data.leave_history
         : [];
       
       setLeaveData(responseData);
+      
       if (dateRange[0].startDate && dateRange[0].endDate) {
         const filtered = responseData.filter(item => {
           const itemDate = new Date(item.selectedDate || item.requestDate);
@@ -70,6 +74,7 @@ const LeaveHistory = () => {
       } else {
         setFilteredData(responseData);
       }
+      
       setLoading(false);
       setError(null);
     } catch (error) {

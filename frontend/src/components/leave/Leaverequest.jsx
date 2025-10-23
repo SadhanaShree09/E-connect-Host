@@ -120,13 +120,13 @@ const LeaveRequest = () => {
     // Define the endpoint based on the leave type
     let endpoint = "/leave-request";
     if (newLeave.leaveType === "Other Leave") {
-      endpoint = "/Other-leave-request";
+      endpoint = "/leave-request?is_other=true";
     }
     if (newLeave.leaveType === "Permission") {                                                                                                                                                                              
-      endpoint = "/Permission-request";
+      endpoint = "/leave-request?is_permission=true";
     }
     if (newLeave.leaveType === "Bonus Leave") {                                                                                                  
-      endpoint = "/Bonus-leave-request";  
+      endpoint = "/leave-request?is_bonus=true";
      
     }
     let status="";

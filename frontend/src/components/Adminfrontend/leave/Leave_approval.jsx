@@ -76,24 +76,43 @@ const Leaveapproval = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      let endpoint = "";
-
+      
+      // Determine role based on user info
+      let role = "";
       if (LS.get("isadmin") === true) {
-        endpoint = `${ipadr}/manager_leave_requests`;
+        role = "admin";
       } else if (LS.get("position") === "Manager") {
-        endpoint = `${ipadr}/only_users_leave_requests`;
+        role = "manager";
       } else if (LS.get("department") === "HR") {
-        endpoint = `${ipadr}/all_users_leave_requests`;
+        role = "hr";
       }
 
+      // Build request parameters
       const requestParams = {
         selectedOption: selectedOption,
-        TL: LS.get("position") === "Manager" ? LS.get("name") : undefined
+        role: role,
       };
 
-      console.log("Leave Approval API Request:", endpoint, requestParams); // Debug log
-      const response = await axios.get(endpoint, { params: requestParams });
+      // Add TL parameter only for managers
+      if (role === "manager") {
+        requestParams.TL = LS.get("name");
+      }
+
+      console.log("Leave Approval API Request:", requestParams); // Debug log
+      
+      // Use the new combined endpoint
+      const response = await axios.get(`${ipadr}/leave_requests`, { params: requestParams });
       console.log("Leave Approval API Response:", response); // Debug log
+
+      // Check for errors in response
+      if (response.data.error) {
+        console.error("API Error:", response.data.error);
+        setError(response.data.error);
+        setLeaveData([]);
+        setFilteredData([]);
+        setLoading(false);
+        return;
+      }
 
       let responseData = response.data && Array.isArray(response.data.user_leave_requests)
         ? response.data.user_leave_requests
@@ -101,7 +120,7 @@ const Leaveapproval = () => {
 
       setLeaveData(responseData);
       
-      // NEW: Fetch attendance data for all employees
+      // Fetch attendance data for all employees
       if (responseData.length > 0) {
         const employeeIds = [...new Set(responseData.map(item => item.Employee_ID))];
         await fetchAllAttendanceData(employeeIds);
@@ -126,7 +145,7 @@ const Leaveapproval = () => {
     } catch (error) {
       console.error("Error fetching data:", error);
       setLoading(false);
-      setError("Error fetching data");
+      setError(error.response?.data?.error || "Error fetching data");
       setLeaveData([]);
       setFilteredData([]);
     }

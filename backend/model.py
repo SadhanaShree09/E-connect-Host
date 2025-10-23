@@ -5,6 +5,10 @@ from pydantic import BaseModel, validator, ValidationError,Field
 from typing import Any, Optional, List, Dict, Union
 from datetime import date,datetime
 
+class AttendanceManage(BaseModel):
+    userid: Optional[str] = None
+    date: Optional[str] = None
+
 class Item(BaseModel):
     email: str
     # password: str
@@ -167,6 +171,19 @@ class Taskedit(BaseModel):
     files: Optional[List[Any]] = None
     verified: Optional[bool] = None 
 
+class TaskEditRequest(BaseModel):
+    taskid: str
+    userid: Optional[str] = None
+    updated_task: Optional[str] = None
+    status: Optional[str] = None
+    due_date: Optional[str] = None
+    priority: Optional[str] = None
+    subtasks: Optional[list] = []
+    comments: Optional[list] = []
+    files: Optional[list] = []
+    verified: Optional[bool] = False
+    action: str  # "edit" or "delete"
+
 class Gettasks(BaseModel):
     userid: str
     date: str
@@ -233,8 +250,20 @@ class EditEmployee(BaseModel):
                     skill['level'] = 0
         return v
 
+class TaskDetail(BaseModel):
+    task: List[str]                 
+    userid: str                     
+    date: str                      
+    due_date: str                  
+    TL: Optional[str] = None       
+    assigned_by: Optional[str] = "self"
+    priority: Optional[str] = "Medium"
+    subtasks: List[SubTask] = []
+    comments: List[Comment] = []
+    files: List[FileRef] = []
+
 class Taskassign(BaseModel):
-    Task_details: List[Dict[str, Any]]
+    Task_details: List[TaskDetail]
     
 class Settings(BaseModel):
     authjwt_secret_key: str = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJjbGllbnRfaWQiOiJhZG1pbl9pZCIsInJvbGUiOiJhZG1pbiIsImV4cGlyZXMiOjE3MDk3MTM2NjEuMjc5ODk4NH0.DwYyZBkO20Kicz5vvqxpCrxZ7279uHRlLttNDBVO-_E"

@@ -145,15 +145,13 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     setLoading(true);
     try {
       const managerName = LS.get("name");
-      const queryParams = new URLSearchParams({
-        manager_name: managerName
-      });
-      const response = await fetch(`${ipadr}/manager_tasks?${queryParams.toString()}`);
+      const response = await fetch(`${ipadr}/tasks?role=manager&manager_name=${managerName}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to fetch task details");
       }
-      const data = await response.json();
+      const result = await response.json();
+      const data = result.data;
       const taskData = data.find(t => String(t.taskid) === String(taskId));
       if (!taskData) {
         throw new Error("Task not found");
@@ -209,17 +207,19 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     setTask(updatedTask);
     setNewComment("");
     try {
-      const res = await fetch(`${ipadr}/edit_task`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          taskid: updatedTask.id,
-          userid: task.assigned_to_id || task.userid,
-          comments: normalizeComments(updatedTask.comments),
-          subtasks: normalizeSubtasks(updatedTask.subtasks),
-          files: normalizeFiles(updatedTask.files)
-        })
-      });
+      const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: updatedTask.id,
+    userid: task.assigned_to_id || task.userid,
+    comments: normalizeComments(updatedTask.comments),
+    subtasks: normalizeSubtasks(updatedTask.subtasks),
+    files: normalizeFiles(updatedTask.files)
+  })
+});
+
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.detail || "Failed to save comment");
       toast.success(`${commentLabel || role} comment added!`);
@@ -245,17 +245,19 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     setTask(updatedTask);
     setNewSubtask("");
     try {
-      const res = await fetch(`${ipadr}/edit_task`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          taskid: updatedTask.id,
-          userid: task.assigned_to_id || task.userid,
-          subtasks: normalizeSubtasks(updatedTask.subtasks),
-          comments: normalizeComments(updatedTask.comments),
-          files: normalizeFiles(updatedTask.files)
-        })
-      });
+      const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: updatedTask.id,
+    userid: task.assigned_to_id || task.userid,
+    subtasks: normalizeSubtasks(updatedTask.subtasks),
+    comments: normalizeComments(updatedTask.comments),
+    files: normalizeFiles(updatedTask.files)
+  })
+});
+
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.detail || "Failed to add subtask");
       toast.success("Subtask added successfully!");
@@ -305,21 +307,23 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
       return;
     }
     try {
-      const res = await fetch(`${ipadr}/edit_task`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          taskid: task.id,
-          userid: task.assigned_to_id || task.userid,
-          updated_task: task.task,
-          status: mapColumnToStatus(newStatus),
-          due_date: task.due_date,
-          priority: task.priority,
-          subtasks: normalizeSubtasks(task.subtasks),
-          comments: normalizeComments(task.comments),
-          files: normalizeFiles(task.files)
-        })
-      });
+      const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: task.id,
+    userid: task.assigned_to_id || task.userid,
+    updated_task: taskEdit.title,
+    priority: taskEdit.priority,
+    due_date: taskEdit.dueDate,
+    status: mapColumnToStatus(task.status),
+    subtasks: normalizeSubtasks(task.subtasks),
+    comments: normalizeComments(task.comments),
+    files: normalizeFiles(task.files)
+  })
+});
+
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.detail || "Failed to update task status");
       setTask(prev => ({ ...prev, status: newStatus }));
@@ -334,21 +338,23 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     if (!task) return;
     if (task.verified) return toast.error('This task is verified and cannot be edited.');
     try {
-      const res = await fetch(`${ipadr}/edit_task`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          taskid: task.id,
-          userid: task.assigned_to_id || task.userid,
-          updated_task: taskEdit.title,
-          priority: taskEdit.priority,
-          due_date: taskEdit.dueDate,
-          status: mapColumnToStatus(task.status),
-          subtasks: normalizeSubtasks(task.subtasks),
-          comments: normalizeComments(task.comments),
-          files: normalizeFiles(task.files)
-        })
-      });
+     const res = await fetch(`${ipadr}/task_actions`, {
+  method: "POST",
+  headers: { "Content-Type": "application/json" },
+  body: JSON.stringify({
+    action: "edit",
+    taskid: task.id,
+    userid: task.assigned_to_id || task.userid,
+    updated_task: task.task,
+    status: mapColumnToStatus(newStatus),
+    due_date: task.due_date,
+    priority: task.priority,
+    subtasks: normalizeSubtasks(task.subtasks),
+    comments: normalizeComments(task.comments),
+    files: normalizeFiles(task.files)
+  })
+});
+
       const resJson = await res.json();
       if (!res.ok) throw new Error(resJson.detail || "Failed to update task");
       setTask(prev => ({
@@ -365,33 +371,38 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   }, [task, taskEdit]);
 
   const handleVerifyAction = async (action) => {
-    if (!task) return;
-    setVerifyProcessing(true);
-    try {
-      const payload = {
-        taskid: task.id,
-        userid: task.assigned_to_id || task.userid,
-        verified: action === 'verify'
-      };
+  if (!task) return;
+  setVerifyProcessing(true);
+  try {
+    const payload = {
+      action: "edit", // use "edit" for updates
+      taskid: task.id,
+      userid: task.assigned_to_id || task.userid,
+      verified: action === 'verify',
+      subtasks: normalizeSubtasks(task.subtasks),
+      comments: normalizeComments(task.comments),
+      files: normalizeFiles(task.files)
+    };
 
-      const res = await fetch(`${ipadr}/edit_task`, {
-        method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(payload)
-      });
-      const json = await res.json();
-      if (!res.ok) throw new Error(json.detail || json.message || 'Failed to update verification');
+    const res = await fetch(`${ipadr}/task_actions`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(payload)
+    });
 
-      // Update local UI
-      setTask(prev => ({ ...prev, verified: action === 'verify' }));
-      toast.success(action === 'verify' ? 'Task Verified Successfully ' : 'Task Verification Revoked ');
-      setVerifyModal({ open: false, action: '' });
-    } catch (err) {
-      toast.error(err.message || 'Verification failed');
-    } finally {
-      setVerifyProcessing(false);
-    }
-  };
+    const json = await res.json();
+    if (!res.ok) throw new Error(json.detail || json.message || 'Failed to update verification');
+
+    // Update local UI
+    setTask(prev => ({ ...prev, verified: action === 'verify' }));
+    toast.success(action === 'verify' ? 'Task Verified Successfully' : 'Task Verification Revoked');
+    setVerifyModal({ open: false, action: '' });
+  } catch (err) {
+    toast.error(err.message || 'Verification failed');
+  } finally {
+    setVerifyProcessing(false);
+  }
+};
 
   useEffect(() => {
     if (taskId) {

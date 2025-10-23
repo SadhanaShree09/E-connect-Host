@@ -176,7 +176,7 @@ class BrowserNotificationService {
 
     let showOriginal = true;
     this.titleInterval = setInterval(() => {
-      document.title = showOriginal ? this.originalTitle : `🔔 ${message}`;
+      document.title = showOriginal ? this.originalTitle : `${message}`;
       showOriginal = !showOriginal;
     }, 1000);
   }
@@ -244,25 +244,26 @@ class BrowserNotificationService {
     }
 
     try {
-      // Get icon based on type
+      // Get icon based on type (no emoji)
       let notificationIcon = icon;
+      // No emoji icons
       const typeIcons = {
-        success: '✅',
-        warning: '⚠️',
-        error: '❌',
-        info: 'ℹ️',
-        task: '📋',
-        leave: '🏖️',
-        wfh: '🏠',
-        attendance: '⏰',
-        chat: '💬'
+        success: '',
+        warning: '',
+        error: '',
+        info: '',
+        task: '',
+        leave: '',
+        wfh: '',
+        attendance: '',
+        chat: ''
       };
 
-      // Create notification body with emoji prefix for better visibility
-      const prefix = typeIcons[type] || '🔔';
-      const notificationTitle = `${prefix} ${title}`;
+      // No emoji prefix in notification title
+      const prefix = typeIcons[type] || '';
+      const notificationTitle = `${title}`;
 
-      // Build notification options with enhanced visibility
+      // Build notification options
       const notificationOptions = {
         body: message,
         icon: notificationIcon,

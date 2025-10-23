@@ -48,8 +48,9 @@ const Timemanagement = () => {
     try {
       setLoading(true);
       const formattedDate = formatDate(selectedDate);
-      const response = await axios.get(
-        `${ipadr}/attendance/?date=${formattedDate}`
+      const response = await axios.post(
+        `${ipadr}/attendance/manage`,
+        { date: formattedDate }
       );
       const data = response.data && Array.isArray(response.data.attendance)
         ? response.data.attendance

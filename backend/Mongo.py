@@ -3355,18 +3355,19 @@ async def task_assign_to_multiple_users_with_notification(task_details, assigner
     user_tasks = {}  # Group tasks by user for single notification option
     
     for item in task_details:
-        tasks = item.get("Tasks", [])  # Extracting tasks from Task_details
+        item = item.dict()  # ✅ convert Pydantic model to dict
+
+        tasks = item.get("task", [])
         userid = item["userid"]
         due_date = datetime.strptime(item["due_date"], "%Y-%m-%d").strftime("%d-%m-%Y")
         
-        # Initialize user tasks if not exists
         if userid not in user_tasks:
             user_tasks[userid] = {
                 "tasks": [],
                 "due_date": due_date,
                 "assigner_name": assigner_name or item.get("TL", "Manager")
             }
-        
+
         for task in tasks:
             task_entry = {
                 "task": [task],
@@ -3377,14 +3378,13 @@ async def task_assign_to_multiple_users_with_notification(task_details, assigner
                 "assigned_by": item.get("assigned_by") or "HR",
                 "priority": item.get("priority", "Medium"),
                 "subtasks": item.get("subtasks", []),
-                "comments": item.get("comments", []), 
+                "comments": item.get("comments", []),
                 "files": item.get("files", []),
             }
             result = Tasks.insert_one(task_entry)
             task_id = str(result.inserted_id)
             inserted_ids.append(task_id)
-            
-            # Add task to user's task list
+
             user_tasks[userid]["tasks"].append({
                 "title": task,
                 "task_id": task_id
@@ -4071,17 +4071,17 @@ def create_leave_notification(userid, leave_type, action, leave_id=None, priorit
         priority = "medium"
         notification_type = "leave_submitted"
     elif action_lower == "approved":
-        title = f"Leave Request Approved ✅"
+        title = f"Leave Request Approved "
         message = f"Your {leave_type} leave request has been approved"
         priority = "high"
         notification_type = "leave_approved"
     elif action_lower == "rejected":
-        title = f"Leave Request Rejected ❌"
+        title = f"Leave Request Rejected "
         message = f"Your {leave_type} leave request has been rejected"
         priority = "high"
         notification_type = "leave_rejected"
     elif action_lower == "recommended":
-        title = f"Leave Request Recommended 👍"
+        title = f"Leave Request Recommended "
         manager_text = f" by {manager_name}" if manager_name else ""
         message = f"Your {leave_type} leave request has been recommended{manager_text} and forwarded for HR review"
         priority = "medium"
@@ -4124,13 +4124,13 @@ def create_wfh_notification(userid, action, wfh_id=None, priority="medium", requ
         priority = "medium"
         notification_type = "wfh_submitted"
     elif action_lower == "approved":
-        title = f"WFH Request Approved ✅"
+        title = f"WFH Request Approved "
         date_text = f" for {request_date}" if request_date else ""
         message = f"Your work from home request{date_text} has been approved"
         priority = "high"
         notification_type = "wfh_approved"
     elif action_lower == "rejected":
-        title = f"WFH Request Rejected ❌"
+        title = f"WFH Request Rejected "
         date_text = f" for {request_date}" if request_date else ""
         message = f"Your work from home request{date_text} has been rejected"
         priority = "high"
@@ -4175,19 +4175,19 @@ def create_attendance_notification(userid, message, priority="medium", attendanc
     
     # Set title based on attendance type
     if attendance_type == "clock_in":
-        title = "✅ Clock-in Success"
+        title = "Clock-in Success"
         priority = "low"
     elif attendance_type == "clock_out":
-        title = "✅ Clock-out Success"
+        title = "Clock-out Success"
         priority = "low"
     elif attendance_type == "auto_clock_out":
-        title = "🔄 Auto Clock-out"
+        title = "Auto Clock-out"
         priority = "medium"
     elif attendance_type == "missed_clock_out":
-        title = "⚠️ Missed Clock-out"
+        title = "Missed Clock-out"
         priority = "high"
     else:
-        title = "📋 Attendance Alert"
+        title = "Attendance Alert"
     
     action_url = get_role_based_action_url(userid, "attendance")
     

@@ -42,12 +42,15 @@ export default function Clockdashboard() {
 
     try {
       const userId = LS.get("userid");
-      const response = await fetch(`${ipadr}/clock-records/${userId}`, requestOptions);
+      const response = await fetch(`${ipadr}/attendance/manage`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ userid: userId })
+      });
       const data = await response.json();
-      
       setAttendanceData(
-        data && Array.isArray(data.clock_records)
-          ? data.clock_records
+        data && Array.isArray(data.attendance)
+          ? data.attendance
           : []
       );
       setLoading(false);

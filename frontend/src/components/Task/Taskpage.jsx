@@ -258,12 +258,12 @@ const TaskPage = () => {
 
       // Employees → only manager-assigned tasks
       if (LS.get("position") === "Employee") {
-        endpoint = `${ipadr}/get_manager_tasks/${userId}?date=${selectedDate}`;
+        endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${selectedDate}`;
       } else if (LS.get("position") === "Manager") {
         // Managers → only HR-assigned tasks, no self-assigned
         endpoint = selectedDate
-          ? `${ipadr}/get_manager_hr_tasks/${userId}?date=${selectedDate}`
-          : `${ipadr}/get_manager_hr_tasks/${userId}`;
+          ? `${ipadr}/tasks?role=HR&userid=${userId}&date=${selectedDate}`
+          : `${ipadr}/tasks?role=HR&userid=${userId}`;
       }
 
       const response = await fetch(endpoint);
@@ -273,7 +273,8 @@ const TaskPage = () => {
         throw new Error(errorData.detail || "Failed to fetch tasks");
       }
 
-      const data = await response.json();
+      const result = await response.json();
+      const data = result.data;
 
       if (data.message) {
         setTasks([]);
@@ -353,7 +354,7 @@ const TaskPage = () => {
       timestamp: new Date(c.timestamp).toLocaleString()
     }));
 
-  const updateTaskStatus = async (taskId, newStatus) => {
+ const updateTaskStatus = async (taskId, newStatus) => {
   const task = tasks.find(t => t.id === taskId);
   if (!task) return;
 
@@ -363,9 +364,9 @@ const TaskPage = () => {
     return;
   }
 
-    // (verification guard handled above)
-    try {
+  try {
     const requestBody = {
+      action: "edit", // 🔹 required by task_actions endpoint
       taskid: taskId,
       userid: userId,
       updated_task: Array.isArray(task.task) ? task.task[0] : task.task,
@@ -375,10 +376,11 @@ const TaskPage = () => {
       subtasks: normalizeSubtasks(task.subtasks),
       comments: normalizeComments(task.comments),
       files: normalizeFiles(task.files),
+      verified: task.verified
     };
 
-    const response = await fetch(`${ipadr}/edit_task`, {
-      method: "PUT",
+    const response = await fetch(`${ipadr}/task_actions`, {
+      method: "POST",
       headers: {
         "Content-Type": "application/json",
       },
@@ -390,7 +392,7 @@ const TaskPage = () => {
       throw new Error(data.detail || "Failed to update task status");
     }
 
-    // ✅ Update the local state only if allowed
+    // ✅ Update local state
     setTasks(prevTasks =>
       prevTasks.map(t =>
         t.id === taskId ? { ...t, status: newStatus } : t
@@ -405,66 +407,6 @@ const TaskPage = () => {
   }
 };
 
-
- const addTask = async () => {
-  if (newTask.trim() === "") {
-    toast.error("Task cannot be empty.");
-    return;
-  }
-
-  setErrorMessage("");
-  try {
-    const formatDDMMYYYYtoISO = (d) => {
-      if (!d) return "";
-      const [day, month, year] = d.split("-");
-      return `${year}-${month}-${day}`;
-    };
-
-    const response = await fetch(`${ipadr}/add_task`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        task: [newTask],
-        userid: userId,
-        date: formatDDMMYYYYtoISO(date),
-        due_date: duedate,
-      }),
-    });
-
-    const data = await response.json();
-    if (!response.ok) {
-      throw new Error(data.detail || "Failed to add task");
-    }
-
-    toast.success("Task added successfully!");
-
-    // Instead of re-fetching, update tasks locally
-    const newTaskObj = {
-      // id: data.taskid || Date.now(),   // backend id or fallback
-      id: `${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
-      task: newTask,
-      status: "todo",
-      due_date: duedate,
-      priority: "medium",
-      assignedBy: "Self",
-      createdDate: new Date().toISOString().split("T")[0],
-      subtasks: [],
-      comments: [],
-      files: [],
-    };
-
-    setTasks((prev) => [...prev, newTaskObj]); // append new task
-
-    setNewTask("");
-    setDuedate("");
-  } catch (error) {
-    toast.error(error.message);
-  }
-};
-
-
   const handleDragStart = (e, task) => {
     setDraggedTask(task);
   };
@@ -473,13 +415,6 @@ const TaskPage = () => {
     e.preventDefault();
   };
 
-  // const handleDrop = async (e, newStatus) => {
-  //   e.preventDefault();
-  //   if (!draggedTask) return;
-
-  //   await updateTaskStatus(draggedTask.id, newStatus);
-  //   setDraggedTask(null);
-  // };
   const handleDrop = async (e, newStatus) => {
   e.preventDefault();
   if (!draggedTask) return;
@@ -494,7 +429,6 @@ const TaskPage = () => {
   await updateTaskStatus(draggedTask.id, newStatus);
   setDraggedTask(null);
 };
-
 
   const openTaskDetails = (task) => {
     navigate(`/User/Task/Todo/TaskPage/TaskDetailsPage/${task.id}`, {
@@ -670,35 +604,6 @@ const TaskPage = () => {
           />
         </div>
 
-        {/* Add Task Form */}
-        {/* {!isPastDate(date) && (
-          <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-6 rounded-xl border border-gray-200 shadow-sm">
-            <div className="flex flex-col sm:flex-row gap-4">
-              <input
-                type="text"
-                className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                placeholder="Enter new task"
-                value={newTask}
-                onChange={(e) => setNewTask(e.target.value)}
-                onKeyDown={(e) => e.key === "Enter" && addTask()}
-              />
-              <input
-                type="date"
-                className="p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent shadow-sm"
-                placeholder="Due date"
-                value={duedate}
-                onChange={(e) => setDuedate(e.target.value)}
-              />
-              <button
-                onClick={addTask}
-                className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors shadow-sm font-medium"
-              >
-                Add Task
-              </button>
-            </div>
-            {errorMessage && <p className="text-red-500 text-sm mt-3">{errorMessage}</p>}
-          </div>
-        )} */}
       </div>
 
       {/* Kanban Board */}

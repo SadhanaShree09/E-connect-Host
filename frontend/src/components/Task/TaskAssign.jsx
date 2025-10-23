@@ -247,22 +247,32 @@ const handlePageChange = (direction) => {
   }
 };
 
-  useEffect(() => {
-    const fetchOptions = async () => {
-      try {
-        if (isManager) {
-          const res = await axios.get(`${ipadr}/get_team_members?TL=${LS.get('name')}`);
-          SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
-        } else if (isHR) {
-          const res = await axios.get(`${ipadr}/get_manager`);
-          SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
-        }
-      } catch {
-        SetOptions([]);
+useEffect(() => {
+  const fetchOptions = async () => {
+    try {
+      let res;
+      if (isManager) {
+    
+        res = await axios.get(`${ipadr}/list_users`, {
+          params: { role: "TeamMembers", TL: LS.get("name") }
+        });
+      } else if (isHR) {
+       
+        res = await axios.get(`${ipadr}/list_users`, {
+          params: { role: "Manager" }
+        });
       }
-    };
-    fetchOptions();
-  }, [isManager, isHR]);
+
+      SetOptions(res.data && Array.isArray(res.data) ? res.data : []);
+    } catch (err) {
+      console.error("Error fetching users:", err);
+      SetOptions([]);
+    }
+  };
+
+  fetchOptions();
+}, [isManager, isHR]);
+
 
   useEffect(() => {
     fetchTasks();
@@ -274,26 +284,12 @@ const handlePageChange = (direction) => {
     try {
       let url = '';
       if (isManager) {
-        url = `${ipadr}/get_assigned_task?TL=${LS.get('name')}&manager_id=${LS.get('id')}`;
+        url = `${ipadr}/tasks?role=tl&manager_name=${LS.get('name')}`;
       } else if (isHR) {
-        url = `${ipadr}/get_manager`;
-        const res = await axios.get(url);
-        const managers = Array.isArray(res.data) ? res.data : [res.data];
-        let allTasks = [];
-        for (const manager of managers) {
-          if (!manager.userid) continue;
-          const taskRes = await axios.get(`${ipadr}/get_manager_hr_tasks/${manager.userid}`);
-          if (Array.isArray(taskRes.data)) {
-            allTasks = allTasks.concat(taskRes.data);
-          }
-        }
-        setEmployeeData(allTasks);
-        setFilteredData(allTasks);
-        setLoading(false);
-        return;
+        url = `${ipadr}/tasks?role=hr`;
       }
       const res = await axios.get(url);
-      const data = res.data && Array.isArray(res.data) ? res.data : [];
+      const data = res.data && res.data.data ? res.data.data : [];
       setEmployeeData(data);
       setFilteredData(data);
     } catch (err) {
@@ -305,38 +301,60 @@ const handlePageChange = (direction) => {
     }
   };
 
-  const handleDelete = async (taskId) => {
-    if (!taskId) return toast.error("Invalid task ID");
-    try {
-      const response = await fetch(`${ipadr}/task_delete/${taskId}`, { method: "DELETE", headers: { "Content-Type": "application/json" } });
-      const data = await response.json();
-      if (!response.ok) throw new Error(data.detail || "Failed to delete task");
-      toast.success("Task deleted successfully!");
-      fetchTasks();
-    } catch (error) {
-      toast.error(error.message);
-    }
-  };
+const handleDelete = async (taskId) => {
+  if (!taskId) return toast.error("Invalid task ID");
 
-  const handleEdit = async (id) => {
-    try {
-      const response = await axios.get(`${ipadr}/get_single_task/${id}`);
-      const taskdetails = response.data;
-      let actualTaskData = Array.isArray(taskdetails) ? taskdetails[0] : (taskdetails.task || taskdetails);
-      if (actualTaskData.verified) {
-        return toast.error('This task is verified and cannot be edited.');
-      }
-      SetEditmodel([{ 
-        ...actualTaskData, 
+  try {
+    const response = await axios.post(`${ipadr}/task_actions`, {
+      taskid: taskId,
+      action: "delete"
+    }, {
+      headers: { "Content-Type": "application/json" }
+    });
+
+    if (response.status === 200) {
+      toast.success(response.data.message || "Task deleted successfully!");
+      fetchTasks();
+    } else {
+      toast.error(response.data.detail || "Failed to delete task");
+    }
+  } catch (error) {
+    toast.error(error.response?.data?.detail || error.message || "Error deleting task");
+  }
+};
+
+
+ const handleEdit = async (id) => {
+  try {
+    const response = await axios.get(`${ipadr}/tasks`, { params: { taskid: id } });
+
+    const taskdetails = response.data?.data;
+    // Handle nested 'task' object if present
+    const actualTaskData = taskdetails?.task ? taskdetails.task : taskdetails;
+
+    if (!actualTaskData) {
+      toast.error("Task data not found.");
+      return;
+    }
+
+    if (actualTaskData.verified) {
+      return toast.error("This task is verified and cannot be edited.");
+    }
+
+    SetEditmodel([
+      {
+        ...actualTaskData,
         subtasks: normalizeSubtasks(actualTaskData.subtasks || []),
         comments: actualTaskData.comments || [],
-        files: actualTaskData.files || []
-      }]);
-      setModalOpen(true);
-    } catch (error) {
-      toast.error("Error fetching task details");
-    }
-  };
+        files: actualTaskData.files || [],
+      },
+    ]);
+    setModalOpen(true);
+  } catch (error) {
+    console.error("Error fetching task details:", error);
+    toast.error("Error fetching task details");
+  }
+};
 
   const normalizeSubtasks = (subtasks) => (Array.isArray(subtasks) ? subtasks.map((s, idx) => ({ id: s.id || `subtask_${Date.now()}_${idx}_${Math.random()}`, title: s.title || s.text || "", text: s.text || s.title || "", completed: s.completed ?? s.done ?? false, done: s.done ?? s.completed ?? false })) : []);
 
@@ -361,7 +379,7 @@ const handlePageChange = (direction) => {
       if (modeldata.verified) return toast.error('This task is verified and cannot be edited.');
       for (let i = 0; i < selectedUsers.length; i++) {
         const taskdetails = {
-          Tasks: modeldata.task,
+          task: modeldata.task,
           userid: selectedUsers?.[i]?.userid,
           assigned_by: LS.get("name"),
           date: new Date().toISOString().split("T")[0],
@@ -371,7 +389,7 @@ const handlePageChange = (direction) => {
         };
         taskArr.push(taskdetails);
       }
-      const response = await axios({ method: "post", url: `${ipadr}/task_assign_to_multiple_members`, data: { Task_details: taskArr }, headers: { "Content-Type": "application/json" } });
+      const response = await axios({ method: "post", url: `${ipadr}/assign_tasks`, data: { Task_details: taskArr }, headers: { "Content-Type": "application/json" } });
       if (response.status === 200) {
         toast.success(isManager ? "Task assigned to employee(s)" : "Task assigned to TeamLead(s)");
         setModelData({ task: [""], userid: "", date: "", due_date: "", priority: "Medium", subtasks: [] });
@@ -409,22 +427,19 @@ const handleoneditSubmit = async () => {
     };
 
     const updatedetails = {
+      taskid: item._id || item.taskid || item.id,
       updated_task: Array.isArray(item.task) ? item.task[0] : item.task,
       userid: item.userid,
       status: item.status,
       due_date: formatDate(item.due_date),
       priority: item.priority || "Medium",
-      taskid: item._id,
       subtasks: normalizeSubtasks(item.subtasks || []),
-      // Preserve comments and files even if not shown in UI
       comments: item.comments || [],
-      files: item.files || []
+      files: item.files || [],
+      action: "edit"
     };
 
-    const response = await axios({
-      method: 'put',
-      url: `${ipadr}/edit_task`,
-      data: updatedetails,
+    const response = await axios.post(`${ipadr}/task_actions`, updatedetails, {
       headers: { 'Content-Type': 'application/json' }
     });
 
@@ -441,6 +456,7 @@ const handleoneditSubmit = async () => {
     }
   } catch (error) {
     toast.error("Error editing task");
+    console.error(error);
   }
 };
 

@@ -621,7 +621,7 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
         raise HTTPException(500, str(e))
 
 #Leave-request
-#Leave-request - FIXED VERSION
+#Leave-request - FIXED VERSION (Corrected time attribute)
 @app.post('/leave-request')
 async def leave_request(
     item: Union[Item6, Item7, Item8, Item9],
@@ -637,9 +637,10 @@ async def leave_request(
         print(f"Selected Date: {item.selectedDate}")
         print(f"Request Date: {item.requestDate}")
         
-        # Add request time in the desired timezone
+        # Add request time in the desired timezone - CREATE THIS FIRST!
         ist = pytz.timezone("Asia/Kolkata")
         time = datetime.now(ist).strftime("%I:%M:%S %p")
+        print(f"Generated time: {time}")
         
         # Parse and normalize dates BEFORE passing to storage functions
         try:
@@ -672,18 +673,21 @@ async def leave_request(
         # Determine which storage function to call based on query parameters
         if is_permission:
             print(f"Processing permission request for {item.userid}")
+            # Get timeSlot - handle if it doesn't exist
+            time_slot = getattr(item, 'timeSlot', 'Full Day')
+            
             result = store_Permission_request(
                 item.userid,
                 item.employeeName,
-                item.time,
+                time,  # ✅ Use the generated time variable, not item.time
                 item.leaveType,
                 selected_date_str,  # Use parsed date
                 request_date_str,   # Use parsed date
-                item.timeSlot,
+                time_slot,
                 item.reason,
             )
             leave_display_name = "Permission"
-            leave_date_display = f"{selected_date_str} ({item.timeSlot})"
+            leave_date_display = f"{selected_date_str} ({time_slot})"
             
         elif is_other:
             print(f"Processing other leave request for {item.userid}")
@@ -699,7 +703,7 @@ async def leave_request(
             result = store_Other_leave_request(
                 item.userid,
                 item.employeeName,
-                time,
+                time,  # ✅ Use the generated time variable
                 item.leaveType,
                 selected_date_str,
                 to_date_str,
@@ -714,7 +718,7 @@ async def leave_request(
             result = store_sunday_request(
                 item.userid,
                 item.employeeName,
-                time,
+                time,  # ✅ Use the generated time variable
                 item.leaveType,
                 selected_date_str,
                 item.reason,
@@ -729,7 +733,7 @@ async def leave_request(
             result = Mongo.store_leave_request(
                 item.userid,
                 item.employeeName,
-                time,
+                time,  # ✅ Use the generated time variable
                 item.leaveType,
                 selected_date_str,
                 request_date_str,

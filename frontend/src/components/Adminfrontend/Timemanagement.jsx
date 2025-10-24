@@ -47,10 +47,10 @@ const Timemanagement = () => {
   const fetchData = async () => {
     try {
       setLoading(true);
-      const formattedDate = formatDate(selectedDate);
+      // Request all attendance records, not just for a specific date
       const response = await axios.post(
         `${ipadr}/attendance/manage`,
-        { date: formattedDate }
+        {}
       );
       const data = response.data && Array.isArray(response.data.attendance)
         ? response.data.attendance

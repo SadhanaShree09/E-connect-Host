@@ -621,7 +621,7 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
         raise HTTPException(500, str(e))
 
 #Leave-request
-# Combined Leave Request Endpoint - NO FUNCTIONALITY CHANGES, JUST MERGED
+# Combined Leave Request Endpoint - FIXED TYPE DETECTION
 @app.post('/leave-request')
 async def leave_request(
     item: Union[Item6, Item7, Item8, Item9],
@@ -634,7 +634,8 @@ async def leave_request(
         time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
         
         # ========== PERMISSION REQUEST (Item8) ==========
-        if is_permission:
+        if is_permission or hasattr(item, 'timeSlot'):
+            # Permission requests have timeSlot attribute
             result = store_Permission_request(
                 item.userid,
                 item.employeeName,
@@ -723,7 +724,8 @@ async def leave_request(
             return {"message": "Permission request processed", "result": result}
             
         # ========== OTHER LEAVE REQUEST (Item7) ==========
-        elif is_other:
+        elif is_other or hasattr(item, 'ToDate'):
+            # Other Leave has ToDate attribute
             result = store_Other_leave_request(
                 item.userid,
                 item.employeeName,

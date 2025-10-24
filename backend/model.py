@@ -89,7 +89,6 @@ class Item6(BaseModel):
     reason: str
     selectedDate: date
     requestDate: date 
-    time: Optional[str] = None
 
 class Item7(BaseModel):
     userid: str

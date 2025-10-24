@@ -621,7 +621,7 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
         raise HTTPException(500, str(e))
 
 #Leave-request
-# Combined Leave Request Endpoint - FIXED TYPE DETECTION
+# Combined Leave Request Endpoint - FIXED TYPE DETECTION AND TIME HANDLING
 @app.post('/leave-request')
 async def leave_request(
     item: Union[Item6, Item7, Item8, Item9],
@@ -630,16 +630,36 @@ async def leave_request(
     is_permission: bool = False
 ):
     try:
-        # Generate current time in IST
-        time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
+        # ========== AUTO-DETECT REQUEST TYPE IF NOT SPECIFIED ==========
+        if not is_permission and not is_other and not is_bonus:
+            if hasattr(item, 'timeSlot'):
+                is_permission = True
+                print("Auto-detected: Permission request")
+            elif hasattr(item, 'ToDate'):
+                is_other = True
+                print("Auto-detected: Other Leave request")
+        
+        # Generate current time in IST for requests that need it
+        current_time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
         
         # ========== PERMISSION REQUEST (Item8) ==========
-        if is_permission or hasattr(item, 'timeSlot'):
-            # Permission requests have timeSlot attribute
+        if is_permission:
+            # Validate that it's actually a permission request
+            if not hasattr(item, 'timeSlot'):
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Invalid permission request: missing timeSlot"
+                )
+            
+            # Get time from item if available, otherwise use current_time
+            request_time = getattr(item, 'time', current_time)
+            
+            print(f"Processing Permission request for {item.employeeName}")
+            
             result = store_Permission_request(
                 item.userid,
                 item.employeeName,
-                item.time,  # Item8 has time attribute
+                request_time,
                 item.leaveType,
                 item.selectedDate,
                 item.requestDate,
@@ -724,12 +744,20 @@ async def leave_request(
             return {"message": "Permission request processed", "result": result}
             
         # ========== OTHER LEAVE REQUEST (Item7) ==========
-        elif is_other or hasattr(item, 'ToDate'):
-            # Other Leave has ToDate attribute
+        elif is_other:
+            # Validate that it's actually an other leave request
+            if not hasattr(item, 'ToDate'):
+                raise HTTPException(
+                    status_code=400, 
+                    detail="Invalid other leave request: missing ToDate"
+                )
+            
+            print(f"Processing Other Leave request for {item.employeeName}")
+            
             result = store_Other_leave_request(
                 item.userid,
                 item.employeeName,
-                time,  # Use generated time
+                current_time,
                 item.leaveType,
                 item.selectedDate,
                 item.ToDate,
@@ -815,10 +843,12 @@ async def leave_request(
             
         # ========== BONUS LEAVE REQUEST (Item9) ==========
         elif is_bonus:
+            print(f"Processing Bonus Leave request for {item.employeeName}")
+            
             result = store_sunday_request(
                 item.userid,
                 item.employeeName,
-                time,
+                current_time,
                 item.leaveType,
                 item.selectedDate,
                 item.reason,
@@ -876,13 +906,14 @@ async def leave_request(
             
         # ========== REGULAR LEAVE REQUEST (Item6) ==========
         else:
-            print(item.selectedDate)
-            print(item.requestDate)
+            print(f"Processing Regular Leave request for {item.employeeName}")
+            print(f"Selected Date: {item.selectedDate}")
+            print(f"Request Date: {item.requestDate}")
 
             result = Mongo.store_leave_request(
                 item.userid,
                 item.employeeName,
-                time,
+                current_time,  # Use current_time instead of 'time'
                 item.leaveType,
                 item.selectedDate,
                 item.requestDate,
@@ -903,7 +934,7 @@ async def leave_request(
                     # Success case - notify employee and appropriate approver
                     try:
                         # 1. Notify employee about successful submission
-                        await notify_leave_submitted(
+                        await Mongo.notify_leave_submitted(
                             userid=item.userid,
                             leave_type=item.leaveType,
                             leave_id=None
@@ -963,8 +994,12 @@ async def leave_request(
 
             return {"message": "Leave request processed", "result": result}
             
+    except HTTPException:
+        raise
     except Exception as e:
         print(f"❌ Error in leave request: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "status": "error",

@@ -621,6 +621,7 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
         raise HTTPException(500, str(e))
 
 #Leave-request
+#Leave-request - FIXED VERSION
 @app.post('/leave-request')
 async def leave_request(
     item: Union[Item6, Item7, Item8, Item9],
@@ -629,8 +630,44 @@ async def leave_request(
     is_permission: bool = False
 ):
     try:
+        # Add detailed logging for deployment debugging
+        print(f"=== LEAVE REQUEST DEBUG ===")
+        print(f"User: {item.userid}")
+        print(f"Type: {'Permission' if is_permission else 'Other' if is_other else 'Bonus' if is_bonus else 'Regular'}")
+        print(f"Selected Date: {item.selectedDate}")
+        print(f"Request Date: {item.requestDate}")
+        
         # Add request time in the desired timezone
-        time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
+        ist = pytz.timezone("Asia/Kolkata")
+        time = datetime.now(ist).strftime("%I:%M:%S %p")
+        
+        # Parse and normalize dates BEFORE passing to storage functions
+        try:
+            # Parse selectedDate
+            if isinstance(item.selectedDate, str):
+                parsed_date = parser.parse(item.selectedDate)
+                selected_date_str = parsed_date.strftime("%d-%m-%Y")
+            else:
+                selected_date_str = item.selectedDate
+            
+            # Parse requestDate
+            if isinstance(item.requestDate, str):
+                parsed_request_date = parser.parse(item.requestDate)
+                request_date_str = parsed_request_date.strftime("%d-%m-%Y")
+            else:
+                request_date_str = item.requestDate
+            
+            print(f"Parsed dates - Selected: {selected_date_str}, Request: {request_date_str}")
+            
+        except Exception as date_error:
+            print(f"❌ Date parsing error: {date_error}")
+            return {
+                "success": False,
+                "status": "error",
+                "message": "Invalid date format",
+                "details": f"Date parsing failed: {str(date_error)}",
+                "suggestion": "Please ensure dates are in valid format"
+            }
 
         # Determine which storage function to call based on query parameters
         if is_permission:
@@ -640,28 +677,37 @@ async def leave_request(
                 item.employeeName,
                 item.time,
                 item.leaveType,
-                item.selectedDate,
-                item.requestDate,
+                selected_date_str,  # Use parsed date
+                request_date_str,   # Use parsed date
                 item.timeSlot,
                 item.reason,
             )
             leave_display_name = "Permission"
-            leave_date_display = f"{item.selectedDate} ({item.timeSlot})"
+            leave_date_display = f"{selected_date_str} ({item.timeSlot})"
             
         elif is_other:
             print(f"Processing other leave request for {item.userid}")
+            # Parse ToDate for other leave
+            to_date_str = selected_date_str  # Default to same as selected
+            if hasattr(item, 'ToDate') and item.ToDate:
+                try:
+                    parsed_to_date = parser.parse(item.ToDate)
+                    to_date_str = parsed_to_date.strftime("%d-%m-%Y")
+                except:
+                    pass
+            
             result = store_Other_leave_request(
                 item.userid,
                 item.employeeName,
                 time,
                 item.leaveType,
-                item.selectedDate,
-                item.ToDate,
-                item.requestDate,
+                selected_date_str,
+                to_date_str,
+                request_date_str,
                 item.reason,
             )
             leave_display_name = "Other leave"
-            leave_date_display = f"{item.selectedDate} to {item.ToDate}" if item.selectedDate != item.ToDate else item.selectedDate
+            leave_date_display = f"{selected_date_str} to {to_date_str}" if selected_date_str != to_date_str else selected_date_str
             
         elif is_bonus:
             print(f"Processing bonus leave request for {item.userid}")
@@ -670,34 +716,33 @@ async def leave_request(
                 item.employeeName,
                 time,
                 item.leaveType,
-                item.selectedDate,
+                selected_date_str,
                 item.reason,
-                item.requestDate,
+                request_date_str,
             )
             leave_display_name = "Bonus leave"
-            leave_date_display = item.selectedDate
+            leave_date_display = selected_date_str
             
         else:
             # Regular leave request
             print(f"Processing regular leave request for {item.userid}")
-            print(item.selectedDate)
-            print(item.requestDate)
             result = Mongo.store_leave_request(
                 item.userid,
                 item.employeeName,
                 time,
                 item.leaveType,
-                item.selectedDate,
-                item.requestDate,
+                selected_date_str,
+                request_date_str,
                 item.reason,
             )
             leave_display_name = "Leave"
-            leave_date_display = item.selectedDate
+            leave_date_display = selected_date_str
+
+        print(f"Storage function result: {result}")
 
         # Check if result is a conflict or other business logic issue
         if isinstance(result, str):
             if "Conflict" in result or "already has" in result:
-                # This is a business logic conflict, not a request error
                 return {
                     "success": False,
                     "status": "conflict",
@@ -706,7 +751,6 @@ async def leave_request(
                     "suggestion": "Please select different dates or check your existing requests."
                 }
             elif "No bonus leave available" in result:
-                # Bonus leave specific validation error
                 return {
                     "success": False,
                     "status": "validation_error",
@@ -740,8 +784,6 @@ async def leave_request(
                                 leave_id=None
                             )
                             print(f"✅ Admin notification sent for manager {leave_display_name.lower()} request")
-                        else:
-                            print(f"⚠️ No admin found, skipping admin notification")
                     else:
                         # Regular employee leave request - notify manager
                         manager_id = await Mongo.get_user_manager_id(item.userid)
@@ -755,11 +797,11 @@ async def leave_request(
                                 leave_id=None
                             )
                             print(f"✅ Manager notification sent for employee {leave_display_name.lower()} approval request")
-                        else:
-                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")
+                    import traceback
+                    traceback.print_exc()
                 
                 return {
                     "success": True,
@@ -768,7 +810,7 @@ async def leave_request(
                     "details": result
                 }
             else:
-                # Other validation errors (Sunday, invalid dates, too many days, etc.)
+                # Other validation errors
                 return {
                     "success": False,
                     "status": "validation_error",
@@ -780,13 +822,16 @@ async def leave_request(
         return {"message": f"{leave_display_name} request processed", "result": result}
         
     except Exception as e:
-        print(f"❌ Error in leave request: {e}")
+        print(f"❌ CRITICAL ERROR in leave request: {e}")
+        import traceback
+        traceback.print_exc()
         return {
             "success": False,
             "status": "error",
             "message": "An unexpected error occurred while processing your request",
             "details": str(e),
-            "suggestion": "Please try again later or contact support if the issue persists."
+            "suggestion": "Please try again later or contact support if the issue persists.",
+            "error_type": type(e).__name__
         }
 
 # Leave History

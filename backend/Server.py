@@ -621,7 +621,6 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
         raise HTTPException(500, str(e))
 
 #Leave-request
-# Combined Leave Request Endpoint - FIXED TYPE DETECTION AND TIME HANDLING
 @app.post('/leave-request')
 async def leave_request(
     item: Union[Item6, Item7, Item8, Item9],
@@ -634,32 +633,15 @@ async def leave_request(
         if not is_permission and not is_other and not is_bonus:
             if hasattr(item, 'timeSlot'):
                 is_permission = True
-                print("Auto-detected: Permission request")
             elif hasattr(item, 'ToDate'):
                 is_other = True
-                print("Auto-detected: Other Leave request")
-        
-        # Generate current time in IST for requests that need it
-        current_time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
         
         # ========== PERMISSION REQUEST (Item8) ==========
         if is_permission:
-            # Validate that it's actually a permission request
-            if not hasattr(item, 'timeSlot'):
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Invalid permission request: missing timeSlot"
-                )
-            
-            # Get time from item if available, otherwise use current_time
-            request_time = getattr(item, 'time', current_time)
-            
-            print(f"Processing Permission request for {item.employeeName}")
-            
             result = store_Permission_request(
                 item.userid,
                 item.employeeName,
-                request_time,
+                item.time,
                 item.leaveType,
                 item.selectedDate,
                 item.requestDate,
@@ -670,6 +652,7 @@ async def leave_request(
             # Check if result is a conflict or other business logic issue
             if isinstance(result, str):
                 if "Conflict" in result or "already has" in result:
+                    # This is a business logic conflict, not a request error
                     return {
                         "success": False,
                         "status": "conflict",
@@ -684,7 +667,7 @@ async def leave_request(
                         await Mongo.notify_leave_submitted(
                             userid=item.userid,
                             leave_type=item.leaveType,
-                            leave_id=None
+                            leave_id=None  # No specific ID for permission
                         )
                         print(f"✅ Employee notification sent for permission submission")
                         
@@ -733,6 +716,7 @@ async def leave_request(
                         "details": result
                     }
                 else:
+                    # Other validation errors (Sunday, too many days, etc.)
                     return {
                         "success": False,
                         "status": "validation_error",
@@ -745,29 +729,25 @@ async def leave_request(
             
         # ========== OTHER LEAVE REQUEST (Item7) ==========
         elif is_other:
-            # Validate that it's actually an other leave request
-            if not hasattr(item, 'ToDate'):
-                raise HTTPException(
-                    status_code=400, 
-                    detail="Invalid other leave request: missing ToDate"
-                )
-            
-            print(f"Processing Other Leave request for {item.employeeName}")
-            
+            # Add request time in the desired timezone
+            time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
+
+            # Store the leave request in MongoDB
             result = store_Other_leave_request(
                 item.userid,
                 item.employeeName,
-                current_time,
+                time,  # Use the generated time
                 item.leaveType,
-                item.selectedDate,
-                item.ToDate,
-                item.requestDate,
+                item.selectedDate,  # Formatted as DD-MM-YYYY
+                item.ToDate,  # Formatted as DD-MM-YYYY
+                item.requestDate,  # Formatted as DD-MM-YYYY
                 item.reason,
             )
 
             # Check if result is a conflict or other business logic issue
             if isinstance(result, str):
                 if "Conflict" in result or "already has" in result:
+                    # This is a business logic conflict, not a request error
                     return {
                         "success": False,
                         "status": "conflict",
@@ -782,7 +762,7 @@ async def leave_request(
                         await Mongo.notify_leave_submitted(
                             userid=item.userid,
                             leave_type=item.leaveType,
-                            leave_id=None
+                            leave_id=None  # No specific ID for other leave
                         )
                         print(f"✅ Employee notification sent for other leave submission")
                         
@@ -831,6 +811,7 @@ async def leave_request(
                         "details": result
                     }
                 else:
+                    # Other validation errors (Sunday, too many days, etc.)
                     return {
                         "success": False,
                         "status": "validation_error",
@@ -843,16 +824,18 @@ async def leave_request(
             
         # ========== BONUS LEAVE REQUEST (Item9) ==========
         elif is_bonus:
-            print(f"Processing Bonus Leave request for {item.employeeName}")
+            # Get the current time in IST
+            time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
             
+            # Store bonus leave request
             result = store_sunday_request(
                 item.userid,
                 item.employeeName,
-                current_time,
+                time,
                 item.leaveType,
-                item.selectedDate,
+                item.selectedDate,  # Formatted as DD-MM-YYYY
                 item.reason,
-                item.requestDate,
+                item.requestDate,  # Formatted as DD-MM-YYYY
             )
             
             if result and result != "No bonus leave available" and "Conflict" not in str(result):
@@ -862,7 +845,7 @@ async def leave_request(
                     await Mongo.notify_leave_submitted(
                         userid=item.userid,
                         leave_type=item.leaveType,
-                        leave_id=None
+                        leave_id=None  # No specific ID for bonus leave
                     )
                     print(f"✅ Employee notification sent for bonus leave submission")
                     
@@ -906,23 +889,27 @@ async def leave_request(
             
         # ========== REGULAR LEAVE REQUEST (Item6) ==========
         else:
-            print(f"Processing Regular Leave request for {item.employeeName}")
-            print(f"Selected Date: {item.selectedDate}")
-            print(f"Request Date: {item.requestDate}")
+            print(item.selectedDate)
+            print(item.requestDate)
 
+            # Add request time in the desired timezone
+            time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
+
+            # Store the leave request in MongoDB
             result = Mongo.store_leave_request(
                 item.userid,
                 item.employeeName,
-                current_time,  # Use current_time instead of 'time'
+                time,
                 item.leaveType,
-                item.selectedDate,
-                item.requestDate,
+                item.selectedDate,  # Formatted as DD-MM-YYYY
+                item.requestDate,  # Formatted as DD-MM-YYYY
                 item.reason,
             )
 
             # Check if result is a conflict or other business logic issue
             if isinstance(result, str):
                 if "Conflict" in result or "already has" in result:
+                    # This is a business logic conflict, not a request error
                     return {
                         "success": False,
                         "status": "conflict",
@@ -934,7 +921,7 @@ async def leave_request(
                     # Success case - notify employee and appropriate approver
                     try:
                         # 1. Notify employee about successful submission
-                        await Mongo.notify_leave_submitted(
+                        await notify_leave_submitted(
                             userid=item.userid,
                             leave_type=item.leaveType,
                             leave_id=None
@@ -984,6 +971,7 @@ async def leave_request(
                         "details": result
                     }
                 else:
+                    # Other validation errors (Sunday, invalid dates, etc.)
                     return {
                         "success": False,
                         "status": "validation_error",
@@ -994,12 +982,9 @@ async def leave_request(
 
             return {"message": "Leave request processed", "result": result}
             
-    except HTTPException:
-        raise
     except Exception as e:
         print(f"❌ Error in leave request: {e}")
-        import traceback
-        traceback.print_exc()
+        # Only return 500 for actual server errors, not business logic issues
         return {
             "success": False,
             "status": "error",

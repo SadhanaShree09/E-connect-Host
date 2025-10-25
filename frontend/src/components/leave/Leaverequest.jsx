@@ -171,6 +171,14 @@ const LeaveRequest = () => {
                 style: { whiteSpace: 'pre-line' }
               }
             );
+          } else if (responseData.status === "no_bonus_available") {
+            toast.warning(
+              `${responseData.message}`,
+              {
+                autoClose: 5000,
+                position: "top-right",
+              }
+            );
           }
         } else {
           // Handle legacy response format

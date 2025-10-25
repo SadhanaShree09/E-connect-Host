@@ -731,7 +731,6 @@ async def leave_request(item: Item6):
 @app.post('/Bonus-leave-request')
 async def bonus_leave_request(item: Item9):
     try:
-        # Get the current time in IST
         time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
 
         # Store bonus leave request
@@ -740,19 +739,20 @@ async def bonus_leave_request(item: Item9):
             item.employeeName,
             time,
             item.leaveType,
-            item.selectedDate,  # Formatted as DD-MM-YYYY
+            item.selectedDate,
             item.reason,
-            item.requestDate,  # Formatted as DD-MM-YYYY
+            item.requestDate,
         )
 
-        if result and result != "No bonus leave available" and "Conflict" not in str(result):
-            # For successful requests, create notifications
+        # ✅ FIXED: Check for explicit success message ONLY
+        if isinstance(result, str) and result == "Leave request stored successfully":
+            # Only send notifications when request is truly successful
             try:
                 # 1. Notify employee about successful submission
                 await Mongo.notify_leave_submitted(
                     userid=item.userid,
                     leave_type=item.leaveType,
-                    leave_id=None  # No specific ID for bonus leave
+                    leave_id=None
                 )
                 print(f"✅ Employee notification sent for bonus leave submission")
                 
@@ -791,11 +791,53 @@ async def bonus_leave_request(item: Item9):
                 
             except Exception as notification_error:
                 print(f"⚠️ Notification error: {notification_error}")
+            
+            # Return success response
+            return {
+                "success": True,
+                "status": "submitted",
+                "message": "Bonus leave request submitted successfully",
+                "details": result
+            }
+        
+        # Handle specific error cases WITHOUT notifications
+        elif result == "No bonus leave available":
+            return {
+                "success": False,
+                "status": "no_bonus_available",
+                "message": "No bonus leave available",
+                "details": result,
+                "suggestion": "You don't have any bonus leave days available."
+            }
+        
+        elif "Conflict" in str(result) or "already has" in str(result):
+            return {
+                "success": False,
+                "status": "conflict",
+                "message": "Request processed successfully, but a scheduling conflict was detected.",
+                "details": result,
+                "suggestion": "Please select a different date or check your existing requests."
+            }
+        
+        else:
+            # Other validation errors
+            return {
+                "success": False,
+                "status": "validation_error",
+                "message": "Request validation failed",
+                "details": result,
+                "suggestion": "Please check your request details and try again."
+            }
 
-        return {"message": "Bonus leave request processed", "result": result}
     except Exception as e:
         print(f"❌ Error in bonus leave request: {e}")
-        raise HTTPException(status_code=400, detail=str(e))
+        return {
+            "success": False,
+            "status": "error",
+            "message": "An unexpected error occurred while processing your request",
+            "details": str(e),
+            "suggestion": "Please try again later or contact support if the issue persists."
+        }
 
 
 @app.post('/Other-leave-request')

@@ -81,7 +81,13 @@ const LeaveRequest = () => {
   const handleCancel = () => {
     setLeaveType("");
     setSelectedDate(null);
+    setTimeSlot("");
     setReason("");
+    setOtherFromDate(null);
+    setOtherToDate(null);
+    setOtherReason("");
+    setBonusLeaveDate(null);
+    setBonusLeaveReason("");
     setValidationMessage("");
     setIsApplying(false);
   };
@@ -99,6 +105,7 @@ const LeaveRequest = () => {
  
   const handleBonusLeaveReasonChange = (e) => {
     setBonusLeaveReason(e.target.value);
+    setValidationMessage("");
   };
 
   const leaverequestapi = (newLeave) => {
@@ -238,13 +245,18 @@ const LeaveRequest = () => {
       return;
     }
 
-    if (!selectedDate && ["Sick Leave", "Casual Leave", "Bonus Leave"].includes(leaveType)) {
+    if (!selectedDate && ["Sick Leave", "Casual Leave"].includes(leaveType)) {
       setValidationMessage("Select a valid date");
       return;
     }
 
-    if (!reason.trim() && ["Sick Leave", "Casual Leave", "Bonus Leave"].includes(leaveType)) {
+    if (!reason.trim() && ["Sick Leave", "Casual Leave"].includes(leaveType)) {
       setValidationMessage("Enter a valid reason");
+      return;
+    }
+
+    if (leaveType === "Bonus Leave" && (!bonusLeaveDate || !bonusLeaveReason.trim())) {
+      setValidationMessage("Complete all fields for Bonus Leave");
       return;
     }
 
@@ -262,7 +274,7 @@ const LeaveRequest = () => {
       return null;
     };
 
-    if (["Sick Leave", "Casual Leave", "Bonus Leave"].includes(leaveType)) {
+    if (["Sick Leave", "Casual Leave"].includes(leaveType)) {
       const formattedSelectedDate = formatDate(selectedDate);
       if (!formattedSelectedDate) {
         setValidationMessage("Invalid date selected");
@@ -273,6 +285,20 @@ const LeaveRequest = () => {
         leaveType,
         selectedDate: formattedSelectedDate,
         reason,
+        requestDate: new Date().toISOString().split("T")[0],
+      };
+    }
+    else if (leaveType === "Bonus Leave") {
+      const formattedBonusDate = formatDate(bonusLeaveDate);
+      if (!formattedBonusDate) {
+        setValidationMessage("Invalid date selected for Bonus Leave");
+        return;
+      }
+
+      newLeave = {
+        leaveType,
+        selectedDate: formattedBonusDate,
+        reason: bonusLeaveReason,
         requestDate: new Date().toISOString().split("T")[0],
       };
     }
@@ -405,7 +431,8 @@ const LeaveRequest = () => {
               </label>
             </div>
           </div>
-          {(leaveType === "Sick Leave" || leaveType === "Casual Leave" || leaveType === "Permission" || leaveType === "Bonus Leave") && (
+          
+          {(leaveType === "Sick Leave" || leaveType === "Casual Leave" || leaveType === "Permission") && (
             <div>
               <h2 className="text-sm font-semibold mb-2 font-poppins">Date</h2>
               <div>
@@ -458,6 +485,37 @@ const LeaveRequest = () => {
                   placeholder="Enter reason"
                   value={reason}
                   onChange={handleReasonChange}
+                />
+              </div>
+            </div>
+          )}
+
+          {leaveType === "Bonus Leave" && (
+            <div>
+              <h2 className="text-sm font-semibold mb-2 font-poppins">Date</h2>
+              <div>
+                <Datetime
+                  value={bonusLeaveDate}
+                  onChange={handleBonusLeaveDateChange}
+                  dateFormat="DD-MM-YYYY"
+                  isValidDate={(current) => isValidDate(current, leaveType)}
+                  timeFormat={false}
+                  closeOnSelect
+                  inputProps={{
+                    className:
+                      "p-2 text-sm border border-gray-300 rounded-md block w-full mb-2",
+                    placeholder: "Select date",
+                  }}
+                />
+              </div>
+              <h2 className="text-sm font-semibold mb-2 font-poppins">Reason</h2>
+              <div>
+                <input
+                  type="text"
+                  className="border border-gray-300 p-2 w-full font-poppins rounded-lg text-sm"
+                  placeholder="Enter reason for bonus leave"
+                  value={bonusLeaveReason}
+                  onChange={handleBonusLeaveReasonChange}
                 />
               </div>
             </div>

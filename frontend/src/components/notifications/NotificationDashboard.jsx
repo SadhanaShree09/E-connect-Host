@@ -428,12 +428,18 @@ const NotificationDashboard = () => {
         case 'wfh_submitted':
         case 'wfh_approved':
         case 'wfh_rejected':
+        case 'wfh_hr_approval':
         case 'wfh_hr_final_approval':
         case 'wfh_hr_pending':
         case 'wfh_final_approval_required':
-          if (isAdminLevel) {
+          if (isAdmin) {
+            // Admin users go to admin route
             targetUrl = '/admin/LeaveManage/wfh';
+          } else if (isHR) {
+            // HR users go to User route
+            targetUrl = '/User/LeaveManage/wfh';
           } else {
+            // Regular users go to their WFH details
             targetUrl = '/User/Leave/LeaveHistory/Remote_details';
           }
           break;

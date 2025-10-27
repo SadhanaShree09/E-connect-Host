@@ -448,7 +448,7 @@ async def notify_wfh_submitted_to_manager(employee_name, employee_id, request_da
             message=f"{employee_name} has submitted a work from home request {date_range}. Please review and approve.",
             notification_type="wfh_manager_approval",
             priority="high",
-            action_url="/manager/wfh-requests",
+            action_url="/User/LeaveManage",
             related_id=wfh_id,
             metadata={
                 "action": "manager_approval_needed",
@@ -484,7 +484,7 @@ async def notify_wfh_recommended_to_hr(employee_name, employee_id, request_date_
                 message=f"{employee_name}'s work from home request {date_range} has been recommended by {recommended_by} for HR approval.",
                 notification_type="wfh_hr_approval",
                 priority="high",
-                action_url="/hr/wfh-requests",
+                action_url="/User/LeaveManage",
                 related_id=wfh_id,
                 metadata={
                     "action": "hr_approval_needed",

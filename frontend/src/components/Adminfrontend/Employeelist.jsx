@@ -4,6 +4,7 @@ import { faSearch, faDownload, faExclamationTriangle } from "@fortawesome/free-s
 import axios from "axios";
 import { Link,Outlet } from "react-router-dom";
 import { LS } from "../../Utils/Resuse";
+import * as XLSX from 'xlsx';
 
 const EmployeeList = () => {
     const [employeeData, setEmployeeData] = useState([]);

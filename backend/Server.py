@@ -598,9 +598,34 @@ async def manage_attendance(data: AttendanceManage):
                             except Exception:
                                 pass
                     attendance_data = filtered
+        
+        # Format datetime fields for better readability
+        # Convert ISO format to readable time format in clockin/clockout fields
+        formatted_attendance = []
+        for record in attendance_data:
+            formatted_record = record.copy()
+            
+            # Format clockin time - replace with formatted version
+            if 'clockin' in formatted_record and formatted_record['clockin']:
+                try:
+                    clockin_dt = parser.parse(formatted_record['clockin'])
+                    formatted_record['clockin'] = clockin_dt.strftime('%I:%M:%S %p')
+                except:
+                    pass
+            
+            # Format clockout time - replace with formatted version
+            if 'clockout' in formatted_record and formatted_record['clockout']:
+                try:
+                    clockout_dt = parser.parse(formatted_record['clockout'])
+                    formatted_record['clockout'] = clockout_dt.strftime('%I:%M:%S %p')
+                except:
+                    pass
+            
+            formatted_attendance.append(formatted_record)
+        
         return {
             "status": "success",
-            "attendance": attendance_data or []
+            "attendance": formatted_attendance or []
         }
     except HTTPException:
         raise
@@ -621,157 +646,48 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
         raise HTTPException(500, str(e))
 
 #Leave-request
-#Leave-request - FIXED VERSION (Corrected time attribute)
 @app.post('/leave-request')
-async def leave_request(
-    item: Union[Item6, Item7, Item8, Item9],
-    is_bonus: bool = False,
-    is_other: bool = False,
-    is_permission: bool = False
-):
+async def leave_request(item: Item6):
     try:
-        # Add detailed logging for deployment debugging
-        print(f"=== LEAVE REQUEST DEBUG ===")
-        print(f"User: {item.userid}")
-        print(f"Type: {'Permission' if is_permission else 'Other' if is_other else 'Bonus' if is_bonus else 'Regular'}")
-        print(f"Selected Date: {item.selectedDate}")
-        print(f"Request Date: {item.requestDate}")
         
-        # Add request time in the desired timezone - CREATE THIS FIRST!
-        ist = pytz.timezone("Asia/Kolkata")
-        time = datetime.now(ist).strftime("%I:%M:%S %p")
-        print(f"Generated time: {time}")
-        
-        # Parse and normalize dates BEFORE passing to storage functions
-        try:
-            # Parse selectedDate
-            if isinstance(item.selectedDate, str):
-                parsed_date = parser.parse(item.selectedDate)
-                selected_date_str = parsed_date.strftime("%d-%m-%Y")
-            else:
-                selected_date_str = item.selectedDate
-            
-            # Parse requestDate
-            if isinstance(item.requestDate, str):
-                parsed_request_date = parser.parse(item.requestDate)
-                request_date_str = parsed_request_date.strftime("%d-%m-%Y")
-            else:
-                request_date_str = item.requestDate
-            
-            print(f"Parsed dates - Selected: {selected_date_str}, Request: {request_date_str}")
-            
-        except Exception as date_error:
-            print(f"❌ Date parsing error: {date_error}")
-            return {
-                "success": False,
-                "status": "error",
-                "message": "Invalid date format",
-                "details": f"Date parsing failed: {str(date_error)}",
-                "suggestion": "Please ensure dates are in valid format"
-            }
+        print(item.selectedDate)
+        print(item.requestDate)
 
-        # Determine which storage function to call based on query parameters
-        if is_permission:
-            print(f"Processing permission request for {item.userid}")
-            # Get timeSlot - handle if it doesn't exist
-            time_slot = getattr(item, 'timeSlot', 'Full Day')
-            
-            result = store_Permission_request(
-                item.userid,
-                item.employeeName,
-                time,  # ✅ Use the generated time variable, not item.time
-                item.leaveType,
-                selected_date_str,  # Use parsed date
-                request_date_str,   # Use parsed date
-                time_slot,
-                item.reason,
-            )
-            leave_display_name = "Permission"
-            leave_date_display = f"{selected_date_str} ({time_slot})"
-            
-        elif is_other:
-            print(f"Processing other leave request for {item.userid}")
-            # Parse ToDate for other leave
-            to_date_str = selected_date_str  # Default to same as selected
-            if hasattr(item, 'ToDate') and item.ToDate:
-                try:
-                    parsed_to_date = parser.parse(item.ToDate)
-                    to_date_str = parsed_to_date.strftime("%d-%m-%Y")
-                except:
-                    pass
-            
-            result = store_Other_leave_request(
-                item.userid,
-                item.employeeName,
-                time,  # ✅ Use the generated time variable
-                item.leaveType,
-                selected_date_str,
-                to_date_str,
-                request_date_str,
-                item.reason,
-            )
-            leave_display_name = "Other leave"
-            leave_date_display = f"{selected_date_str} to {to_date_str}" if selected_date_str != to_date_str else selected_date_str
-            
-        elif is_bonus:
-            print(f"Processing bonus leave request for {item.userid}")
-            result = store_sunday_request(
-                item.userid,
-                item.employeeName,
-                time,  # ✅ Use the generated time variable
-                item.leaveType,
-                selected_date_str,
-                item.reason,
-                request_date_str,
-            )
-            leave_display_name = "Bonus leave"
-            leave_date_display = selected_date_str
-            
-        else:
-            # Regular leave request
-            print(f"Processing regular leave request for {item.userid}")
-            result = Mongo.store_leave_request(
-                item.userid,
-                item.employeeName,
-                time,  # ✅ Use the generated time variable
-                item.leaveType,
-                selected_date_str,
-                request_date_str,
-                item.reason,
-            )
-            leave_display_name = "Leave"
-            leave_date_display = selected_date_str
+        # Add request time in the desired timezone
+        time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
 
-        print(f"Storage function result: {result}")
+        # Store the leave request in MongoDB
+        result = Mongo.store_leave_request(
+            item.userid,
+            item.employeeName,
+            time,
+            item.leaveType,
+            item.selectedDate,  # Formatted as DD-MM-YYYY
+            item.requestDate,  # Formatted as DD-MM-YYYY
+            item.reason,
+        )
 
         # Check if result is a conflict or other business logic issue
         if isinstance(result, str):
             if "Conflict" in result or "already has" in result:
+                # This is a business logic conflict, not a request error
                 return {
                     "success": False,
                     "status": "conflict",
                     "message": "Request processed successfully, but a scheduling conflict was detected.",
                     "details": result,
-                    "suggestion": "Please select different dates or check your existing requests."
+                    "suggestion": "Please select a different date or check your existing requests."
                 }
-            elif "No bonus leave available" in result:
-                return {
-                    "success": False,
-                    "status": "validation_error",
-                    "message": "No bonus leave available",
-                    "details": result,
-                    "suggestion": "You don't have any bonus leave credits available."
-                }
-            elif result == "Leave request stored successfully" or (is_bonus and result and "Conflict" not in str(result) and result != "No bonus leave available"):
+            elif result == "Leave request stored successfully":
                 # Success case - notify employee and appropriate approver
                 try:
                     # 1. Notify employee about successful submission
-                    await Mongo.notify_leave_submitted(
+                    await notify_leave_submitted(
                         userid=item.userid,
                         leave_type=item.leaveType,
                         leave_id=None
                     )
-                    print(f"✅ Employee notification sent for {leave_display_name.lower()} submission")
+                    print(f"✅ Employee notification sent for leave submission")
                     
                     # 2. Check if the user is a manager and send appropriate notifications
                     user_position = await Mongo.get_user_position(item.userid)
@@ -784,10 +700,12 @@ async def leave_request(
                                 manager_name=item.employeeName,
                                 manager_id=item.userid,
                                 leave_type=item.leaveType,
-                                leave_date=leave_date_display,
+                                leave_date=item.selectedDate,
                                 leave_id=None
                             )
-                            print(f"✅ Admin notification sent for manager {leave_display_name.lower()} request")
+                            print(f"✅ Admin notification sent for manager leave request")
+                        else:
+                            print(f"⚠️ No admin found, skipping admin notification")
                     else:
                         # Regular employee leave request - notify manager
                         manager_id = await Mongo.get_user_manager_id(item.userid)
@@ -796,25 +714,25 @@ async def leave_request(
                                 employee_name=item.employeeName,
                                 employee_id=item.userid,
                                 leave_type=item.leaveType,
-                                leave_date=leave_date_display,
+                                leave_date=item.selectedDate,
                                 manager_id=manager_id,
                                 leave_id=None
                             )
-                            print(f"✅ Manager notification sent for employee {leave_display_name.lower()} approval request")
+                            print(f"✅ Manager notification sent for employee leave approval request")
+                        else:
+                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")
-                    import traceback
-                    traceback.print_exc()
                 
                 return {
                     "success": True,
                     "status": "submitted",
-                    "message": f"{leave_display_name} request submitted successfully",
+                    "message": "Leave request submitted successfully",
                     "details": result
                 }
             else:
-                # Other validation errors
+                # Other validation errors (Sunday, invalid dates, etc.)
                 return {
                     "success": False,
                     "status": "validation_error",
@@ -823,20 +741,324 @@ async def leave_request(
                     "suggestion": "Please check your request details and try again."
                 }
 
-        return {"message": f"{leave_display_name} request processed", "result": result}
-        
+        return {"message": "Leave request processed", "result": result}
     except Exception as e:
-        print(f"❌ CRITICAL ERROR in leave request: {e}")
-        import traceback
-        traceback.print_exc()
+        print(f"❌ Error in leave request: {e}")
+        # Only return 500 for actual server errors, not business logic issues
         return {
             "success": False,
             "status": "error",
             "message": "An unexpected error occurred while processing your request",
             "details": str(e),
-            "suggestion": "Please try again later or contact support if the issue persists.",
-            "error_type": type(e).__name__
+            "suggestion": "Please try again later or contact support if the issue persists."
         }
+
+@app.post('/Bonus-leave-request')
+async def bonus_leave_request(item: Item9):
+    try:
+        time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
+
+        # Store bonus leave request
+        result = store_sunday_request(
+            item.userid,
+            item.employeeName,
+            time,
+            item.leaveType,
+            item.selectedDate,
+            item.reason,
+            item.requestDate,
+        )
+
+        # ✅ FIXED: Check for explicit success message ONLY
+        if isinstance(result, str) and result == "Leave request stored successfully":
+            # Only send notifications when request is truly successful
+            try:
+                # 1. Notify employee about successful submission
+                await Mongo.notify_leave_submitted(
+                    userid=item.userid,
+                    leave_type=item.leaveType,
+                    leave_id=None
+                )
+                print(f"✅ Employee notification sent for bonus leave submission")
+                
+                # 2. Check if the user is a manager and send appropriate notifications
+                user_position = await Mongo.get_user_position(item.userid)
+                
+                if user_position == "Manager":
+                    # Manager bonus leave request - notify admin
+                    admin_ids = await Mongo.get_admin_user_ids()
+                    if admin_ids:
+                        await Mongo.notify_admin_manager_leave_request(
+                            manager_name=item.employeeName,
+                            manager_id=item.userid,
+                            leave_type=item.leaveType,
+                            leave_date=item.selectedDate,
+                            leave_id=None
+                        )
+                        print(f"✅ Admin notification sent for manager bonus leave request")
+                    else:
+                        print(f"⚠️ No admin found, skipping admin notification")
+                else:
+                    # Regular employee bonus leave request - notify manager
+                    manager_id = await Mongo.get_user_manager_id(item.userid)
+                    if manager_id:
+                        await Mongo.notify_manager_leave_request(
+                            employee_name=item.employeeName,
+                            employee_id=item.userid,
+                            leave_type=item.leaveType,
+                            leave_date=item.selectedDate,
+                            manager_id=manager_id,
+                            leave_id=None
+                        )
+                        print(f"✅ Manager notification sent for employee bonus leave approval request")
+                    else:
+                        print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                
+            except Exception as notification_error:
+                print(f"⚠️ Notification error: {notification_error}")
+            
+            # Return success response
+            return {
+                "success": True,
+                "status": "submitted",
+                "message": "Bonus leave request submitted successfully",
+                "details": result
+            }
+        
+        # Handle specific error cases WITHOUT notifications
+        elif result == "No bonus leave available":
+            return {
+                "success": False,
+                "status": "no_bonus_available",
+                "message": "No bonus leave available",
+                "details": result,
+                "suggestion": "You don't have any bonus leave days available."
+            }
+        
+        elif "Conflict" in str(result) or "already has" in str(result):
+            return {
+                "success": False,
+                "status": "conflict",
+                "message": "Request processed successfully, but a scheduling conflict was detected.",
+                "details": result,
+                "suggestion": "Please select a different date or check your existing requests."
+            }
+        
+        else:
+            # Other validation errors
+            return {
+                "success": False,
+                "status": "validation_error",
+                "message": "Request validation failed",
+                "details": result,
+                "suggestion": "Please check your request details and try again."
+            }
+
+    except Exception as e:
+        print(f"❌ Error in bonus leave request: {e}")
+        return {
+            "success": False,
+            "status": "error",
+            "message": "An unexpected error occurred while processing your request",
+            "details": str(e),
+            "suggestion": "Please try again later or contact support if the issue persists."
+        }
+
+
+@app.post('/Other-leave-request')
+async def other_leave_request(item: Item7):
+    try:
+        # Add request time in the desired timezone
+        time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
+
+        # Store the leave request in MongoDB
+        result = store_Other_leave_request(
+            item.userid,
+            item.employeeName,
+            time,  # Use the generated time
+            item.leaveType,
+            item.selectedDate,  # Formatted as DD-MM-YYYY
+            item.ToDate,  # Formatted as DD-MM-YYYY
+            item.requestDate,  # Formatted as DD-MM-YYYY
+            item.reason,
+        )
+
+        # Check if result is a conflict or other business logic issue
+        if isinstance(result, str):
+            if "Conflict" in result or "already has" in result:
+                # This is a business logic conflict, not a request error
+                return {
+                    "success": False,
+                    "status": "conflict",
+                    "message": "Request processed successfully, but a scheduling conflict was detected.",
+                    "details": result,
+                    "suggestion": "Please select different dates or check your existing requests."
+                }
+            elif result == "Leave request stored successfully":
+                # Success case - notify employee and manager
+                try:
+                    # 1. Notify employee about successful submission
+                    await Mongo.notify_leave_submitted(
+                        userid=item.userid,
+                        leave_type=item.leaveType,
+                        leave_id=None  # No specific ID for other leave
+                    )
+                    print(f"✅ Employee notification sent for other leave submission")
+                    
+                    # 2. Check if the user is a manager and send appropriate notifications
+                    user_position = await Mongo.get_user_position(item.userid)
+                    
+                    if user_position == "Manager":
+                        # Manager other leave request - notify admin
+                        admin_ids = await Mongo.get_admin_user_ids()
+                        if admin_ids:
+                            date_range = f"{item.selectedDate} to {item.ToDate}" if item.selectedDate != item.ToDate else item.selectedDate
+                            await Mongo.notify_admin_manager_leave_request(
+                                manager_name=item.employeeName,
+                                manager_id=item.userid,
+                                leave_type=item.leaveType,
+                                leave_date=date_range,
+                                leave_id=None
+                            )
+                            print(f"✅ Admin notification sent for manager other leave request")
+                        else:
+                            print(f"⚠️ No admin found, skipping admin notification")
+                    else:
+                        # Regular employee other leave request - notify manager
+                        manager_id = await Mongo.get_user_manager_id(item.userid)
+                        if manager_id:
+                            date_range = f"{item.selectedDate} to {item.ToDate}" if item.selectedDate != item.ToDate else item.selectedDate
+                            await Mongo.notify_manager_leave_request(
+                                employee_name=item.employeeName,
+                                employee_id=item.userid,
+                                leave_type=item.leaveType,
+                                leave_date=date_range,
+                                manager_id=manager_id,
+                                leave_id=None
+                            )
+                            print(f"✅ Manager notification sent for employee other leave approval request")
+                        else:
+                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                        
+                except Exception as notification_error:
+                    print(f"⚠️ Notification error: {notification_error}")
+                
+                return {
+                    "success": True,
+                    "status": "submitted",
+                    "message": "Other leave request submitted successfully",
+                    "details": result
+                }
+            else:
+                # Other validation errors (Sunday, too many days, etc.)
+                return {
+                    "success": False,
+                    "status": "validation_error",
+                    "message": "Request validation failed",
+                    "details": result,
+                    "suggestion": "Please check your request details and try again."
+                }
+
+        return {"message": "Leave request processed", "result": result}
+    except Exception as e:
+        print(f"❌ Error in other leave request: {e}")
+        raise HTTPException(400, str(e))
+
+
+@app.post('/Permission-request')
+async def permission_request(item: Item8):
+    try:
+        result = store_Permission_request(
+                item.userid,
+                item.employeeName,
+                item.time,
+                item.leaveType,
+                item.selectedDate,
+                item.requestDate,
+                item.timeSlot,
+                item.reason,
+            )
+
+        # Check if result is a conflict or other business logic issue
+        if isinstance(result, str):
+            if "Conflict" in result or "already has" in result:
+                # This is a business logic conflict, not a request error
+                return {
+                    "success": False,
+                    "status": "conflict",
+                    "message": "Request processed successfully, but a scheduling conflict was detected.",
+                    "details": result,
+                    "suggestion": "Please select different dates or check your existing requests."
+                }
+            elif result == "Leave request stored successfully":
+                # Success case - notify employee and manager
+                try:
+                    # 1. Notify employee about successful submission
+                    await Mongo.notify_leave_submitted(
+                        userid=item.userid,
+                        leave_type=item.leaveType,
+                        leave_id=None  # No specific ID for permission
+                    )
+                    print(f"✅ Employee notification sent for permission submission")
+                    
+                    # 2. Check if the user is a manager and send appropriate notifications
+                    user_position = await Mongo.get_user_position(item.userid)
+                    
+                    if user_position == "Manager":
+                        # Manager permission request - notify admin
+                        admin_ids = await Mongo.get_admin_user_ids()
+                        if admin_ids:
+                            permission_details = f"{item.selectedDate} ({item.timeSlot})"
+                            await Mongo.notify_admin_manager_leave_request(
+                                manager_name=item.employeeName,
+                                manager_id=item.userid,
+                                leave_type=item.leaveType,
+                                leave_date=permission_details,
+                                leave_id=None
+                            )
+                            print(f"✅ Admin notification sent for manager permission request")
+                        else:
+                            print(f"⚠️ No admin found, skipping admin notification")
+                    else:
+                        # Regular employee permission request - notify manager
+                        manager_id = await Mongo.get_user_manager_id(item.userid)
+                        if manager_id:
+                            permission_details = f"{item.selectedDate} ({item.timeSlot})"
+                            await Mongo.notify_manager_leave_request(
+                                employee_name=item.employeeName,
+                                employee_id=item.userid,
+                                leave_type=item.leaveType,
+                                leave_date=permission_details,
+                                manager_id=manager_id,
+                                leave_id=None
+                            )
+                            print(f"✅ Manager notification sent for employee permission approval request")
+                        else:
+                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                        
+                except Exception as notification_error:
+                    print(f"⚠️ Notification error: {notification_error}")
+                
+                return {
+                    "success": True,
+                    "status": "submitted",
+                    "message": "Permission request submitted successfully",
+                    "details": result
+                }
+            else:
+                # Other validation errors (Sunday, too many days, etc.)
+                return {
+                    "success": False,
+                    "status": "validation_error",
+                    "message": "Request validation failed",
+                    "details": result,
+                    "suggestion": "Please check your request details and try again."
+                }
+
+        return {"message": "Permission request processed", "result": result}
+    except Exception as e:
+        print(f"❌ Error in permission request: {e}")
+        raise HTTPException(400, str(e))
 
 # Leave History
 @app.get("/leave-History/{userid}/")

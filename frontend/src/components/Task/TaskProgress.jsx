@@ -87,13 +87,13 @@ const TaskProgress = () => {
   const userId = LS.get("id");
 
   const statusColumns = [
-    { id: "todo", title: "To Do", color: "bg-red-100", borderColor: "border-red-300" },
+    { id: "todo", title: "To Do", color: "bg-red-50", borderColor: "border-red-300" },
     { id: "in-progress", title: "In Progress", color: "bg-blue-50", borderColor: "border-blue-300" },
     { id: "completed", title: "Completed", color: "bg-green-50", borderColor: "border-green-300" },
   ];
 
   const priorityColors = {
-    low: "text-green-600 bg-green-100",
+    low: "text-green-600 bg-green-50",
     medium: "text-yellow-600 bg-yellow-100",
     high: "text-red-600 bg-red-100"
   };
@@ -118,8 +118,8 @@ const TaskProgress = () => {
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-orange-100 text-orange-800 border-orange-200',
-        icon: <FaClock className="text-orange-600" />
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
@@ -360,13 +360,13 @@ const handleAssignTask = () => {
         onClick={() => openTaskDetail(task)}
         className={`bg-white rounded-lg p-4 shadow-sm border cursor-pointer hover:shadow-lg transition-all mb-3 ${
           dueDateStatus?.status === 'overdue' ? 'border-red-300 shadow-red-100' : 
-          dueDateStatus?.status === 'due-today' ? 'border-orange-300 shadow-orange-100' :
+          dueDateStatus?.status === 'due-today' ? 'border-yellow-300 shadow-yellow-100' :
           'border-gray-200 hover:border-blue-300'
         }`}
       >
         {/* Due Date Alert Banner */}
         {dueDateStatus && (
-          <div className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-md border ${dueDateStatus.className}`}>
+          <div className={`flex items-center gap-2 mb-3 px-3 py-1 rounded-md border ${dueDateStatus.className}`}>
             {dueDateStatus.icon}
             <span className="text-sm font-semibold">{dueDateStatus.message}</span>
             {dueDateStatus.status === 'overdue' && (
@@ -378,14 +378,14 @@ const handleAssignTask = () => {
           <h4 className="font-semibold text-gray-800 text-sm leading-tight pr-2 flex-1 line-clamp-2 break-words">{task.task}</h4>
           <div className="flex flex-col gap-1 items-end">
             <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              task.status === 'todo' ? 'bg-red-200 text-red-700' :
+              task.status === 'todo' ? 'bg-red-100 text-red-700' :
               task.status === 'in-progress' ? 'bg-blue-200 text-blue-700' :
-              'bg-green-200 text-green-700'
+              'bg-green-100 text-green-700'
             }`}>
               {statusColumns.find(col => col.id === task.status)?.title}
             </span>
             {task.verified && (
-              <span className="mt-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-700 text-white">
+              <span className="mt-1 px-2 py-1 rounded-full text-xs font-semibold bg-green-600 text-white">
                 Verified
               </span>
             )}
@@ -404,7 +404,7 @@ const handleAssignTask = () => {
           <div className="flex items-center gap-2 mb-3">
             <p className={`text-xs flex items-center gap-1 ${
               dueDateStatus?.status === 'overdue' ? 'text-red-600 font-semibold' :
-              dueDateStatus?.status === 'due-today' ? 'text-orange-600 font-semibold' :
+              dueDateStatus?.status === 'due-today' ? 'text-yellow-600 font-semibold' :
               dueDateStatus?.status === 'due-tomorrow' ? 'text-yellow-600 font-semibold' :
               'text-gray-600'
             }`}>
@@ -514,8 +514,8 @@ const handleAssignTask = () => {
               onClick={() => setShowProgress(!showProgress)}
               className={`px-6 py-3 rounded-lg transition-all duration-300 font-medium flex items-center gap-2 ${
                 showProgress 
-                  ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg' 
-                  : 'bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:from-blue-700 hover:to-purple-700 shadow-lg hover:shadow-xl'
+                  ? 'bg-blue-700 text-white hover:bg-blue-600 shadow-lg' 
+                  : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
               }`}
             >
               <FaChartLine className={`transition-transform duration-300 ${showProgress ? 'rotate-180' : ''}`} />
@@ -722,7 +722,7 @@ const handleAssignTask = () => {
           {/* Right column: selected employee detail */}
           <div className="flex-1 overflow-hidden">
             {(!selectedEmployeeId) ? (
-              <div className="bg-white rounded-xl shadow-sm border border-gray-200 p-6 text-center text-gray-500">Select an employee to view tasks</div>
+              <div className="bg-white rounded-xl shadow-sm border border-blue-600 p-6 text-center text-gray-500">Select an employee to view tasks</div>
             ) : (
               (() => {
                 const selected = filteredEmployeeTasks.find(e => e.employeeId === selectedEmployeeId) || filteredEmployeeTasks[0];

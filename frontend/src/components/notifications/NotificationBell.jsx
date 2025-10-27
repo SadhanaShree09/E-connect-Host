@@ -62,7 +62,7 @@ const NotificationBell = ({ className = "" }) => {
   return (
     <div className={`relative cursor-pointer ${className}`} onClick={handleBellClick}>
       <FaBell 
-        className={`text-xl ${unreadCount > 0 ? 'text-yellow-400' : 'text-gray-300'} hover:text-yellow-300 transition-colors`}
+        className={`text-xl ${unreadCount > 0 ? 'text-yellow-200' : 'text-gray-300'} hover:text-yellow-300 transition-colors`}
         title="Notifications"
       />
       {unreadCount > 0 && (

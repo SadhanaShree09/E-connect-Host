@@ -119,8 +119,8 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-orange-100 text-orange-800 border-orange-200',
-        icon: <FaClock className="text-orange-600" />
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
@@ -467,7 +467,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
         </div>
         {/* Due Date Alert */}
         {dueDateStatus && (
-          <div className={`flex items-center gap-2 mb-4 px-4 py-3 rounded border text-s ${dueDateStatus.className}`}>
+          <div className={`flex items-center gap-2 mb-4 px-4 py-1 rounded border text-s ${dueDateStatus.className}`}>
             {dueDateStatus.icon}
             <span className="font-semibold">{dueDateStatus.message}</span>
             {dueDateStatus.status === 'overdue' && (
@@ -534,7 +534,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     task.status !== "completed"
       ? "bg-gray-300 text-gray-600 cursor-not-allowed"
       : task.verified
-      ? "bg-green-700 hover:bg-green-800 text-white"
+      ? "bg-green-600 hover:bg-green-700 text-white"
       : "bg-green-600 hover:bg-green-700 text-white"
   }`}
 >

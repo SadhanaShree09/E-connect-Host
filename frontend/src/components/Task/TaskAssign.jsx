@@ -48,14 +48,12 @@ function ConfirmModal({ open, title, message, onConfirm, onClose, confirmLabel =
     document.body
   );
 }
-
-// Note Component
 // Note Component
 const Note = ({ empdata, handleDelete, handleEdit }) => (
   <div
     className={`
       relative p-4 w-full flex flex-col justify-between rounded-xl 
-      shadow-sm border border-blue-200 bg-blue-50 transition-all duration-200 transform
+      shadow-sm border border-blue-300 bg-blue-50 transition-all duration-200 transform
       hover:scale-[1.02] hover:shadow-lg hover:z-20 cursor-pointer
     `}
   >
@@ -63,17 +61,17 @@ const Note = ({ empdata, handleDelete, handleEdit }) => (
     <div
       className={`absolute top-2 left-1/2 transform -translate-x-1/2 w-12 h-1 rounded-full ${
         empdata.status === 'Completed'
-          ? 'bg-green-500'
+          ? 'bg-green-200'
           : empdata.status === 'In Progress'
-          ? 'bg-blue-500'
-          : 'bg-red-500'
+          ? 'bg-blue-200'
+          : 'bg-red-200'
       }`}
     />
 
     {/* Verified badge (top-right) */}
     {empdata.verified && (
       <div className="absolute top-2 right-2">
-        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-700 text-white">Verified</span>
+        <span className="px-2 py-0.5 rounded-full text-xs font-semibold bg-green-600 text-white">Verified</span>
       </div>
     )}
     <div className="mt-2 flex flex-col gap-2">
@@ -91,10 +89,10 @@ const Note = ({ empdata, handleDelete, handleEdit }) => (
           <span className="font-semibold">Status:</span>
           <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full ${
             empdata.status === 'Completed'
-              ? 'bg-green-100 text-green-700'
+              ? 'bg-green-50 text-green-700'
               : empdata.status === 'In Progress'
               ? 'bg-blue-100 text-blue-800'
-              : 'bg-red-100 text-red-700'
+              : 'bg-red-50 text-red-700'
           }`}>
             {empdata.status}
           </span>
@@ -102,7 +100,7 @@ const Note = ({ empdata, handleDelete, handleEdit }) => (
         <li><span className="font-semibold">Assigned By:</span> {empdata.assigned_by}</li>
         <li>
           <span className="font-semibold">Priority:</span>
-          <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-100 text-yellow-700 border ${
+          <span className={`ml-2 px-2 py-0.5 text-xs font-medium rounded-full bg-yellow-50 text-yellow-700 border ${
             empdata.priority === 'High'
               ? 'border-red-500'
               : empdata.priority === 'Medium'

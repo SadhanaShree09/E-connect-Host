@@ -41,6 +41,9 @@ const LeaveDetails = () => {
     direction: 'asc'
   });
 
+  // Progress visibility state
+  const [showProgress, setShowProgress] = useState(false);
+
   // User info from localStorage
   const userId = LS.get('userid');
   const userPosition = LS.get('position');
@@ -244,7 +247,7 @@ const LeaveDetails = () => {
       : <ArrowDown className="inline ml-1 w-4 h-4" />;
   };
 
-  // Calculate summary stats - FIXED: Added Not_Recommend count
+  // Calculate summary stats
   const getSummaryStats = () => {
     const records = filteredData;
     return {
@@ -253,7 +256,7 @@ const LeaveDetails = () => {
       pending: records.filter(r => !r.status || r.status === 'Pending').length,
       rejected: records.filter(r => r.status === 'Rejected').length,
       recommended: records.filter(r => r.status === 'Recommend').length,
-      notRecommended: records.filter(r => r.status === 'Not_Recommend').length, // ADDED
+      notRecommended: records.filter(r => r.status === 'Not_Recommend').length,
     };
   };
 
@@ -286,69 +289,94 @@ const LeaveDetails = () => {
     <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full shadow-black rounded-xl justify-center items-center relative jsonback ml-10 rounded-md">
       <div className="">
         {/* Header */}
-        <div className="flex justify-between border-b-2">
+        <div className="flex justify-between border-b-2 pb-4">
           <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text">
             Leave Management Dashboard
           </h1>
-          <div>
+          <div className="flex items-center gap-4">
+            <button
+              onClick={() => setShowProgress(!showProgress)}
+              className={`px-5 py-2 rounded-lg transition-all duration-300 font-medium flex items-center gap-2 ${
+                showProgress 
+                  ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg' 
+                  : 'bg-gradient-to-r from-blue-600 to-blue-600 text-white hover:from-blue-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+              }`}
+            >
+              <svg className={`w-5 h-5 transition-transform duration-300 ${showProgress ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
+              </svg>
+              {showProgress ? 'Hide Progress' : 'See Progress'}
+            </button>
             <Link to={isAdmin ? "/admin/LeaveManage/leave_details/wfh_details" : "/User/LeaveManage/leave_details/wfh_details"}>
-                  <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
-                    Remote Details
-                  </button>
+              <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
+                Remote Details
+              </button>
             </Link>
             <Link to={isAdmin ? "/admin/LeaveManage" : "/User/LeaveManage"}>
-              <button className="mr-4 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
+              <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                 Back to Overview
               </button>
             </Link>
           </div>
         </div>
 
-        {/* Summary Cards - FIXED: Added Not_Recommend card */}
-        <div className="grid grid-cols-2 md:grid-cols-6 gap-4 mt-6 mb-6">
-          <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-4 border border-blue-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Total Records</p>
-              <p className="text-2xl font-bold text-blue-600">{summaryStats.total}</p>
+        {/* Progress Section - Conditionally Rendered */}
+        {showProgress && (
+          <div className="relative my-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-2 border border-blue-200 shadow-md overflow-hidden">
+            {/* Header with inline progress */}
+            <div className="flex items-center gap-2 mb-2">
+              <svg className="w-5 h-5 text-blue-600" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+              </svg>
+              <h3 className="text-base font-semibold text-gray-800 leading-snug">Leave Statistics Overview</h3>
             </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-4 border border-green-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Approved</p>
-              <p className="text-2xl font-bold text-green-600">{summaryStats.approved}</p>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-4 border border-yellow-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Pending</p>
-              <p className="text-2xl font-bold text-yellow-600">{summaryStats.pending}</p>
-            </div>
-          </div>
-          
-          <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-4 border border-red-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Rejected</p>
-              <p className="text-2xl font-bold text-red-600">{summaryStats.rejected}</p>
-            </div>
-          </div>
 
-          <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-4 border border-indigo-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Recommended</p>
-              <p className="text-2xl font-bold text-indigo-600">{summaryStats.recommended}</p>
-            </div>
-          </div>
+            {/* Compact grid */}
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
+              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-2 border border-blue-200">
+                <div className="text-center">
+                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Total Records</p>
+                  <p className="text-lg font-bold text-blue-600 leading-none">{summaryStats.total}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-2 border border-green-200">
+                <div className="text-center">
+                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Approved</p>
+                  <p className="text-lg font-bold text-green-600 leading-none">{summaryStats.approved}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-2 border border-yellow-200">
+                <div className="text-center">
+                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Pending</p>
+                  <p className="text-lg font-bold text-yellow-600 leading-none">{summaryStats.pending}</p>
+                </div>
+              </div>
+              
+              <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-2 border border-red-200">
+                <div className="text-center">
+                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Rejected</p>
+                  <p className="text-lg font-bold text-red-600 leading-none">{summaryStats.rejected}</p>
+                </div>
+              </div>
 
-          {/* ADDED: Not Recommended card */}
-          <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-4 border border-orange-200">
-            <div className="text-center">
-              <p className="text-sm text-gray-600">Not Recommended</p>
-              <p className="text-2xl font-bold text-orange-600">{summaryStats.notRecommended}</p>
+              <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-2 border border-indigo-200">
+                <div className="text-center">
+                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Recommended</p>
+                  <p className="text-lg font-bold text-indigo-600 leading-none">{summaryStats.recommended}</p>
+                </div>
+              </div>
+
+              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-2 border border-orange-200">
+                <div className="text-center">
+                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Not Recommended</p>
+                  <p className="text-lg font-bold text-orange-600 leading-none">{summaryStats.notRecommended}</p>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Main Content */}
         <div className="w-full bg-gradient-to-b from-white to-blue-50 shadow-lg rounded-xl border border-gray-200 my-2 mt-4">
@@ -369,7 +397,7 @@ const LeaveDetails = () => {
                 <option value="Not_Recommend">Not Recommended</option>
               </select>
 
-              {/* Leave Type Filter - FIXED: Added min-width and proper positioning */}
+              {/* Leave Type Filter */}
               <select
                 className="border border-gray-300 rounded-md px-3 py-2 text-sm min-w-[140px]"
                 value={leaveTypeFilter}
@@ -382,7 +410,7 @@ const LeaveDetails = () => {
                 ))}
               </select>
 
-              {/* Department Filter - Only for Admin/HR - FIXED: Added min-width and proper positioning */}
+              {/* Department Filter - Only for Admin/HR */}
               {(userRole === 'admin' || userRole === 'hr') && (
                 <select
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm min-w-[140px]"
@@ -397,7 +425,7 @@ const LeaveDetails = () => {
                 </select>
               )}
 
-              {/* Position Filter - Only for Admin/HR - FIXED: Added min-width and proper positioning */}
+              {/* Position Filter - Only for Admin/HR */}
               {(userRole === 'admin' || userRole === 'hr') && (
                 <select
                   className="border border-gray-300 rounded-md px-3 py-2 text-sm min-w-[140px]"

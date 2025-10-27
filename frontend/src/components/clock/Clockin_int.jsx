@@ -230,7 +230,6 @@ function Clockin_int() {
             <span>
               {LS.get("name")}
             </span>
-            👋
           </div>
           <div className="">
             {!showBackButton ? (

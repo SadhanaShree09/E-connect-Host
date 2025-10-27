@@ -205,13 +205,13 @@ const AttendanceStats = ({ onClose = () => {} }) => {
               {/* Stats Cards */}
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
                 <StatCard
-                  icon={<Calendar className="h-6 w-6 text-blue-600" />}
+                  icon={<Calendar className="h-6 w-6 text-blue-100" />}
                   title="Total Working Days"
                   value={attendanceData.attendance_stats.total_working_days}
                   color="text-blue-600"
                 />
                 <StatCard
-                  icon={<UserCheck className="h-6 w-6 text-green-600" />}
+                  icon={<UserCheck className="h-6 w-6 text-green-100" />}
                   title="Present Days"
                   value={attendanceData.attendance_stats.present_days}
                   subtitle={`${attendanceData.attendance_stats.attendance_percentage.toFixed(1)}%`}

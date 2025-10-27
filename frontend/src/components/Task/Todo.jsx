@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
+import './calendar.css';
 import { LS, ipadr } from "../../Utils/Resuse"; 
 
 const ToDoList = () => {
@@ -144,7 +145,7 @@ const ToDoList = () => {
             <div 
               title={`${count} incomplete task(s)`}
               style={{
-                backgroundColor: '#ef4444',
+                backgroundColor: '#c06767ff',
                 borderRadius: '50%',
                 width: '8px',
                 height: '8px',
@@ -223,7 +224,7 @@ return (
                   display: 'inline-block',
                   width: '8px',
                   height: '8px',
-                  backgroundColor: '#ef4444',
+                  backgroundColor: '#c06767ff',
                   borderRadius: '50%',
                 }}
               ></span>
@@ -239,7 +240,7 @@ return (
           </h2>
 
           {hasIncompleteTasks(date) && (
-            <div className="mb-4 p-3 bg-yellow-50 border border-yellow-200 rounded-lg">
+            <div className="mb-4 p-3 bg-blue-100 border border-blue-200 rounded-lg">
               <p className="text-sm text-yellow-800 font-medium">
                 📋 {getIncompleteTaskCount(date)} incomplete task(s) on this date
               </p>

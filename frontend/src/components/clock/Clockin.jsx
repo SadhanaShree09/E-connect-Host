@@ -44,12 +44,16 @@ function Clockin() {
         if (todayRecord) {
           // User has a record for today
           if (todayRecord.clockin) {
-            setTodayClockIn(new Date(todayRecord.clockin));
+            // Parse formatted time string (e.g., "09:44:10 AM") and combine with today's date
+            const clockinTime = parseFormattedTime(todayRecord.clockin);
+            setTodayClockIn(clockinTime);
             setLogin(true);
           }
           
           if (todayRecord.clockout) {
-            setTodayClockOut(new Date(todayRecord.clockout));
+            // Parse formatted time string (e.g., "09:30:00 PM") and combine with today's date
+            const clockoutTime = parseFormattedTime(todayRecord.clockout);
+            setTodayClockOut(clockoutTime);
             setCurrentStatus("clocked-out");
             setLogin(false);
           } else if (todayRecord.clockin) {
@@ -78,6 +82,28 @@ function Clockin() {
       minute: '2-digit',
       second: '2-digit'
     });
+  };
+
+  const parseFormattedTime = (timeString) => {
+    // Parse formatted time string like "09:44:10 AM" and create a Date object for today
+    if (!timeString || timeString === 'N/A') return null;
+    
+    try {
+      const today = new Date();
+      const dateStr = today.toISOString().split('T')[0]; // Get YYYY-MM-DD
+      const dateTimeStr = `${dateStr} ${timeString}`;
+      const parsedDate = new Date(dateTimeStr);
+      
+      if (isNaN(parsedDate.getTime())) {
+        console.error('Invalid date parsed from:', timeString);
+        return null;
+      }
+      
+      return parsedDate;
+    } catch (error) {
+      console.error('Error parsing time:', error);
+      return null;
+    }
   };
 
   const formatDate = (date) => {

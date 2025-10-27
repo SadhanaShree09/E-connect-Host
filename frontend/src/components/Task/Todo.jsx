@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { useNavigate } from 'react-router-dom';
 import Calendar from 'react-calendar';
 import 'react-calendar/dist/Calendar.css';
-import './calendar.css';
+import './Calendar.css';
 import { LS, ipadr } from "../../Utils/Resuse"; 
 
 const ToDoList = () => {

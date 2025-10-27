@@ -7,7 +7,7 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
   return (
-    <div className="bg-gradient-to-br from-gray-50 to-gray-100 rounded-xl border border-gray-200 shadow-sm overflow-hidden">
+    <div className="bg-gradient-to-br from-white-50 to-white-100 rounded-xl border border-white-200 shadow-sm overflow-hidden">
       {/* Toggle Button */}
       <button
         onClick={onToggle}
@@ -36,9 +36,9 @@ const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl shadow-sm border border-red-200">
+            <div className="bg-red-50 p-4 rounded-xl shadow-sm border border-red-200">
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-700 mb-1">{stats.todo}</div>
+                <div className="text-3xl font-bold text-red-600 mb-1">{stats.todo}</div>
                 <div className="text-sm font-medium text-red-600">To Do</div>
               </div>
             </div>
@@ -50,21 +50,21 @@ const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl shadow-sm border border-green-200">
+            <div className="bg-green-50 p-4 rounded-xl shadow-sm border border-green-200">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-700 mb-1">{stats.completed}</div>
                 <div className="text-sm font-medium text-green-600">Completed</div>
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-red-50 to-red-100 p-4 rounded-xl shadow-sm border border-red-200">
+            <div className="bg-red-50 p-4 rounded-xl shadow-sm border border-red-200">
               <div className="text-center">
-                <div className="text-3xl font-bold text-red-700 mb-1">{stats.overdue}</div>
+                <div className="text-3xl font-bold text-red-600 mb-1">{stats.overdue}</div>
                 <div className="text-sm font-medium text-red-600">Overdue</div>
               </div>
             </div>
             
-            <div className="bg-gradient-to-br from-green-50 to-green-100 p-4 rounded-xl shadow-sm border border-green-200">
+            <div className="bg-green-50 p-4 rounded-xl shadow-sm border border-green-200">
               <div className="text-center">
                 <div className="text-3xl font-bold text-green-700 mb-1">{stats.highPriority}</div>
                 <div className="text-sm font-medium text-green-600">High Priority</div>
@@ -73,7 +73,7 @@ const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
             
             <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 rounded-xl shadow-sm border border-indigo-200">
               <div className="text-center">
-                <div className="text-3xl font-bold text-indigo-700 mb-1">{stats.completionRate}%</div>
+                <div className="text-3xl font-bold text-indigo-600 mb-1">{stats.completionRate}%</div>
                 <div className="text-sm font-medium text-indigo-600">Completion Rate</div>
               </div>
             </div>
@@ -114,9 +114,9 @@ const TaskPage = () => {
   const [showDailyProgress, setShowDailyProgress] = useState(false);
 
   const statusColumns = [
-    { id: "todo", title: "To Do", color: "bg-gray-50", borderColor: "border-red-300" },
-    { id: "in-progress", title: "In Progress", color: "bg-gray-50", borderColor: "border-blue-300" },
-    { id: "completed", title: "Completed", color: "bg-gray-50", borderColor: "border-green-300" },
+    { id: "todo", title: "To Do", color: "bg-white-50", borderColor: "border-red-300" },
+    { id: "in-progress", title: "In Progress", color: "bg-white-50", borderColor: "border-blue-500" },
+    { id: "completed", title: "Completed", color: "bg-white-50", borderColor: "border-green-300" },
   ];
 
   const priorityColors = {
@@ -159,22 +159,6 @@ const TaskPage = () => {
     };
   }, [tasks]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr);
-    const year = d.getFullYear();
-    const month = String(d.getMonth() + 1).padStart(2, "0");
-    const day = String(d.getDate()).padStart(2, "0");
-    return `${year}-${month}-${day}`;
-  };
-
-  const isPastDate = (selectedDate) => {
-    if (!selectedDate) return false;
-    const today = new Date();
-    const todayStr = today.toISOString().split("T")[0];
-    return selectedDate < todayStr;
-  };
-
   // Enhanced function to check due date status
   const getDueDateStatus = (dueDate, isCompleted = false) => {
     if (!dueDate || isCompleted) return null;
@@ -206,8 +190,8 @@ const TaskPage = () => {
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-orange-100 text-orange-800 border-orange-200',
-        icon: <FaClock className="text-orange-600" />
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
@@ -366,7 +350,7 @@ const TaskPage = () => {
 
   try {
     const requestBody = {
-      action: "edit", // 🔹 required by task_actions endpoint
+      action: "edit", 
       taskid: taskId,
       userid: userId,
       updated_task: Array.isArray(task.task) ? task.task[0] : task.task,
@@ -392,7 +376,6 @@ const TaskPage = () => {
       throw new Error(data.detail || "Failed to update task status");
     }
 
-    // ✅ Update local state
     setTasks(prevTasks =>
       prevTasks.map(t =>
         t.id === taskId ? { ...t, status: newStatus } : t
@@ -419,7 +402,6 @@ const TaskPage = () => {
   e.preventDefault();
   if (!draggedTask) return;
 
-  // 🛑 Prevent verified tasks from being moved
   if (draggedTask.verified === true) {
     toast.warning("Verified tasks cannot be moved.");
     setDraggedTask(null);
@@ -452,15 +434,15 @@ const TaskPage = () => {
           onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, task); }}
           onDragEnd={() => setDraggedTask(null)}
           onClick={() => openTaskDetails(task)}
-          className={`bg-white rounded-lg p-4 shadow-sm border cursor-pointer hover:shadow-md transition-all mb-3 ${
-            dueDateStatus?.status === 'overdue' ? 'border-red-300 shadow-red-100' : 
-            dueDateStatus?.status === 'due-today' ? 'border-orange-300 shadow-orange-100' :
-            'border-gray-200'
-          }`}
+          className={`bg-white rounded-lg p-4 shadow-md border cursor-pointer -translate-y-1 transition-all mb-3 ${
+              dueDateStatus?.status === 'overdue' ? 'border-red-300 shadow-red-100' :
+              dueDateStatus?.status === 'due-today' ? 'border-yellow-300 shadow-yellow-100' :
+              'border-gray-200'
+            }`}
         >
         {/* Due Date Alert Banner */}
         {dueDateStatus && (
-          <div className={`flex items-center gap-2 mb-3 px-3 py-2 rounded-md border ${dueDateStatus.className}`}>
+          <div className={`flex items-center gap-2 mb-3 px-3 py-1 rounded-md border ${dueDateStatus.className}`}>
             {dueDateStatus.icon}
             <span className="text-sm font-semibold">{dueDateStatus.message}</span>
             {dueDateStatus.status === 'overdue' && (
@@ -472,19 +454,19 @@ const TaskPage = () => {
         <div className="flex justify-between items-start mb-2">
           <h4 className="font-semibold text-gray-800 text-sm leading-tight pr-2 break-words whitespace-normal max-w-full" style={{wordBreak: 'break-word', overflowWrap: 'break-word'}}>{task.task}</h4>
           <div className="flex flex-col gap-1 items-end">
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${
-              task.status === 'todo' ? 'bg-red-200 text-red-700' :
+            <span className={`px-1 rounded-full text-xs font-medium ${
+              task.status === 'todo' ? 'bg-red-100 text-red-700' :
               task.status === 'in-progress' ? 'bg-blue-200 text-blue-700' :
-              'bg-green-200 text-green-700'
+              'bg-green-100 text-green-700'
             }`}>
               {statusColumns.find(col => col.id === task.status)?.title}
             </span>
-            <span className={`px-2 py-1 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
+            <span className={`px-1 rounded-full text-xs font-medium ${priorityColors[task.priority] || priorityColors.medium}`}>
               {task.priority?.toUpperCase() || 'MEDIUM'}
             </span>
 
             {task.verified && (
-  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-700 text-white">
+  <span className="px-2 py-1 rounded-full text-xs font-semibold bg-green-600 text-white">
     Verified
   </span>
 )}
@@ -501,7 +483,7 @@ const TaskPage = () => {
           <div className="flex items-center gap-2 mb-2">
             <p className={`text-xs flex items-center gap-1 ${
               dueDateStatus?.status === 'overdue' ? 'text-red-600 font-semibold' :
-              dueDateStatus?.status === 'due-today' ? 'text-orange-600 font-semibold' :
+              dueDateStatus?.status === 'due-today' ? 'text-yellow-600 font-semibold' :
               dueDateStatus?.status === 'due-tomorrow' ? 'text-yellow-600 font-semibold' :
               'text-gray-600'
             }`}>
@@ -580,8 +562,7 @@ const TaskPage = () => {
         draggable
         pauseOnHover
       />
-      
-      {/* Header */}
+
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">
@@ -595,7 +576,6 @@ const TaskPage = () => {
           </button>
         </div>
 
-        {/* Daily Progress Component */}
         <div className="mb-6">
           <DailyProgress 
             stats={stats} 

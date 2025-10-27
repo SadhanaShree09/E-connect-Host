@@ -428,12 +428,18 @@ const NotificationDashboard = () => {
         case 'wfh_submitted':
         case 'wfh_approved':
         case 'wfh_rejected':
+        case 'wfh_hr_approval':
         case 'wfh_hr_final_approval':
         case 'wfh_hr_pending':
         case 'wfh_final_approval_required':
-          if (isAdminLevel) {
+          if (isAdmin) {
+            // Admin users go to admin route
             targetUrl = '/admin/LeaveManage/wfh';
+          } else if (isHR) {
+            // HR users go to User route
+            targetUrl = '/User/LeaveManage/wfh';
           } else {
+            // Regular users go to their WFH details
             targetUrl = '/User/Leave/LeaveHistory/Remote_details';
           }
           break;
@@ -720,7 +726,7 @@ const NotificationDashboard = () => {
           <div className="bg-white rounded-xl shadow-md p-6 mb-4">
             <div className="flex flex-col lg:flex-row justify-between items-start lg:items-center gap-4">
               <div className="flex items-center">
-                <div className="bg-blue-300 p-4 rounded-full mr-4 flex-shrink-0 shadow-sm">
+                <div className="bg-blue-600 p-4 rounded-full mr-4 flex-shrink-0 shadow-sm">
                   <FaBell className="text-white text-2xl" />
                 </div>
                 <div>
@@ -746,7 +752,7 @@ const NotificationDashboard = () => {
                 </div>
                 <button
                   onClick={markAllAsRead}
-                  className="bg-blue-300 text-white px-6 py-2.5 rounded-xl hover:bg-blue-400 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                  className="bg-blue-500 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
                   disabled={unreadCount === 0}
                 >
                   Mark All Read
@@ -758,7 +764,7 @@ const NotificationDashboard = () => {
           {/* Filters */}
           <div className="bg-white rounded-xl shadow-md p-5 mb-4">
             <div className="flex flex-col md:flex-row items-start md:items-center gap-4">
-              <div className="flex items-center text-blue-400">
+              <div className="flex items-center text-blue-500">
                 <FaFilter className="text-xl mr-2" />
               </div>
               <div className="flex flex-col sm:flex-row gap-3 w-full">
@@ -831,10 +837,10 @@ const NotificationDashboard = () => {
                 className={`transition-all duration-200 shadow-md ${
                   isOverdue ? 'bg-red-50 border-l-red-500 border border-red-200' :
                   !notification.is_read 
-                    ? 'bg-white border-l-blue-400 border border-gray-200 hover:shadow-lg' 
+                    ? 'bg-white border-l-blue-600 border border-gray-200 hover:shadow-lg' 
                     : 'bg-white border-l-gray-300 border border-gray-200 hover:shadow-lg'
                 } rounded-lg p-4 border-l-4 ${
-                  notification.action_url || notification.type ? 'cursor-pointer hover:border-l-blue-400' : 'cursor-default'
+                  notification.action_url || notification.type ? 'cursor-pointer hover:border-l-blue-700' : 'cursor-default'
                 } ${
                   notification.action_url || notification.type ? 'relative' : ''
                 }`}
@@ -844,7 +850,7 @@ const NotificationDashboard = () => {
                 {(notification.action_url || notification.type) && (
                   <div className="absolute top-3 right-3 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity duration-200">
                     <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mr-1 select-none">Click to view</span>
-                    <div className="bg-blue-400 text-white p-1 rounded-full text-xs">
+                    <div className="bg-blue-500 text-white p-1 rounded-full text-xs">
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
                       </svg>

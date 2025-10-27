@@ -257,8 +257,8 @@ def Clockin(userid, name, time):
         end_time = datetime.strptime("10:30:00", "%H:%M:%S").time()
         status = "Present" if start_time <= clockin_time_only <= end_time else "Late"
 
-        # Check for an existing record for today
-        existing_record = Clock.find_one({'date': str(today), 'name': name})
+        # Check for an existing record for today using userid instead of name
+        existing_record = Clock.find_one({'date': str(today), 'userid': userid})
         
         if existing_record and 'clockin' in existing_record and existing_record['clockin']:
             # User already clocked in today - return the existing time
@@ -271,11 +271,11 @@ def Clockin(userid, name, time):
         elif existing_record:
             # Update existing record with clock-in
             Clock.find_one_and_update(
-                {'date': str(today), 'name': name},
+                {'date': str(today), 'userid': userid},
                 {'$set': {
                     'clockin': clockin_dt.isoformat(),
                     'status': status,
-                    'userid': userid,
+                    'name': name,
                     'remark': 'N/A'  # Reset remark to N/A on new clock-in
                 }}
             )
@@ -423,12 +423,12 @@ def Clockout(userid, name, time):
     today = datetime.now(ist).date()
     now = datetime.now(ist)
     
-    # Find today's attendance record
-    record = Clock.find_one({'date': str(today), 'name': name})
+    # Find today's attendance record using userid instead of name
+    record = Clock.find_one({'date': str(today), 'userid': userid})
     
     if not record:
         # Check if user has a previous day's clock-in without clock-out
-        prev_record = Clock.find_one({'name': name, 'clockout': {'$exists': False}})
+        prev_record = Clock.find_one({'userid': userid, 'clockout': {'$exists': False}})
         if prev_record:
             prev_date = prev_record.get('date', '')
             return f"You have an incomplete clock-in from {prev_date}. Please use the 'Previous Day Clock-out' option first."
@@ -501,9 +501,9 @@ def Clockout(userid, name, time):
     # Format work duration text
     hours_text = f'{total_hours_worked} hours {total_minutes_worked} minutes'
     
-    # Update the database with clock-out information
+    # Update the database with clock-out information using userid instead of name
     Clock.find_one_and_update(
-        {'date': str(today), 'name': name},
+        {'date': str(today), 'userid': userid},
         {'$set': {
             'clockout': clockout_time.isoformat(),
             'total_hours_worked': hours_text,
@@ -530,8 +530,8 @@ def PreviousDayClockout(userid, name):
     # You can change this to suit your office hours (e.g., 6:30 PM)
     clockout_default_time = datetime.strptime("06:30:00 PM", "%I:%M:%S %p").time()
     
-    # Fetch the previous day's record
-    prev_day_record = Clock.find_one({'date': str(previous_day), 'name': name})
+    # Fetch the previous day's record using userid instead of name
+    prev_day_record = Clock.find_one({'date': str(previous_day), 'userid': userid})
     
     if not prev_day_record:
         return "No clock-in record found for the previous day."
@@ -598,9 +598,9 @@ def PreviousDayClockout(userid, name):
     # Format work duration
     hours_text = f'{total_hours_worked} hours {total_minutes_worked} minutes'
     
-    # Update the previous day's record with the clock-out time
+    # Update the previous day's record with the clock-out time using userid instead of name
     Clock.find_one_and_update(
-        {'date': str(previous_day), 'name': name},
+        {'date': str(previous_day), 'userid': userid},
         {'$set': {
             'clockout': prev_clockout_time.isoformat(),
             'total_hours_worked': hours_text,
@@ -1191,12 +1191,17 @@ def get_manager_leave_requests(selected_option):
 
     for leave in leave_request:
         if selected_option == "Leave" or selected_option == "Permission":
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
+            if leave.get("selectedDate"):
+                leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
+            if leave.get("requestDate"):
+                leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
         else:
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
+            if leave.get("selectedDate"):
+                leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
+            if leave.get("ToDate"):
+                leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
+            if leave.get("requestDate"):
+                leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
 
     return leave_request
 
@@ -1366,12 +1371,17 @@ def get_only_user_leave_requests(selected_option,TL_name):
 
     for leave in leave_request:
         if selected_option == "Leave" or selected_option == "Permission":
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
+            if leave.get("selectedDate"):
+                leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
+            if leave.get("requestDate"):
+                leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
         else:
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
+            if leave.get("selectedDate"):
+                leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
+            if leave.get("ToDate"):
+                leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
+            if leave.get("requestDate"):
+                leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
     
     return leave_request
 
@@ -1917,9 +1927,12 @@ def Otherleave_History_Details(userid):
     # Convert ObjectId to string for JSON serialization
     for item in leave_history:
         item["_id"] = str(item["_id"])
-        item["selectedDate"] = item["selectedDate"].strftime("%d-%m-%Y")
-        item["ToDate"] = item["ToDate"].strftime("%d-%m-%Y")
-        item["requestDate"] = item["requestDate"].strftime("%d-%m-%Y")
+        if item.get("selectedDate"):
+            item["selectedDate"] = item["selectedDate"].strftime("%d-%m-%Y")
+        if item.get("ToDate"):
+            item["ToDate"] = item["ToDate"].strftime("%d-%m-%Y")
+        if item.get("requestDate"):
+            item["requestDate"] = item["requestDate"].strftime("%d-%m-%Y")
 
 
     return leave_history
@@ -1932,8 +1945,10 @@ def normal_leave_details(userid):
     # Convert ObjectId to string for JSON serialization
     for item in leave_history:
         item["_id"] = str(item["_id"])
-        item["selectedDate"] = item["selectedDate"].strftime("%d-%m-%Y")
-        item["requestDate"] = item["requestDate"].strftime("%d-%m-%Y")
+        if item.get("selectedDate"):
+            item["selectedDate"] = item["selectedDate"].strftime("%d-%m-%Y")
+        if item.get("requestDate"):
+            item["requestDate"] = item["requestDate"].strftime("%d-%m-%Y")
     
     return leave_history
 
@@ -1946,9 +1961,10 @@ def Permission_History_Details(userid):
     # Convert ObjectId to string for JSON serialization
     for item in leave_history:
         item["_id"] = str(item["_id"])
-        item["_id"] = str(item["_id"])
-        item["selectedDate"] = item["selectedDate"].strftime("%d-%m-%Y")
-        item["requestDate"] = item["requestDate"].strftime("%d-%m-%Y")
+        if item.get("selectedDate"):
+            item["selectedDate"] = item["selectedDate"].strftime("%d-%m-%Y")
+        if item.get("requestDate"):
+            item["requestDate"] = item["requestDate"].strftime("%d-%m-%Y")
 
     return leave_history
 

@@ -154,7 +154,19 @@ const Timemanagement = () => {
   };
 
   const downloadExcel = () => {
-    const worksheet = XLSX.utils.json_to_sheet(filteredData);
+    // Format the data before exporting to match the table display
+    const formattedData = filteredData.map(item => ({
+      userid: item.userid,
+      date: formatDateOnly(item.date),
+      name: item.name,
+      clockin: formatTime(item.clockin),
+      status: item.status,
+      remark: item.remark,
+      clockout: formatTime(item.clockout),
+      total_hours_worked: item.total_hours_worked
+    }));
+    
+    const worksheet = XLSX.utils.json_to_sheet(formattedData);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceData");
     XLSX.writeFile(workbook, "attendance_data.xlsx");

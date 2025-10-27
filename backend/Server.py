@@ -598,9 +598,34 @@ async def manage_attendance(data: AttendanceManage):
                             except Exception:
                                 pass
                     attendance_data = filtered
+        
+        # Format datetime fields for better readability
+        # Convert ISO format to readable time format in clockin/clockout fields
+        formatted_attendance = []
+        for record in attendance_data:
+            formatted_record = record.copy()
+            
+            # Format clockin time - replace with formatted version
+            if 'clockin' in formatted_record and formatted_record['clockin']:
+                try:
+                    clockin_dt = parser.parse(formatted_record['clockin'])
+                    formatted_record['clockin'] = clockin_dt.strftime('%I:%M:%S %p')
+                except:
+                    pass
+            
+            # Format clockout time - replace with formatted version
+            if 'clockout' in formatted_record and formatted_record['clockout']:
+                try:
+                    clockout_dt = parser.parse(formatted_record['clockout'])
+                    formatted_record['clockout'] = clockout_dt.strftime('%I:%M:%S %p')
+                except:
+                    pass
+            
+            formatted_attendance.append(formatted_record)
+        
         return {
             "status": "success",
-            "attendance": attendance_data or []
+            "attendance": formatted_attendance or []
         }
     except HTTPException:
         raise

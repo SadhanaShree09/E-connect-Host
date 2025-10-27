@@ -264,7 +264,7 @@ const AddLeave = () => {
               setShowAddForm(!showAddForm);
               setShowDeleteMode(false);
             }}
-            className="px-4 py-2 text-base bg-green-400 rounded-md text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
+            className="px-4 py-2 text-base bg-green-600 rounded-md text-white hover:bg-green-500 focus:outline-none focus:ring-2 focus:ring-green-400 flex items-center gap-2"
           >
             <FontAwesomeIcon icon={faPlus} />
             Add

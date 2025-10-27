@@ -48,8 +48,8 @@ const TaskDetailsPage = () => {
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-orange-100 text-orange-800 border-orange-200',
-        icon: <FaClock className="text-orange-600" />
+        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
@@ -436,14 +436,14 @@ const mapStatusToColumn = (status) => {
   </div>
   {task.verified && (
     <div className="flex items-center gap-2 mb-2">
-      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-700 text-white font-semibold text-sm">
+      <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-600 text-white font-semibold text-sm">
         <FaCheckCircle /> Verified
       </span>
     </div>
   )}
         {/* Due Date Alert */}
         {dueDateStatus && (
-          <div className={`flex items-center gap-2 mb-4 px-4 py-2 rounded border text-s ${dueDateStatus.className}`}>
+          <div className={`flex items-center gap-2 mb-4 px-4 py-1 rounded border text-s ${dueDateStatus.className}`}>
             {dueDateStatus.icon}
             <span className="font-semibold">{dueDateStatus.message}</span>
             {dueDateStatus.status === 'overdue' && (
@@ -467,7 +467,7 @@ const mapStatusToColumn = (status) => {
             <FaClock className="text-gray-400" />
             <span className={`text-gray-600 ${
               dueDateStatus?.status === 'overdue' ? 'text-red-600 font-semibold' :
-              dueDateStatus?.status === 'due-today' ? 'text-orange-600 font-semibold' :
+              dueDateStatus?.status === 'due-today' ? 'text-yellow-600 font-semibold' :
               ''
             }`}>
               Due: {task.due_date || "No due date"}

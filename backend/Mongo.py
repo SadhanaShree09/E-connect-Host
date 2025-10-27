@@ -858,10 +858,19 @@ def store_leave_request(userid, employee_name, time, leave_type, selected_date, 
     return "Leave request stored successfully"
 
 def is_leave_taken(userid, selected_date, leave_type):
-    # Check if leave of given type is taken on the selected date
+    # Normalize the date to midnight for accurate comparison
+    if isinstance(selected_date, str):
+        selected_date_dt = datetime.strptime(selected_date, "%Y-%m-%d")
+    else:
+        selected_date_dt = selected_date
+    
+    # Ensure time is set to midnight
+    selected_date_dt = selected_date_dt.replace(hour=0, minute=0, second=0, microsecond=0)
+    
+    # Query using datetime object (same format as stored in DB)
     leave_entry = Leave.find_one({
         "userid": userid,
-        "selectedDate": format_timestamp(selected_date),
+        "selectedDate": selected_date_dt,  # ✅ Use datetime object
         "leaveType": leave_type
     })
     

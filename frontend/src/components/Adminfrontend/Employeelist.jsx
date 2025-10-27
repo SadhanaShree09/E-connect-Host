@@ -203,7 +203,7 @@ const EmployeeList = () => {
                         </div>
                     </div>
                     <div className="mt-4 flex justify-end">
-                        <button className="py-1 px-3 bg-[#3B82F6] hover:bg-[#3EBF76] text-white text-sm font-inter rounded-full shadow-lg" onClick={downloadExcel}>
+                        <button className="py-1 px-3 bg-blue-600 hover:bg-green-600 text-white text-sm font-inter rounded-full shadow-lg" onClick={downloadExcel}>
                             <FontAwesomeIcon icon={faDownload} /> Download Excel
                         </button>
                     </div>

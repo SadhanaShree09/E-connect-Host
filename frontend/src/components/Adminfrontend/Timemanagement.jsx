@@ -20,7 +20,7 @@ const Timemanagement = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [selectedMonth, setSelectedMonth] = useState("");
-  const [selectedYear, setSelectedYear] = useState("");
+  const [selectedYear, setSelectedYear] = useState(new Date().getFullYear().toString());
   const [searchTerm, setSearchTerm] = useState("");
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
@@ -34,15 +34,27 @@ const Timemanagement = () => {
     },
   ]);
 
+  // Generate years array for dropdown (current year and past 5 years)
+  const generateYears = () => {
+    const currentYear = new Date().getFullYear();
+    const years = [];
+    for (let i = 0; i < 6; i++) {
+      years.push((currentYear - i).toString());
+    }
+    return years;
+  };
+
+  const years = generateYears();
+
   // Fetch data when component mounts or when search/date changes
   useEffect(() => {
     fetchData();
   }, [selectedDate, searchTerm]);
 
-  // Effect to filter data when date range or search term changes
+  // Effect to filter data when date range, search term, or year changes
   useEffect(() => {
     filterData();
-  }, [attendanceData, dateRange, searchTerm]);
+  }, [attendanceData, dateRange, searchTerm, selectedYear]);
 
   const fetchData = async () => {
     try {
@@ -73,6 +85,14 @@ const Timemanagement = () => {
       filtered = filtered.filter(item =>
         item.name.toLowerCase().includes(searchTerm.toLowerCase())
       );
+    }
+
+    // Filter by year if selected
+    if (selectedYear) {
+      filtered = filtered.filter(item => {
+        const itemDate = parseISO(item.date);
+        return itemDate.getFullYear().toString() === selectedYear;
+      });
     }
 
     // Filter by date range
@@ -155,21 +175,51 @@ const Timemanagement = () => {
 
   const downloadExcel = () => {
     // Format the data before exporting to match the table display
-    const formattedData = filteredData.map(item => ({
-      userid: item.userid,
-      date: formatDateOnly(item.date),
-      name: item.name,
-      clockin: formatTime(item.clockin),
-      status: item.status,
-      remark: item.remark,
-      clockout: formatTime(item.clockout),
-      total_hours_worked: item.total_hours_worked
+    const formattedData = filteredData.map((item, index) => ({
+      'S.No': index + 1,
+      'User ID': item.userid,
+      'Name': item.name,
+      'Date': formatDateOnly(item.date),
+      'Clock In': formatTime(item.clockin),
+      'Clock Out': formatTime(item.clockout),
+      'Total Hours Worked': item.total_hours_worked || 'N/A',
+      'Status': item.status,
+      'Remark': item.remark || 'N/A'
     }));
     
     const worksheet = XLSX.utils.json_to_sheet(formattedData);
+    
+    // Auto-size columns
+    const maxWidth = 20;
+    const wscols = [
+      { wch: 6 },  // S.No
+      { wch: 15 }, // User ID
+      { wch: 20 }, // Name
+      { wch: 12 }, // Date
+      { wch: 12 }, // Clock In
+      { wch: 12 }, // Clock Out
+      { wch: 18 }, // Total Hours Worked
+      { wch: 10 }, // Status
+      { wch: 15 }  // Remark
+    ];
+    worksheet['!cols'] = wscols;
+    
     const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, "AttendanceData");
-    XLSX.writeFile(workbook, "attendance_data.xlsx");
+    XLSX.utils.book_append_sheet(workbook, worksheet, "Attendance Data");
+    
+    // Generate filename with year and date range info
+    let filename = 'attendance_data';
+    if (selectedYear) {
+      filename += `_${selectedYear}`;
+    }
+    if (dateRange[0].startDate && dateRange[0].endDate) {
+      const startDate = format(dateRange[0].startDate, 'yyyy-MM-dd');
+      const endDate = format(dateRange[0].endDate, 'yyyy-MM-dd');
+      filename += `_${startDate}_to_${endDate}`;
+    }
+    filename += '.xlsx';
+    
+    XLSX.writeFile(workbook, filename);
   };
 
   return (
@@ -180,17 +230,43 @@ const Timemanagement = () => {
           Clock In & Clock Out
         </h1>
         <div className="w-full bg-gradient-to-b from-white to-blue-50 shadow-lg rounded-xl border border-gray-200 my-2 mt-10">
-          <header className="flex justify-between px-5 py-4 border-b border-gray-200">
-            <div className="relative">
-              <input
-                type="text"
-                placeholder="Search by name..."
-                className="px-2 py-1 rounded-md border text-sm pl-8 border-gray-300 w-40"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-              <div className="absolute top-0 left-0 mt-1 ml-2 text-gray-400 cursor-text">
-                <FontAwesomeIcon icon={faSearch} />
+          <header className="flex flex-wrap justify-between px-5 py-4 border-b border-gray-200 gap-4">
+            <div className="flex items-center gap-4 flex-wrap">
+              <div className="relative">
+                <input
+                  type="text"
+                  placeholder="Search by name..."
+                  className="px-2 py-1 rounded-md border text-sm pl-8 border-gray-300 w-40"
+                  value={searchTerm}
+                  onChange={(e) => setSearchTerm(e.target.value)}
+                />
+                <div className="absolute top-0 left-0 mt-1 ml-2 text-gray-400 cursor-text">
+                  <FontAwesomeIcon icon={faSearch} />
+                </div>
+              </div>
+
+              <div className="flex items-center gap-2">
+                <label className="text-sm font-medium text-gray-700">Year:</label>
+                <select
+                  value={selectedYear}
+                  onChange={(e) => {
+                    setSelectedYear(e.target.value);
+                    // Clear date range when year is selected
+                    if (e.target.value) {
+                      setDateRange([{
+                        startDate: null,
+                        endDate: null,
+                        key: "selection",
+                      }]);
+                    }
+                  }}
+                  className="px-3 py-1 rounded-md border border-gray-300 text-sm bg-white focus:outline-none focus:ring-2 focus:ring-blue-500"
+                >
+                  <option value="">All Years</option>
+                  {years.map(year => (
+                    <option key={year} value={year}>{year}</option>
+                  ))}
+                </select>
               </div>
             </div>
 
@@ -198,12 +274,12 @@ const Timemanagement = () => {
               <div className="relative">
                 <button
                   onClick={() => setShowDatePicker(!showDatePicker)}
-                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
+                  className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600 transition-colors text-sm"
                 >
                   {showDatePicker ? 'Hide Date Range' : 'Show Date Range'}
                 </button>
                 {showDatePicker && (
-                  <div className="absolute right-0 top-12 z-50 bg-white shadow-lg rounded-md border">
+                  <div className="absolute right-0 top-12 z-50 bg-white shadow-xl rounded-md border">
                     <DateRangePicker
                       ranges={dateRange}
                       onChange={handleDateRangeChange}
@@ -322,10 +398,12 @@ const Timemanagement = () => {
               : 0}
           </div>
           <button
-            className="py-1 px-3 bg-[#3B82F6] hover:bg-green-400 text-white text-sm font-inter rounded-full shadow-lg"
+            className="py-2 px-4 bg-blue-600 hover:bg-green-600 text-white text-sm font-inter rounded-md shadow-lg transition-colors flex items-center gap-2"
             onClick={downloadExcel}
+            disabled={filteredData.length === 0}
           >
-            <FontAwesomeIcon icon={faDownload} /> Download Excel
+            <FontAwesomeIcon icon={faDownload} /> 
+            Download Excel 
           </button>
         </div>
       </div>

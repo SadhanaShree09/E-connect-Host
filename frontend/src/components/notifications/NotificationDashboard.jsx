@@ -32,6 +32,7 @@ const NotificationDashboard = () => {
     status: 'all'
   });
   const [confirmDeleteId, setConfirmDeleteId] = useState(null);
+  const [showMarkAllConfirm, setShowMarkAllConfirm] = useState(false);
   const navigate = useNavigate();
   const userid = LS.get('userid');
   
@@ -680,7 +681,7 @@ const NotificationDashboard = () => {
   // Use WebSocket data when available
   useEffect(() => {
     if (isConnected) {
-      // ✅ Filter WebSocket notifications to ensure they belong to current user
+      // Filter WebSocket notifications to ensure they belong to current user
       const validWsNotifications = wsNotifications.filter(notif => 
         notif.userid === userid
       );
@@ -747,16 +748,35 @@ const NotificationDashboard = () => {
                 </div>
               </div>
               <div className="flex items-center space-x-3 w-full lg:w-auto justify-end">
-                <div className="bg-blue-50 text-blue-500 px-5 py-2.5 rounded-xl font-semibold text-sm">
+                <div className="bg-blue-100 text-blue-500 px-5 py-2.5 rounded-xl font-semibold text-sm">
                   {unreadCount} unread
                 </div>
-                <button
-                  onClick={markAllAsRead}
-                  className="bg-blue-500 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
-                  disabled={unreadCount === 0}
-                >
-                  Mark All Read
-                </button>
+                {showMarkAllConfirm ? (
+                  <div className="flex flex-col items-center bg-white border border-blue-200 rounded-lg p-2 shadow-md z-10">
+                    <span className="text-sm text-gray-700 mb-2">Mark all notifications as read?</span>
+                    <div className="flex gap-2">
+                      <button
+                        className="px-2 py-1 bg-blue-500 text-white rounded hover:bg-blue-600 text-xs"
+                        onClick={() => {
+                          setShowMarkAllConfirm(false);
+                          markAllAsRead();
+                        }}
+                      >Yes</button>
+                      <button
+                        className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
+                        onClick={() => setShowMarkAllConfirm(false)}
+                      >No</button>
+                    </div>
+                  </div>
+                ) : (
+                  <button
+                    onClick={() => setShowMarkAllConfirm(true)}
+                    className="bg-blue-500 text-white px-6 py-2.5 rounded-xl hover:bg-blue-700 transition-colors duration-200 disabled:opacity-50 disabled:cursor-not-allowed text-sm font-medium"
+                    disabled={unreadCount === 0}
+                  >
+                    Mark All Read
+                  </button>
+                )}
               </div>
             </div>
           </div>
@@ -820,147 +840,177 @@ const NotificationDashboard = () => {
         >
           
           <div className="max-w-7xl mx-auto space-y-4">
-          {filteredNotifications.length === 0 ? (
-            <div className="bg-white rounded-xl shadow-sm p-8 text-center">
-              <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
-                <FaInfoCircle className="text-blue-400 text-2xl" />
+            {filteredNotifications.length === 0 ? (
+              <div className="bg-white rounded-xl shadow-sm p-8 text-center">
+                <div className="bg-blue-50 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <FaInfoCircle className="text-blue-400 text-2xl" />
+                </div>
+                <h3 className="text-lg font-semibold text-gray-800 mb-2">No notifications found</h3>
+                <p className="text-gray-600">You're all caught up! Check back later for updates.</p>
               </div>
-              <h3 className="text-lg font-semibold text-gray-800 mb-2">No notifications found</h3>
-              <p className="text-gray-600">You're all caught up! Check back later for updates.</p>
-            </div>
-          ) : (
-            filteredNotifications.map((notification, index) => {
-              const isOverdue = isOverdueNotification(notification);
-              return (
-              <div
-                key={notification._id}
-                className={`transition-all duration-200 shadow-md ${
-                  isOverdue ? 'bg-red-50 border-l-red-500 border border-red-200' :
-                  !notification.is_read 
-                    ? 'bg-white border-l-blue-600 border border-gray-200 hover:shadow-lg' 
-                    : 'bg-white border-l-gray-300 border border-gray-200 hover:shadow-lg'
-                } rounded-lg p-4 border-l-4 ${
-                  notification.action_url || notification.type ? 'cursor-pointer hover:border-l-blue-700' : 'cursor-default'
-                } ${
-                  notification.action_url || notification.type ? 'relative' : ''
-                }`}
-                onClick={() => handleNotificationClick(notification)}
-              >
-                {/* Clickable indicator */}
-                {(notification.action_url || notification.type) && (
-                  <div className="absolute top-3 right-3 flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity duration-200">
-                    <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mr-1 select-none">Click to view</span>
-                    <div className="bg-blue-500 text-white p-1 rounded-full text-xs">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
-                      </svg>
+            ) : (
+              // Group notifications by date
+              (() => {
+                const groups = {};
+                filteredNotifications.forEach((notif) => {
+                  const dateKey = new Date(notif.created_at).toLocaleDateString('en-US', {
+                    year: 'numeric', month: 'short', day: 'numeric'
+                  });
+                  if (!groups[dateKey]) groups[dateKey] = [];
+                  groups[dateKey].push(notif);
+                });
+                return Object.entries(groups).map(([date, notifs]) => (
+                  <div key={date}>
+                    <div className="sticky top-0 z-10 border border-blue-200 bg-blue-100 py-2.5 px-3 rounded-lg mb-3 shadow text-blue-700 font-semibold text-sm">
+                      {date}
                     </div>
-                  </div>
-                )}
-                <div className="flex items-start justify-between">
-                  <div className="flex items-start space-x-3 flex-1">
-                    <div className={`mt-1 p-2 rounded-lg flex-shrink-0 ${
-                      isOverdue ? 'bg-red-100' :
-                      !notification.is_read ? 'bg-blue-50' : 'bg-gray-100'
-                    }`}>
-                      {getTypeIcon(notification)}
-                    </div>
-                    
-                    <div className="flex-1 min-w-0">
-                      <div className="flex flex-wrap items-center gap-2 mb-1">
-                        <h3 className={`font-semibold text-sm md:text-base ${
-                          isOverdue ? 'text-red-700' :
-                          !notification.is_read ? 'text-gray-900' : 'text-gray-700'
-                        }`}>
-                          {notification.title}
-                        </h3>
-                        <span className={`px-2 py-1 text-xs rounded-md font-medium border ${
-                          isOverdue ? 'bg-red-100 text-red-800 border-red-200' : getOverduePriorityColors(notification.priority, isOverdue)
-                        }`}>
-                          {isOverdue ? 'URGENT' : notification.priority}
-                        </span>
-                        {!notification.is_read && (
-                          <div className="flex items-center gap-1">
-                            <div className={`w-2 h-2 rounded-full ${
-                              isOverdue ? 'bg-red-500' : 'bg-blue-400'
-                            } animate-pulse`}></div>
-                            <span className={`text-xs font-semibold ${
-                              isOverdue ? 'text-red-600' : 'text-blue-500'
-                            }`}>NEW</span>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <p className={`text-sm mb-2 leading-relaxed ${
-                        isOverdue ? 'text-red-700 font-medium' :
-                        !notification.is_read ? 'text-gray-800' : 'text-gray-600'
-                      }`}>
-                        {notification.message}
-                      </p>
-                      
-                      <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
-                        <span className="text-xs text-gray-600 bg-gray-100 px-3 py-1 rounded-md">
-                          {formatDate(notification.created_at)}
-                        </span>
-                        
-                        <div className="flex gap-2">
-                          <button
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              markAsRead(notification._id, notification.is_read);
-                            }}
-                            className={`p-2 rounded-lg transition-colors duration-200 ${
-                              notification.is_read 
-                                ? 'text-gray-500 hover:bg-gray-100 border border-gray-300' 
-                                : 'text-blue-500 hover:bg-blue-50 bg-blue-50 border border-blue-200'
-                            }`}
-                            title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
-                          >
-                            <FaCheck size={14} />
-                          </button>
-                          
-                          {confirmDeleteId === notification._id ? (
-                            <div className="flex flex-col items-center bg-white border border-red-200 rounded-lg p-2 shadow-md z-10">
-                              <span className="text-sm text-gray-700 mb-2">Delete this notification?</span>
-                              <div className="flex gap-2">
-                                <button
-                                  className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    deleteNotification(notification._id);
-                                    setConfirmDeleteId(null);
-                                  }}
-                                >Yes</button>
-                                <button
-                                  className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
-                                  onClick={(e) => {
-                                    e.stopPropagation();
-                                    setConfirmDeleteId(null);
-                                  }}
-                                >No</button>
+                    {notifs.map((notification) => {
+                      const isOverdue = isOverdueNotification(notification);
+                      return (
+                        <div
+                          key={notification._id}
+                          className={`transition-all duration-200 shadow-md mb-3 min-h-[120px] ${
+                            isOverdue ? 'bg-red-50 border-l-red-500 border border-red-200' :
+                            !notification.is_read 
+                              ? 'bg-white border-l-blue-600 border border-gray-200 hover:shadow-lg' 
+                              : 'bg-white border-l-gray-300 border border-gray-200 hover:shadow-lg'
+                          } rounded-lg p-4 border-l-4 ${
+                            notification.action_url || notification.type ? 'cursor-pointer hover:border-l-blue-700' : 'cursor-default'
+                          } ${
+                            notification.action_url || notification.type ? 'relative' : ''
+                          }`}
+                          onClick={() => handleNotificationClick(notification)}
+                        >
+                          {/* Clickable indicator */}
+                          {(notification.action_url || notification.type) && (
+                            <div className="absolute top-4 right-4 flex items-center gap-1 opacity-60 hover:opacity-100 transition-opacity duration-200">
+                              <span className="text-xs text-blue-700 bg-blue-100 px-2 py-0.5 rounded-full mr-1 select-none">Click to view</span>
+                              <div className="bg-blue-500 text-white p-1 rounded-full text-xs">
+                                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M9 5l7 7-7 7" />
+                                </svg>
                               </div>
                             </div>
-                          ) : (
-                            <button
-                              onClick={(e) => {
-                                e.stopPropagation();
-                                setConfirmDeleteId(notification._id);
-                              }}
-                              className="p-2 rounded-lg transition-colors duration-200 text-red-600 hover:bg-red-50 border border-red-200"
-                              title="Delete notification"
-                            >
-                              <FaTrash size={14} />
-                            </button>
                           )}
+                          <div className="flex items-start justify-between">
+                            <div className="flex items-start space-x-4 flex-1">
+                              <div className={`mt-1 p-3 rounded-lg flex-shrink-0 w-10 h-10 flex items-center justify-center ${
+                                isOverdue ? 'bg-red-100' :
+                                !notification.is_read ? 'bg-blue-50' : 'bg-gray-100'
+                              }`}>
+                                <div className="text-base">
+                                  {getTypeIcon(notification)}
+                                </div>
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <div className="flex flex-wrap items-center gap-2 mb-2">
+                                  <h3 className={`font-semibold text-base ${
+                                    isOverdue ? 'text-red-700' :
+                                    !notification.is_read ? 'text-gray-900' : 'text-gray-700'
+                                  }`}>
+                                    {notification.title}
+                                  </h3>
+                                  <span className={`px-2.5 py-1 text-xs rounded-md font-medium border ${
+                                    isOverdue ? 'bg-red-100 text-red-800 border-red-200' : getOverduePriorityColors(notification.priority, isOverdue)
+                                  }`}>
+                                    {isOverdue ? 'URGENT' : notification.priority}
+                                  </span>
+                                  {!notification.is_read && (
+                                    <div className="flex items-center gap-1">
+                                      <div className={`w-2 h-2 rounded-full ${
+                                        isOverdue ? 'bg-red-500' : 'bg-blue-400'
+                                      } animate-pulse`}></div>
+                                      <span className={`text-xs font-semibold ${
+                                        isOverdue ? 'text-red-600' : 'text-blue-500'
+                                      }`}>NEW</span>
+                                    </div>
+                                  )}
+                                </div>
+                                <p className={`text-sm mb-3 leading-relaxed ${
+                                  isOverdue ? 'text-red-700 font-medium' :
+                                  !notification.is_read ? 'text-gray-800' : 'text-gray-600'
+                                }`}>
+                                  {(() => {
+                                    // Truncate task name if present in message
+                                    if (notification.type === 'task' || notification.type === 'task_updated' || notification.type === 'task_created' || notification.type === 'task_manager_assigned') {
+                                      // Try to extract the task name from the message
+                                      const match = notification.message.match(/'(.*?)'/);
+                                      if (match && match[1]) {
+                                        let taskName = match[1];
+                                        if (taskName.length > 20) {
+                                          taskName = taskName.substring(0, 20) + '...';
+                                        }
+                                        // Replace the long task name in the message with the truncated one
+                                        return notification.message.replace(match[1], taskName);
+                                      }
+                                    }
+                                    return notification.message;
+                                  })()}
+                                </p>
+                                <div className="flex flex-wrap items-center justify-between gap-2 mt-3">
+                                  <span className="text-xs text-gray-600 bg-blue-100 px-3 py-1.5 rounded-md">
+                                    {formatDate(notification.created_at)}
+                                  </span>
+                                  <div className="flex gap-2">
+                                    <button
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        markAsRead(notification._id, notification.is_read);
+                                      }}
+                                      className={`p-2.5 rounded-lg transition-colors duration-200 ${
+                                        notification.is_read 
+                                          ? 'text-gray-500 hover:bg-gray-100 border border-gray-300' 
+                                          : 'text-blue-500 hover:bg-blue-50 bg-blue-50 border border-blue-200'
+                                      }`}
+                                      title={notification.is_read ? 'Mark as unread' : 'Mark as read'}
+                                    >
+                                      <FaCheck size={14} />
+                                    </button>
+                                    {confirmDeleteId === notification._id ? (
+                                      <div className="flex flex-col items-center bg-white border border-red-200 rounded-lg p-2 shadow-md z-10">
+                                        <span className="text-sm text-gray-700 mb-2">Delete this notification?</span>
+                                        <div className="flex gap-2">
+                                          <button
+                                            className="px-2 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              deleteNotification(notification._id);
+                                              setConfirmDeleteId(null);
+                                            }}
+                                          >Yes</button>
+                                          <button
+                                            className="px-2 py-1 bg-gray-200 text-gray-700 rounded hover:bg-gray-300 text-xs"
+                                            onClick={(e) => {
+                                              e.stopPropagation();
+                                              setConfirmDeleteId(null);
+                                            }}
+                                          >No</button>
+                                        </div>
+                                      </div>
+                                    ) : (
+                                      <button
+                                        onClick={(e) => {
+                                          e.stopPropagation();
+                                          setConfirmDeleteId(notification._id);
+                                        }}
+                                        className="p-2.5 rounded-lg transition-colors duration-200 text-red-600 hover:bg-red-50 border border-red-200"
+                                        title="Delete notification"
+                                      >
+                                        <FaTrash size={14} />
+                                      </button>
+                                    )}
+                                  </div>
+                                </div>
+                              </div>
+                            </div>
+                          </div>
                         </div>
-                      </div>
-                    </div>
+                      );
+                    })}
                   </div>
-                </div>
-              </div>
-            );
-            })
-          )}
+                ));
+              })()
+            )}
           </div>
         </div>
       </div>

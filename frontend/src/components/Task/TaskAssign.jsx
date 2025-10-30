@@ -9,6 +9,7 @@ import { RotateCw } from "lucide-react";
 import { toast } from "react-toastify";
 import { parseISO, isWithinInterval } from 'date-fns';
 import { AiOutlineDelete, AiOutlineEdit } from 'react-icons/ai';
+import { FaPlus} from "react-icons/fa";
 
 function ConfirmModal({ open, title, message, onConfirm, onClose, confirmLabel = 'Delete', cancelLabel = 'Cancel' }) {
   useEffect(() => {
@@ -33,10 +34,26 @@ function ConfirmModal({ open, title, message, onConfirm, onClose, confirmLabel =
               <AiOutlineDelete className="w-5 h-5" />
             </div>
             <div>
-              <h3 className="text-lg font-semibold text-gray-900">{title}</h3>
-              <p className="text-sm text-gray-600 mt-1">Are you sure you want to delete this task?</p>
-              {message && <p className="text-xs text-gray-500 mt-2 break-words">{message}</p>}
-            </div>
+            <h3 className="text-lg font-semibold text-gray-900 break-words [word-break:break-all] px-2">
+              {title}
+            </h3>
+            <p className="text-sm text-gray-700 mt-1">
+              Are you sure you want to delete this task?
+            </p>
+            {message && (
+              <div
+                className="text-xs text-gray-800 mt-2 
+                          break-words whitespace-pre-wrap 
+                          max-h-36 overflow-y-auto 
+                          leading-relaxed text-center 
+                          px-3 w-full
+                          [word-break:break-all]"
+              >
+                {message}
+              </div>
+            )}
+          </div>
+
           </div>
           <div className="mt-6 flex justify-end gap-3">
             <button onClick={onClose} className="px-3 py-1 rounded-md border border-gray-300 bg-white text-gray-700">{cancelLabel}</button>
@@ -475,7 +492,7 @@ const handleoneditSubmit = async () => {
           </div>
           <div className="flex-1 flex items-center justify-center space-x-3">
             <select className="w-40 p-1 text-sm border border-gray-300 rounded-md" value={ValueSelected} onChange={e => SetValueSelected(e.target.value)}>
-              <option value="" disabled hidden>--select {isManager ? 'Employee' : 'TeamLead'}--</option>
+              <option value="" disabled hidden>select {isManager ? 'Employee' : 'TeamLead'}</option>
               {options.map(item => (
                 <option key={item.id || item.userid} value={item.userid}>{item.name}</option>
               ))}
@@ -533,7 +550,7 @@ const handleoneditSubmit = async () => {
             ))}
             <div className="mt-4">
               <label className="block text-lg font-semibold text-gray-700 mb-2">Due date</label>
-              <input type="date" name="due_date" value={modeldata.due_date ? String(modeldata.due_date).slice(0, 10) : ''} onChange={e => setModelData({ ...modeldata, due_date: e.target.value })} min={new Date().toISOString().split("T")[0]} className="w-full border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:ring-2 focus:ring-pink-400 focus:border-pink-400 transition cursor-pointer" />
+              <input type="date" name="due_date" value={modeldata.due_date ? String(modeldata.due_date).slice(0, 10) : ''} onChange={e => setModelData({ ...modeldata, due_date: e.target.value })} min={new Date().toISOString().split("T")[0]} className="w-full border border-gray-300 rounded-lg px-4 py-3 shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 transition cursor-pointer" />
             </div>
             <div className="mt-4">
               <label className="block text-lg font-semibold text-gray-700 mb-2">Priority</label>
@@ -551,7 +568,7 @@ const handleoneditSubmit = async () => {
                   <input type="text" value={subtask.title} onChange={e => { const updated = [...modeldata.subtasks]; updated[idx].title = e.target.value; setModelData({ ...modeldata, subtasks: updated }); }} className="w-full border border-gray-300 rounded px-2 py-1" />
                 </div>
               ))}
-              <button onClick={() => setModelData({ ...modeldata, subtasks: [...(modeldata.subtasks || []), { title: "", done: false }] })} className="text-blue-500 mt-2">➕ Add Subtask</button>
+              <button onClick={() => setModelData({ ...modeldata, subtasks: [...(modeldata.subtasks || []), { title: "", done: false }] })}  className="flex items-center gap-2 text-blue-500 mt-2"><FaPlus /><span>Add Subtask</span></button>
             </div>
             <div className="mt-4">
               <label className="block text-lg font-semibold text-gray-700 mb-2">Select {isManager ? 'Employee(s)' : 'TeamLead(s)'}</label>

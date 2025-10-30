@@ -7,6 +7,8 @@ import { DateRangePicker } from 'react-date-range';
 import 'react-date-range/dist/styles.css';
 import 'react-date-range/dist/theme/default.css';
 import { format, isWithinInterval, parseISO } from 'date-fns';
+import { FaChartLine, FaPlus } from "react-icons/fa";
+
 
 const LeaveDetails = () => {
   const [leaveData, setLeaveData] = useState({});
@@ -294,26 +296,30 @@ const LeaveDetails = () => {
             Leave Management Dashboard
           </h1>
           <div className="flex items-center gap-4">
-            <button
-              onClick={() => setShowProgress(!showProgress)}
-              className={`px-5 py-2 rounded-lg transition-all duration-300 font-medium flex items-center gap-2 ${
-                showProgress 
-                  ? 'bg-green-600 text-white hover:bg-green-700 shadow-lg' 
-                  : 'bg-gradient-to-r from-blue-600 to-blue-600 text-white hover:from-blue-700 hover:to-blue-700 shadow-lg hover:shadow-xl'
+          <button
+            onClick={() => setShowProgress(!showProgress)}
+            className={`px-4 py-2 rounded-full transition-all duration-300 text-sm font-medium flex items-center gap-2 ${
+              showProgress
+                ? "bg-blue-800 text-white hover:bg-blue-600 shadow-lg"
+                : "bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl"
+            }`}
+          >
+            <FaChartLine
+              className={`text-lg transition-transform duration-300 ${
+                showProgress ? "rotate-180" : ""
               }`}
-            >
-              <svg className={`w-5 h-5 transition-transform duration-300 ${showProgress ? 'rotate-180' : ''}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M7 12l3-3 3 3 4-4M8 21l4-4 4 4M3 4h18M4 4h16v12a1 1 0 01-1 1H5a1 1 0 01-1-1V4z" />
-              </svg>
-              {showProgress ? 'Hide Progress' : 'See Progress'}
-            </button>
+            />
+            {showProgress ? "Hide Progress" : "Show Progress"}
+          </button>
+
+
             <Link to={isAdmin ? "/admin/LeaveManage/leave_details/wfh_details" : "/User/LeaveManage/leave_details/wfh_details"}>
               <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                 Remote Details
               </button>
             </Link>
             <Link to={isAdmin ? "/admin/LeaveManage" : "/User/LeaveManage"}>
-              <button className="bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
+              <button className="bg-blue-400 hover:bg-blue-300 hover:text-slate-900 text-white text-sm font-inter px-4 py-2 rounded-full shadow-lg">
                 Back to Overview
               </button>
             </Link>
@@ -332,50 +338,51 @@ const LeaveDetails = () => {
             </div>
 
             {/* Compact grid */}
-            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2">
-              <div className="bg-gradient-to-r from-blue-50 to-blue-100 rounded-lg p-2 border border-blue-200">
-                <div className="text-center">
-                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Total Records</p>
-                  <p className="text-lg font-bold text-blue-600 leading-none">{summaryStats.total}</p>
+            <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 text-center">
+              <div className="bg-blue-50 p-2 rounded-lg border border-blue-200">
+                <div className="text-lg font-bold text-blue-700 leading-none">
+                  {summaryStats.total}
                 </div>
-              </div>
-              
-              <div className="bg-gradient-to-r from-green-50 to-green-100 rounded-lg p-2 border border-green-200">
-                <div className="text-center">
-                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Approved</p>
-                  <p className="text-lg font-bold text-green-600 leading-none">{summaryStats.approved}</p>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-r from-yellow-50 to-yellow-100 rounded-lg p-2 border border-yellow-200">
-                <div className="text-center">
-                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Pending</p>
-                  <p className="text-lg font-bold text-yellow-600 leading-none">{summaryStats.pending}</p>
-                </div>
-              </div>
-              
-              <div className="bg-gradient-to-r from-red-50 to-red-100 rounded-lg p-2 border border-red-200">
-                <div className="text-center">
-                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Rejected</p>
-                  <p className="text-lg font-bold text-red-600 leading-none">{summaryStats.rejected}</p>
-                </div>
+                <div className="text-[11px] font-medium text-blue-600">Total Records</div>
               </div>
 
-              <div className="bg-gradient-to-r from-indigo-50 to-indigo-100 rounded-lg p-2 border border-indigo-200">
-                <div className="text-center">
-                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Recommended</p>
-                  <p className="text-lg font-bold text-indigo-600 leading-none">{summaryStats.recommended}</p>
+              <div className="bg-blue-50 p-2 rounded-lg border border-green-200">
+                <div className="text-lg font-bold text-green-700 leading-none">
+                  {summaryStats.approved}
                 </div>
+                <div className="text-[11px] font-medium text-green-600">Approved</div>
               </div>
 
-              <div className="bg-gradient-to-r from-orange-50 to-orange-100 rounded-lg p-2 border border-orange-200">
-                <div className="text-center">
-                  <p className="text-[11px] font-medium text-gray-600 mb-0.5">Not Recommended</p>
-                  <p className="text-lg font-bold text-orange-600 leading-none">{summaryStats.notRecommended}</p>
+              <div className="bg-blue-50 p-2 rounded-lg border border-yellow-200">
+                <div className="text-lg font-bold text-yellow-700 leading-none">
+                  {summaryStats.pending}
                 </div>
+                <div className="text-[11px] font-medium text-yellow-600">Pending</div>
+              </div>
+
+              <div className="bg-blue-50 p-2 rounded-lg border border-red-200">
+                <div className="text-lg font-bold text-red-700 leading-none">
+                  {summaryStats.rejected}
+                </div>
+                <div className="text-[11px] font-medium text-red-600">Rejected</div>
+              </div>
+
+              <div className="bg-blue-50 p-2 rounded-lg border border-indigo-200">
+                <div className="text-lg font-bold text-indigo-700 leading-none">
+                  {summaryStats.recommended}
+                </div>
+                <div className="text-[11px] font-medium text-indigo-600">Recommended</div>
+              </div>
+
+              <div className="bg-blue-50 p-2 rounded-lg border border-orange-200">
+                <div className="text-lg font-bold text-orange-700 leading-none">
+                  {summaryStats.notRecommended}
+                </div>
+                <div className="text-[11px] font-medium text-orange-600">Not Recommended</div>
               </div>
             </div>
-          </div>
+
+            </div>
         )}
 
         {/* Main Content */}

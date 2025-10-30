@@ -166,11 +166,6 @@ const Remote_details = () => {
         </h1>
         <div className="flex justify-end my-4">
           <Link to="/User/Leave/LeaveHistory">
-            <button className="mr-3 px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black active:bg-white active:text-white">
-              Go Back
-            </button>
-          </Link>
-          <Link to="/User/Leave/LeaveHistory">
             <button className="px-4 py-2 text-base bg-blue-500 rounded-md text-white hover:bg-[#b7c6df80] hover:text-black active:bg-white active:text-white">
               Leave Details
             </button>

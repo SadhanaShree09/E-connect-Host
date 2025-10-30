@@ -7,15 +7,15 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
   return (
-    <div className="bg-gradient-to-br from-white-50 to-white-100 rounded-xl border border-white-200 shadow-sm overflow-hidden">
+    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-4 hover:bg-gray-100 transition-colors"
+        className="w-full flex items-center justify-between p-2 hover:bg-blue-100 transition-colors"
       >
         <div className="flex items-center gap-3">
           <FaChartLine className="text-blue-600" size={20} />
-          <span className="text-lg font-semibold text-gray-800">Daily Progress</span>
+          <span className="text-s font-semibold text-gray-800">Daily Progress</span>
         </div>
         {isVisible ? (
           <FaChevronUp className="text-gray-500" size={16} />
@@ -26,73 +26,74 @@ const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
 
 
       {isVisible && (
-        <div className="p-6 pt-0 border-t border-gray-200">
-          {/* Task Statistics Dashboard */}
-          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-4 mb-6">
-            <div className="bg-gradient-to-br from-white to-gray-50 p-4 rounded-xl shadow-sm border border-gray-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-gray-700 mb-1">{stats.total}</div>
-                <div className="text-sm font-medium text-gray-600">Total Tasks</div>
-              </div>
-            </div>
-            
-            <div className="bg-red-50 p-4 rounded-xl shadow-sm border border-red-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-red-600 mb-1">{stats.todo}</div>
-                <div className="text-sm font-medium text-red-600">To Do</div>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-blue-50 to-blue-100 p-4 rounded-xl shadow-sm border border-blue-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-blue-700 mb-1">{stats.inProgress}</div>
-                <div className="text-sm font-medium text-blue-600">In Progress</div>
-              </div>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-xl shadow-sm border border-green-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-700 mb-1">{stats.completed}</div>
-                <div className="text-sm font-medium text-green-600">Completed</div>
-              </div>
-            </div>
-            
-            <div className="bg-red-50 p-4 rounded-xl shadow-sm border border-red-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-red-600 mb-1">{stats.overdue}</div>
-                <div className="text-sm font-medium text-red-600">Overdue</div>
-              </div>
-            </div>
-            
-            <div className="bg-green-50 p-4 rounded-xl shadow-sm border border-green-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-green-700 mb-1">{stats.highPriority}</div>
-                <div className="text-sm font-medium text-green-600">High Priority</div>
-              </div>
-            </div>
-            
-            <div className="bg-gradient-to-br from-indigo-50 to-indigo-100 p-4 rounded-xl shadow-sm border border-indigo-200">
-              <div className="text-center">
-                <div className="text-3xl font-bold text-indigo-600 mb-1">{stats.completionRate}%</div>
-                <div className="text-sm font-medium text-indigo-600">Completion Rate</div>
-              </div>
-            </div>
-          </div>
+        <div className="p-4 pt-0 border-t border-gray-200 max-h-44 overflow-auto">
+  {/* Compact Task Statistics Dashboard */}
+  <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-7 gap-2 mb-4">
+    <div className="bg-blue-50 rounded-lg shadow-sm border border-gray-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-gray-700 mb-0.5">{stats.total}</div>
+        <div className="text-xs font-medium text-gray-600">Total Tasks</div>
+      </div>
+    </div>
 
-          {/* Progress Bar */}
-          <div>
-            <div className="flex justify-between items-center mb-2">
-              <span className="text-sm font-medium text-gray-700">Daily Progress</span>
-              <span className="text-sm text-gray-600">{stats.completed} of {stats.total} completed</span>
-            </div>
-            <div className="w-full bg-gray-200 rounded-full h-3 shadow-inner">
-              <div 
-                className="bg-gradient-to-r from-green-500 to-green-600 h-3 rounded-full transition-all duration-500 shadow-sm"
-                style={{ width: `${stats.completionRate}%` }}
-              ></div>
-            </div>
-          </div>
-        </div>
+    <div className="bg-blue-50 rounded-lg shadow-sm border border-red-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-red-600 mb-0.5">{stats.todo}</div>
+        <div className="text-xs font-medium text-red-600">To Do</div>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg shadow-sm border border-blue-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-blue-700 mb-0.5">{stats.inProgress}</div>
+        <div className="text-xs font-medium text-blue-600">In Progress</div>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg shadow-sm border border-green-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-green-700 mb-0.5">{stats.completed}</div>
+        <div className="text-xs font-medium text-green-600">Completed</div>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg shadow-sm border border-red-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-red-600 mb-0.5">{stats.overdue}</div>
+        <div className="text-xs font-medium text-red-600">Overdue</div>
+      </div>
+    </div>
+
+    <div className="bg-blue-50 rounded-lg shadow-sm border border-green-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-green-700 mb-0.5">{stats.highPriority}</div>
+        <div className="text-xs font-medium text-green-600">High Priority</div>
+      </div>
+    </div>
+
+    <div className="bg-blue-100 rounded-lg shadow-sm border border-indigo-200">
+      <div className="text-center">
+        <div className="text-xl font-bold text-indigo-600 mb-0.5">{stats.completionRate}%</div>
+        <div className="text-xs font-medium text-indigo-600">Completion Rate</div>
+      </div>
+    </div>
+  </div>
+
+  {/* Compact Progress Bar */}
+  <div>
+    <div className="flex justify-between items-center mb-0.5">
+      <span className="text-sm font-medium text-gray-700">Daily Progress</span>
+      <span className="text-xs text-gray-600">{stats.completed} of {stats.total} completed</span>
+    </div>
+    <div className="w-full bg-gray-200 rounded-full h-2 shadow-inner">
+      <div
+        className="bg-gradient-to-r from-blue-500 to-blue-600 h-2 rounded-full transition-all duration-500 shadow-sm"
+        style={{ width: `${stats.completionRate}%` }}
+      ></div>
+    </div>
+  </div>
+</div>
+
       )}
     </div>
   );
@@ -104,6 +105,8 @@ const TaskPage = () => {
   const location = useLocation();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
+  const [dueFilterInput, setDueFilterInput] = useState('');
+  const [filterDueDate, setFilterDueDate] = useState('');
   const [date, setDate] = useState("");
   const userId = LS.get("id");
   const [loading, setLoading] = useState(false);
@@ -112,6 +115,8 @@ const TaskPage = () => {
   const [duedate, setDuedate] = useState("");
   const [draggedTask, setDraggedTask] = useState(null);
   const [showDailyProgress, setShowDailyProgress] = useState(false);
+  const [highlightedTaskIds, setHighlightedTaskIds] = useState([]);
+  
 
   const statusColumns = [
     { id: "todo", title: "To Do", color: "bg-white-50", borderColor: "border-red-300" },
@@ -183,21 +188,21 @@ const TaskPage = () => {
       return {
         status: 'overdue',
         message: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''}`,
-        className: 'bg-red-100 text-red-800 border-red-200',
+        className: 'bg-red-50 text-red-800 border-red-200',
         icon: <FaExclamationTriangle className="text-red-600" />
       };
     } else if (diffDays === 0) {
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        className: 'bg-yellow-50 text-yellow-800 border-yellow-200',
         icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
         status: 'due-tomorrow',
         message: 'Due Tomorrow',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        className: 'bg-yellow-50 text-yellow-800 border-yellow-200',
         icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays <= 3) {
@@ -221,6 +226,31 @@ const TaskPage = () => {
       fetchTasks(userId, dateFromQuery);
     }
   }, [location, userId]);
+
+  // When a due-date filter is applied, mark matching tasks and scroll the first match into view
+  useEffect(() => {
+    if (!filterDueDate) {
+      setHighlightedTaskIds([]);
+      return;
+    }
+
+    const matched = tasks.filter(t => t.due_date === filterDueDate).map(t => t.id).filter(Boolean);
+    setHighlightedTaskIds(matched);
+
+    if (matched.length > 0) {
+      // slight delay to allow render
+      setTimeout(() => {
+        try {
+          const el = document.querySelector(`[data-task-id="${matched[0]}"]`);
+          if (el && typeof el.scrollIntoView === 'function') {
+            el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+          }
+        } catch (e) {
+          // ignore
+        }
+      }, 120);
+    }
+  }, [filterDueDate, tasks]);
 
   const convertDateFormat = (dateString) => {
     if (!dateString) return null;
@@ -263,24 +293,13 @@ const TaskPage = () => {
       if (data.message) {
         setTasks([]);
       } else {
-        const formattedTasks = (data || []).map((t) => ({
-          ...t,
-          id: t.taskid || t.id,
-          status: mapStatusToColumn(t.status),
-          // Convert DD-MM-YYYY to YYYY-MM-DD format
-          due_date: convertDateFormat(t.due_date || t.dueDate || t.due),
-          subtasks: (t.subtasks || []).map((s, idx) => ({
-            id: s.id || `${t.taskid}-${idx}`,
-            text: s.text || s.title || "",
-            completed: s.completed ?? s.done ?? false
-          })),
-          comments: t.comments || [],
-          files: t.files || [],
-          assignedBy: t.assigned_by || t.assignedBy || "TeamLead",
-          priority: t.priority || "medium",
-          verified: t.verified || false,
-          createdDate: t.created_date || t.date
-        }));
+        // Normalize tasks and sort newest-first by createdDate
+        const formattedTasks = (data || []).map((t) => formatTask(t));
+        formattedTasks.sort((a, b) => {
+          const da = a.createdDate ? new Date(a.createdDate) : new Date(0);
+          const db = b.createdDate ? new Date(b.createdDate) : new Date(0);
+          return db - da; // newest first
+        });
         setTasks(formattedTasks);
       }
     } catch (error) {
@@ -302,6 +321,63 @@ const TaskPage = () => {
     
     // Default to todo for new tasks
     return "todo";
+  };
+
+  // Helper to normalize/format a single task object consistently
+  const formatTask = (t) => ({
+    ...t,
+    id: t.taskid || t.id,
+    status: mapStatusToColumn(t.status),
+    due_date: convertDateFormat(t.due_date || t.dueDate || t.due),
+    subtasks: (t.subtasks || []).map((s, idx) => ({
+      id: s.id || `${t.taskid || t.id}-${idx}`,
+      text: s.text || s.title || "",
+      completed: s.completed ?? s.done ?? false
+    })),
+    comments: t.comments || [],
+    files: t.files || [],
+    assignedBy: t.assigned_by || t.assignedBy || "TeamLead",
+    priority: t.priority || "medium",
+    verified: t.verified || false,
+    createdDate: (
+      t.created_date || t.createdDate || t.date ||
+      ((t.taskid || t.id) && /^[a-fA-F0-9]{24}$/.test(String(t.taskid || t.id)))
+        ? new Date(parseInt(String(t.taskid || t.id).substring(0, 8), 16) * 1000).toISOString()
+        : null
+    )
+  });
+
+  const formatDisplayDate = (dateInput) => {
+    if (!dateInput) return "";
+    try {
+
+      if (/^\d{2}-\d{2}-\d{4}$/.test(String(dateInput))) {
+        return String(dateInput);
+      }
+
+      let d = String(dateInput);
+      if (/^\d{4}-\d{2}-\d{2}$/.test(d)) {
+        const [y, m, day] = d.split('-');
+        return `${day}-${m}-${y}`;
+      }
+
+      const parsed = new Date(d);
+      if (isNaN(parsed.getTime())) return String(dateInput);
+
+      const dd = String(parsed.getDate()).padStart(2, '0');
+      const mm = String(parsed.getMonth() + 1).padStart(2, '0');
+      const yy = parsed.getFullYear();
+      const hh = String(parsed.getHours()).padStart(2, '0');
+      const min = String(parsed.getMinutes()).padStart(2, '0');
+
+      if (hh === '00' && min === '00') {
+        return `${dd}-${mm}-${yy}`;
+      }
+
+      return `${dd}-${mm}-${yy} ${hh}:${min}`;
+    } catch (e) {
+      return String(dateInput);
+    }
   };
 
   const mapColumnToStatus = (column) => {
@@ -430,15 +506,16 @@ const TaskPage = () => {
     
     return (
         <div
+          data-task-id={task.id}
           draggable
           onDragStart={(e) => { e.stopPropagation(); handleDragStart(e, task); }}
           onDragEnd={() => setDraggedTask(null)}
           onClick={() => openTaskDetails(task)}
-          className={`bg-white rounded-lg p-4 shadow-md border cursor-pointer -translate-y-1 transition-all mb-3 ${
-              dueDateStatus?.status === 'overdue' ? 'border-red-300 shadow-red-100' :
-              dueDateStatus?.status === 'due-today' ? 'border-yellow-300 shadow-yellow-100' :
-              'border-gray-200'
-            }`}
+          className={`bg-blue rounded-lg p-4 shadow-md border cursor-pointer -translate-y-1 transition-all mb-3 ${
+              dueDateStatus?.status === 'overdue' ? 'border-blue-300' :
+              dueDateStatus?.status === 'due-today' ? 'border-blue-300' :
+              'border-blue-300'
+            } ${highlightedTaskIds.includes(task.id) ? 'ring-2 ring-blue-600 bg-blue-100' : ''}`}
         >
         {/* Due Date Alert Banner */}
         {dueDateStatus && (
@@ -482,9 +559,9 @@ const TaskPage = () => {
         {task.due_date && (
           <div className="flex items-center gap-2 mb-2">
             <p className={`text-xs flex items-center gap-1 ${
-              dueDateStatus?.status === 'overdue' ? 'text-red-600 font-semibold' :
-              dueDateStatus?.status === 'due-today' ? 'text-yellow-600 font-semibold' :
-              dueDateStatus?.status === 'due-tomorrow' ? 'text-yellow-600 font-semibold' :
+              dueDateStatus?.status === 'overdue' ? 'text-gray-600 font-semibold' :
+              dueDateStatus?.status === 'due-today' ? 'text-gray-600 font-semibold' :
+              dueDateStatus?.status === 'due-tomorrow' ? 'text-gray-600 font-semibold' :
               'text-gray-600'
             }`}>
               <FaClock className="text-xs" />
@@ -512,7 +589,7 @@ const TaskPage = () => {
 
         <div className="flex justify-between items-center text-xs text-gray-500">
           <span className="flex items-center gap-1">
-            📅 {task.createdDate || task.date}
+            {formatDisplayDate(task.createdDate || task.date)}
           </span>
           <div className="flex gap-2">
             {task.comments && task.comments.length > 0 && (
@@ -565,18 +642,28 @@ const TaskPage = () => {
 
       <div className="bg-white shadow-sm border-b border-gray-200 p-6">
         <div className="flex justify-between items-center mb-6">
-          <h2 className="text-3xl font-bold text-gray-800">
-            Tasks - {date || "Date not available"}
-          </h2>
-          <button
-            onClick={() => navigate("/User/Task/Todo")}
-            className="px-6 py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
-          >
-            ← Back to Calendar
-          </button>
+          <h2 className="text-3xl font-bold text-gray-800">Tasks - {date || "Date not available"}</h2>
+          <div className="flex items-center gap-3">
+            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2 py-1">
+           <label className="text-sm font-medium text-gray-600">Filter by Due Date:</label>
+            <input
+              type="date"
+              value={filterDueDate}
+              onChange={(e) => setFilterDueDate(e.target.value)}
+              className="border border-gray-300 rounded-md px-2 py-1 text-sm"
+            />
+            </div>
+
+            <button
+              onClick={() => navigate("/User/Task/Todo")}
+              className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+            >
+              ← Back to Calendar
+            </button>
+          </div>
         </div>
 
-        <div className="mb-6">
+        <div className="mb-0">
           <DailyProgress 
             stats={stats} 
             isVisible={showDailyProgress} 
@@ -587,36 +674,45 @@ const TaskPage = () => {
       </div>
 
       {/* Kanban Board */}
-      <div className="flex gap-6 p-6 h-[calc(100vh-200px)] overflow-x-auto">
-        {statusColumns.map((column) => (
-          <div
-            key={column.id}
-            className={`${column.color} ${column.borderColor} border-2 border-dashed rounded-xl p-4 min-w-[320px] flex-1 shadow-sm`}
-            onDragOver={handleDragOver}
-            onDrop={(e) => handleDrop(e, column.id)}
-          >
-            <div className="flex justify-between items-center mb-4">
-              <h3 className="text-lg font-semibold text-gray-800">{column.title}</h3>
-              <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-600 shadow-sm">
-                {tasks.filter(task => task.status === column.id).length}
-              </span>
-            </div>
+      <div className="flex gap-6 p-3 h-[calc(100vh-200px)] overflow-x-auto">
+        {statusColumns.map((column) => {
+          // compute column tasks and, if filterDueDate is set, put matching due_date tasks first
+          let colTasks = tasks.filter(task => task.status === column.id);
+          if (filterDueDate) {
+            colTasks = [...colTasks].sort((a, b) => {
+              const aMatch = a.due_date === filterDueDate ? 0 : 1;
+              const bMatch = b.due_date === filterDueDate ? 0 : 1;
+              if (aMatch !== bMatch) return aMatch - bMatch; // matched due_date first
+              return 0;
+            });
+          }
+
+          return (
+            <div
+              key={column.id}
+              className={`${column.color} ${column.borderColor} border-2 border-dashed rounded-xl p-4 min-w-[320px] flex-1 shadow-sm`}
+              onDragOver={handleDragOver}
+              onDrop={(e) => handleDrop(e, column.id)}
+            >
+              <div className="flex justify-between items-center mb-4">
+                <h3 className="text-lg font-semibold text-gray-800">{column.title}</h3>
+                <span className="bg-white px-3 py-1 rounded-full text-sm font-medium text-gray-600 shadow-sm">
+                  {colTasks.length}
+                </span>
+              </div>
             
-            <div className="space-y-3 overflow-y-auto max-h-[calc(95vh-300px)]">
-              {tasks
-                .filter(task => task.status === column.id)
-                .map((task) => (
-                  <TaskCard key={task.id} task={task} />
-                ))}
-              
-              {tasks.filter(task => task.status === column.id).length === 0 && (
-                <div className="text-center text-gray-500 py-8">
-                  <p className="text-lg">No tasks in {column.title.toLowerCase()}</p>
-                </div>
-              )}
+              <div className="space-y-3 overflow-y-auto max-h-[calc(95vh-300px)]">
+                {colTasks.length === 0 ? (
+                  <div className="text-center text-gray-500 py-8">
+                    <p className="text-lg">No tasks in {column.title.toLowerCase()}</p>
+                  </div>
+                ) : (
+                  colTasks.map((task) => <TaskCard key={task.id} task={task} />)
+                )}
+              </div>
             </div>
-          </div>
-        ))}
+          );
+        })}
       </div>
     </div>
   );

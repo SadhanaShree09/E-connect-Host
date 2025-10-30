@@ -111,21 +111,21 @@ const TaskProgress = () => {
       return {
         status: 'overdue',
         message: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''}`,
-        className: 'bg-red-100 text-red-800 border-red-200',
+        className: 'bg-red-50 text-red-800 border-red-200',
         icon: <FaExclamationTriangle className="text-red-600" />
       };
     } else if (diffDays === 0) {
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        className: 'bg-yellow-50 text-yellow-800 border-yellow-200',
         icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
         status: 'due-tomorrow',
         message: 'Due Tomorrow',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        className: 'bg-yellow-50 text-yellow-800 border-yellow-200',
         icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays <= 3) {
@@ -316,7 +316,6 @@ const TaskProgress = () => {
     return filtered;
   }, [employeeTasks, filters, searchTerm]);
 
-  // Navigation logic based on role
   const openTaskDetail = (task) => {
     if (task.verified) {
     }
@@ -403,9 +402,9 @@ const handleAssignTask = () => {
         {task.due_date && (
           <div className="flex items-center gap-2 mb-3">
             <p className={`text-xs flex items-center gap-1 ${
-              dueDateStatus?.status === 'overdue' ? 'text-red-600 font-semibold' :
-              dueDateStatus?.status === 'due-today' ? 'text-yellow-600 font-semibold' :
-              dueDateStatus?.status === 'due-tomorrow' ? 'text-yellow-600 font-semibold' :
+              dueDateStatus?.status === 'overdue' ? 'text-gray-600 font-semibold' :
+              dueDateStatus?.status === 'due-today' ? 'text-gray-600 font-semibold' :
+              dueDateStatus?.status === 'due-tomorrow' ? 'text-gray-600 font-semibold' :
               'text-gray-600'
             }`}>
               <FaClock className="text-xs" />
@@ -433,7 +432,7 @@ const handleAssignTask = () => {
         {/* Activity Summary */}
         <div className="flex justify-between items-center text-xs text-gray-500 border-t pt-2">
           <span className="flex items-center gap-1">
-            📅 Created: {new Date(task.createdDate).toLocaleDateString()}
+            Created: {new Date(task.createdDate).toLocaleDateString()}
           </span>
           <div className="flex gap-3">
             {task.comments && task.comments.length > 0 && (
@@ -512,7 +511,7 @@ const handleAssignTask = () => {
             </button>
             <button
               onClick={() => setShowProgress(!showProgress)}
-              className={`px-6 py-3 rounded-lg transition-all duration-300 font-medium flex items-center gap-2 ${
+              className={`px-4 py-2 rounded-lg transition-all duration-300 text-sm font-medium flex items-center gap-2 ${
                 showProgress 
                   ? 'bg-blue-700 text-white hover:bg-blue-600 shadow-lg' 
                   : 'bg-blue-600 text-white hover:bg-blue-700 shadow-lg hover:shadow-xl'
@@ -525,7 +524,7 @@ const handleAssignTask = () => {
         </div>
         {/* Progress Section - Conditionally Rendered */}
         {showProgress && (
-  <div className="relative mb-3 bg-gradient-to-br from-blue-50 to-indigo-100 rounded-xl p-2 border border-blue-200 shadow-md overflow-hidden">
+  <div className="relative mb-3 bg-gradient-to-br from-blue-50 to-blue-200 rounded-xl p-2 border border-blue-200 shadow-md overflow-hidden">
     {/* Header with inline progress */}
     <div className="flex items-center justify-between mb-3">
       <div className="flex items-center gap-2">
@@ -558,13 +557,13 @@ const handleAssignTask = () => {
           {(LS.get("position") === "HR") ? "TeamLeads" : "Employees"}
         </div>
       </div>
-      <div className="bg-gray-50 p-2 rounded-lg border border-gray-200">
+      <div className="bg-blue-50 p-2 rounded-lg border border-gray-200">
         <div className="text-lg font-bold text-gray-700 leading-none">
           {overallStats.total}
         </div>
         <div className="text-[11px] font-medium text-gray-600">Tasks</div>
       </div>
-      <div className="bg-red-50 p-2 rounded-lg border border-red-200">
+      <div className="bg-blue-50 p-2 rounded-lg border border-red-100">
         <div className="text-lg font-bold text-red-700 leading-none">
           {overallStats.todo}
         </div>
@@ -576,25 +575,25 @@ const handleAssignTask = () => {
         </div>
         <div className="text-[11px] font-medium text-blue-600">In Progress</div>
       </div>
-      <div className="bg-green-50 p-2 rounded-lg border border-green-200">
+      <div className="bg-blue-50 p-2 rounded-lg border border-green-200">
         <div className="text-lg font-bold text-green-700 leading-none">
           {overallStats.completed}
         </div>
         <div className="text-[11px] font-medium text-green-600">Completed</div>
       </div>
-      <div className="bg-red-50 p-2 rounded-lg border border-red-200">
+      <div className="bg-blue-50 p-2 rounded-lg border border-red-100">
         <div className="text-lg font-bold text-red-700 leading-none">
           {overallStats.overdue}
         </div>
         <div className="text-[11px] font-medium text-red-600">Overdue</div>
       </div>
-      <div className="bg-green-50 p-2 rounded-lg border border-green-200">
+      <div className="bg-blue-50 p-2 rounded-lg border border-green-200">
         <div className="text-lg font-bold text-green-700 leading-none">
           {overallStats.highPriority}
         </div>
         <div className="text-[11px] font-medium text-green-600">High Priority</div>
       </div>
-      <div className="bg-indigo-50 p-2 rounded-lg border border-indigo-200">
+      <div className="bg-blue-50 p-2 rounded-lg border border-indigo-200">
         <div className="text-lg font-bold text-indigo-700 leading-none">
           {overallStats.completionRate}%
         </div>

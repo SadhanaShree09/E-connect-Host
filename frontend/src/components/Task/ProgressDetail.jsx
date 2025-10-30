@@ -503,7 +503,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
     {/* Due Date */}
     <div className="flex items-center gap-2 text-sm">
       <FaClock className="text-blue-200 flex-shrink-0" />
-      <span className={`truncate ${dueDateStatus?.status === 'overdue' ? 'text-red-300 font-semibold' : ''}`}>
+      <span className={`truncate ${dueDateStatus?.status === 'overdue' ? 'text-white-300 font-semibold' : ''}`}>
         Due: {task.due_date ? formatDate(task.due_date) : "No due date"}
       </span>
     </div>
@@ -701,8 +701,8 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                 <textarea
                   value={newComment}
                   onChange={(e) => setNewComment(e.target.value)}
-                  placeholder={`Write a ${commentLabel || role} comment or feedback...`}
-                  className="flex-1 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-20"
+                  placeholder={`Write a comment...`}
+                  className="flex-1 p-3 border border-blue-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 resize-none h-14"
                   onKeyDown={(e) => {
                     if (e.key === 'Enter' && !e.shiftKey) {
                       e.preventDefault();

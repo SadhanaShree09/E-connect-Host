@@ -124,15 +124,15 @@
 
 /* Today’s date */
 .react-calendar__tile--now {
-  background: #c8d0db !important;
-  color: #fff !important;
+  background: #c8d0db;
+  color: #fff;
 }
 
 /* Hover and focus for today’s date */
 .react-calendar__tile--now:enabled:hover,
 .react-calendar__tile--now:enabled:focus {
-  background: #a5b4caff !important;
-  color: #fff !important;
+  background: #a5b4caff;
+  color: #fff;
 }
 
 
@@ -146,14 +146,14 @@
 }
 
 .react-calendar__tile--active {
-  background: #6393ceff !important;
-  color: #fff !important;
+  background: #6393ceff;
+  color: #fff;
 }
 
 .react-calendar__tile--active:enabled:hover,
 .react-calendar__tile--active:enabled:focus {
-  background: #6393ceff !important;
-  color: #fff !important;
+  background: #6393ceff;
+  color: #fff;
 }
 
 

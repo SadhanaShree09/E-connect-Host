@@ -41,21 +41,21 @@ const TaskDetailsPage = () => {
       return {
         status: 'overdue',
         message: `Overdue by ${Math.abs(diffDays)} day${Math.abs(diffDays) !== 1 ? 's' : ''}`,
-        className: 'bg-red-100 text-red-800 border-red-200',
+        className: 'bg-red-50 text-red-800 border-red-200',
         icon: <FaExclamationTriangle className="text-red-600" />
       };
     } else if (diffDays === 0) {
       return {
         status: 'due-today',
         message: 'Due Today',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        className: 'bg-yellow-50 text-yellow-800 border-yellow-200',
         icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays === 1) {
       return {
         status: 'due-tomorrow',
         message: 'Due Tomorrow',
-        className: 'bg-yellow-100 text-yellow-800 border-yellow-200',
+        className: 'bg-yellow-50 text-yellow-800 border-yellow-200',
         icon: <FaClock className="text-yellow-600" />
       };
     } else if (diffDays <= 3) {
@@ -422,18 +422,35 @@ const mapStatusToColumn = (status) => {
       />
 
       {/* Header */}
-      <div className="bg-white border-b border-gray-200 p-2 sticky top-0 z-10 min-h-[70px]">
-        {/* Compact Back to Tasks and Task Title */}
-  <div className="flex items-center justify-between mb-4 gap-6">
-    <h1 className="text-xl font-bold text-gray-800 break-words whitespace-normal min-w-0">{task.task}</h1>
+     {/* Header */}
+<div className="bg-white border-b border-gray-200 p-2 sticky top-0 z-10 min-h-[70px]">
+  <div className="flex items-start justify-between gap-4 w-full">
+    {/* Scrollable, fixed-height title */}
+    <div
+      className="flex-1 min-w-0 h-[60px] overflow-y-scroll pr-2 border-b border-gray-200"
+      style={{
+        scrollbarWidth: "auto", // always visible in Firefox
+        msOverflowStyle: "auto", // always visible in Edge
+        wordBreak: "break-word",
+      }}
+    >
+      <h1 className="text-xl font-bold text-gray-800 leading-snug whitespace-pre-wrap break-words">
+        {task.task}
+      </h1>
+    </div>
+
+    {/* Back button */}
     <button
       onClick={() => navigate(-1)}
-      className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 transition-colors flex items-center gap-2"
+      className="px-4 py-2 bg-blue-700 text-white rounded-lg hover:bg-blue-600 
+                 transition-colors flex items-center gap-2 flex-shrink-0"
     >
       <FaArrowLeft />
       Back to Tasks
     </button>
-  </div>
+
+</div>
+
   {task.verified && (
     <div className="flex items-center gap-2 mb-2">
       <span className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-green-600 text-white font-semibold text-sm">
@@ -466,8 +483,8 @@ const mapStatusToColumn = (status) => {
           <div className="flex items-center gap-1">
             <FaClock className="text-gray-400" />
             <span className={`text-gray-600 ${
-              dueDateStatus?.status === 'overdue' ? 'text-red-600 font-semibold' :
-              dueDateStatus?.status === 'due-today' ? 'text-yellow-600 font-semibold' :
+              dueDateStatus?.status === 'overdue' ? 'text-white-600 font-semibold' :
+              dueDateStatus?.status === 'due-today' ? 'text-white-600 font-semibold' :
               ''
             }`}>
               Due: {task.due_date || "No due date"}
@@ -533,30 +550,35 @@ const mapStatusToColumn = (status) => {
         )}
       </div>
 
-      <div className="space-y-3">
-        <input
-          type="text"
-          value={newSubtask}
-          onChange={(e) => setNewSubtask(e.target.value)}
-          placeholder="Add a new subtask..."
-          className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500"
-          onKeyDown={(e) => {
-            if (e.key === "Enter") {
-              e.preventDefault();
-              addSubtask();
-            }
-          }}
-          disabled={task.verified}
-        />
-        <button
-          onClick={addSubtask}
-          disabled={!newSubtask.trim() || task.verified}
-          className={`w-full flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors ${task.verified ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-        >
-          <FaPlus />
-          Add Subtask
-        </button>
-      </div>
+    <div className="flex items-center gap-2 mt-2">
+      <input
+        type="text"
+        value={newSubtask}
+        onChange={(e) => setNewSubtask(e.target.value)}
+        placeholder="Add a new subtask..."
+        className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300"
+        onKeyDown={(e) => {
+          if (e.key === "Enter") {
+            e.preventDefault();
+            addSubtask();
+          }
+        }}
+        disabled={task.verified}
+      />
+      <button
+        onClick={addSubtask}
+        disabled={!newSubtask.trim() || task.verified}
+        className={`flex items-center justify-center gap-2 px-4 py-3 rounded-lg transition-colors whitespace-nowrap ${
+          task.verified
+            ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+            : 'bg-blue-600 text-white hover:bg-blue-700'
+        }`}
+      >
+        <FaPlus />
+        Add
+      </button>
+    </div>
+
     </div>
 
     {/* Files Section */}
@@ -608,11 +630,10 @@ const mapStatusToColumn = (status) => {
         ref={fileInputRef}
         onChange={handleFileUpload}
         disabled={task.verified}
-        className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 ${task.verified ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+        className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${task.verified ? 'bg-gray-50 cursor-not-allowed' : ''}`}
       />
     </div>
-
-    {/* Comments Section */}
+    
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">💬 Discussion</h2>
 
@@ -643,26 +664,32 @@ const mapStatusToColumn = (status) => {
         )}
       </div>
 
-      <textarea
-        value={newComment}
-        onChange={(e) => setNewComment(e.target.value)}
-        placeholder="Write a comment..."
-        className="w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-green-500 resize-none h-24"
-        disabled={task.verified}
-        onKeyDown={(e) => {
-          if (e.key === "Enter" && !e.shiftKey) {
-            e.preventDefault();
-            addComment();
-          }
-        }}
-      />
-      <button
-        onClick={addComment}
-        disabled={!newComment.trim() || task.verified}
-        className={`w-full mt-2 px-4 py-3 rounded-lg transition-colors ${task.verified ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
-      >
-        Send
-      </button>
+  <div className="flex items-center gap-2 mt-2">
+    <textarea
+      value={newComment}
+      onChange={(e) => setNewComment(e.target.value)}
+      placeholder="Write a comment..."
+      className="flex-1 p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 resize-none h-[50px]"
+      disabled={task.verified}
+      onKeyDown={(e) => {
+        if (e.key === "Enter" && !e.shiftKey) {
+          e.preventDefault();
+          addComment();
+        }
+      }}
+    />
+    <button
+      onClick={addComment}
+      disabled={!newComment.trim() || task.verified}
+      className={`px-5 py-3 rounded-lg transition-colors whitespace-nowrap ${
+        task.verified
+          ? 'bg-gray-300 text-gray-600 cursor-not-allowed'
+          : 'bg-blue-600 text-white hover:bg-blue-700'
+      }`}
+    >
+      Send
+    </button>
+  </div>
     </div>
   </div>
 </div>

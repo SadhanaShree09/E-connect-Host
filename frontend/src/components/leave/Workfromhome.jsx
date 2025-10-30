@@ -15,7 +15,6 @@ const WorkFromHome = () => {
   const [isApplying, setIsApplying] = useState(false);
   const [ipAddresses, setIpAddresses] = useState(null);
   const [selectedIp, setSelectedIp] = useState("");
-  const [ipSelectionMode, setIpSelectionMode] = useState("select");
   const [isLoading, setIsLoading] = useState(true);
   const [key, setKey] = useState(0);
 
@@ -51,15 +50,8 @@ const WorkFromHome = () => {
     }
   };
 
-  const handleIpSelectChange = (e) => {
-    const value = e.target.value;
-    if (value === "manual") {
-      setIpSelectionMode("manual");
-      setip("");
-    } else {
-      setIpSelectionMode("select");
-      setip(value);
-    }
+  const handleIpChange = (e) => {
+    setSelectedIp(e.target.value);
   };
 
   const handleCancel = () => {
@@ -68,7 +60,6 @@ const WorkFromHome = () => {
     setReason("");
     setip("");
     setSelectedIp("");
-    setIpSelectionMode("select");
     setKey(prev => prev + 1);
   };
 
@@ -121,29 +112,12 @@ const WorkFromHome = () => {
           let userMessage = message || "Please check your input and try again.";
           
           if (details) {
-            // ✅ IP-specific error handling with exact backend messages
-            if (details.toLowerCase().includes("loopback")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("multicast")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("reserved")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("unspecified")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("ipv4") || details.toLowerCase().includes("ipv6")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("ip address format")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("ip") && details.toLowerCase().includes("empty")) {
-              userMessage = "IP address cannot be empty";
-            } else if (details.toLowerCase().includes("ip") && details.toLowerCase().includes("required")) {
-              userMessage = "IP address is required";
-            } else if (details.toLowerCase().includes("ip") && details.toLowerCase().includes("range")) {
-              userMessage = details;
-            } else if (details.toLowerCase().includes("employee name")) {
+            if (details.toLowerCase().includes("employee name")) {
               userMessage = "There was an issue with your profile. Please contact HR.";
             } else if (details.toLowerCase().includes("date")) {
               userMessage = "Invalid date range. Please check your dates.";
+            } else if (details.toLowerCase().includes("ip")) {
+              userMessage = "Invalid IP address format. Please check and try again.";
             } else {
               userMessage = `${message}: ${details}`;
             }
@@ -167,15 +141,9 @@ const WorkFromHome = () => {
         console.error("API Error:", err);
         
         // ✅ Handle network/server errors
-        let errorMsg = "Failed to submit request. Please check your connection and try again.";
-        
-        if (err.response?.data?.details) {
-          errorMsg = err.response.data.details;
-        } else if (err.response?.data?.message) {
-          errorMsg = err.response.data.message;
-        } else if (err.message) {
-          errorMsg = err.message;
-        }
+        const errorMsg = err.response?.data?.message 
+          || err.message 
+          || "Failed to submit request. Please check your connection and try again.";
         
         toast.error(errorMsg, {
           position: "top-right",
@@ -289,8 +257,6 @@ const WorkFromHome = () => {
                   }}
                 />
               </div>
-              
-              {/* ✅ ONLY IP FIELD SECTION CHANGED */}
               <div className="mt-4">
                 <label
                   htmlFor="ipSelect"
@@ -298,52 +264,15 @@ const WorkFromHome = () => {
                 >
                   IP Address
                 </label>
-                
-                {isLoading ? (
-                  <div className="p-2 text-sm text-gray-500">Loading IP addresses...</div>
-                ) : (
-                  <>
-                    <select
-                      id="ipSelect"
-                      onChange={handleIpSelectChange}
-                      className="p-2 text-sm border border-gray-300 rounded-md block w-full mb-2"
-                      value={ipSelectionMode === "manual" ? "manual" : ip}
-                    >
-                      <option value="">Select IP Address</option>
-                      {ipAddresses?.public && (
-                        <option value={ipAddresses.public}>
-                          Public IP: {ipAddresses.public}
-                        </option>
-                      )}
-                      {ipAddresses?.local && (
-                        <option value={ipAddresses.local}>
-                          Local IP: {ipAddresses.local}
-                        </option>
-                      )}
-                      <option value="manual">Enter Manually</option>
-                    </select>
-
-                    {ipSelectionMode === "manual" && (
-                      <input
-                        type="text"
-                        id="ipManual"
-                        value={ip}
-                        onChange={(e) => setip(e.target.value)}
-                        className="mt-2 border border-gray-300 p-2 w-full font-poppins rounded-md text-sm"
-                        placeholder="Enter IP address (e.g., 192.168.1.1)"
-                      />
-                    )}
-
-                    <p className="text-xs text-gray-500 mt-1">
-                      {ipSelectionMode === "manual" 
-                        ? "Enter a valid IPv4 or IPv6 address" 
-                        : "Select an IP address or choose 'Enter Manually'"}
-                    </p>
-                  </>
-                )}
+                <textarea
+                  id="ip"
+                  value={ip}
+                  onChange={(e) => setip(e.target.value)}
+                  rows={1}
+                  className="mt-2 border border-gray-300 p-2 w-full font-poppins rounded-md text-sm"
+                  placeholder="Enter IP address"
+                />
               </div>
-              {/* ✅ END OF IP FIELD CHANGES */}
-              
               <div className="mt-4">
                 <label
                   htmlFor="reason"

@@ -618,21 +618,87 @@ const handleoneditSubmit = async () => {
                    <option value="High">High</option>
                  </select>
                </div>
-              <div>
-                <label className="block mb-1 font-semibold">Subtasks</label>
-                {(item.subtasks && Array.isArray(item.subtasks) && item.subtasks.length > 0) ? item.subtasks.map((subtask, sidx) => {
-                  const text = subtask.text ?? subtask.title ?? "";
-                  const completed = subtask.completed ?? subtask.done ?? false;
-                  return (
-                    <div key={subtask.id || `subtask-${sidx}`} className="flex items-center mb-2 bg-gray-50 p-2 rounded">
-                      <input type="checkbox" checked={completed} onChange={e => { const updated = [...editModel]; updated[index].subtasks[sidx].completed = e.target.checked; SetEditmodel(updated); }} className="mr-2" disabled={isVerifiedEdit} />
-                      <input type="text" value={text} onChange={e => { const updated = [...editModel]; updated[index].subtasks[sidx].text = e.target.value; SetEditmodel(updated); }} className="flex-1 border border-gray-300 rounded px-2 py-1" placeholder="Enter subtask description..." disabled={isVerifiedEdit} />
-                      <button type="button" onClick={() => { const updated = [...editModel]; updated[index].subtasks = updated[index].subtasks.filter((_, i) => i !== sidx); SetEditmodel(updated); }} className={`ml-2 px-2 py-1 rounded ${isVerifiedEdit ? 'text-gray-400 cursor-not-allowed' : 'text-red-500 hover:text-red-700 hover:bg-red-100'}`} disabled={isVerifiedEdit}>✕</button>
-                    </div>
-                  );
-                }) : <div className="text-gray-500 italic mb-2">No subtasks found</div>}
-                <button type="button" onClick={() => { const updated = [...editModel]; if (!updated[index].subtasks) updated[index].subtasks = []; updated[index].subtasks.push({ id: `subtask_${Date.now()}_${Math.random()}`, text: "", title: "", completed: false, done: false }); SetEditmodel(updated); }} className={`w-full mt-2 py-2 px-4 rounded transition-colors ${isVerifiedEdit ? 'bg-gray-200 text-gray-500 cursor-not-allowed' : 'bg-blue-100 text-blue-700 hover:bg-blue-200'}`} disabled={isVerifiedEdit}>+ Add Subtask</button>
-              </div>
+             <div>
+      <label className="block mb-1 font-semibold">Subtasks</label>
+      {(item.subtasks && Array.isArray(item.subtasks) && item.subtasks.length > 0) ? (
+        item.subtasks.map((subtask, sidx) => {
+          const text = subtask.text ?? subtask.title ?? "";
+          const completed = subtask.completed ?? subtask.done ?? false;
+
+          return (
+            <div
+              key={subtask.id || `subtask-${sidx}`}
+              className="flex items-center mb-2 bg-gray-50 p-2 rounded"
+            >
+              {completed ? (
+                <span className="text-green-600 mr-2 text-lg">✓</span>
+              ) : (
+                <span className="w-2 h-2 bg-gray-400 rounded-full mr-2"></span>
+              )}
+
+              <input
+                type="text"
+                value={text}
+                onChange={e => {
+                  const updated = [...editModel];
+                  updated[index].subtasks[sidx].text = e.target.value;
+                  SetEditmodel(updated);
+                }}
+                className={`flex-1 border border-gray-300 rounded px-2 py-1 ${
+                  completed ? "line-through text-gray-500 bg-gray-100" : ""
+                }`}
+                placeholder="Enter subtask description..."
+                disabled={isVerifiedEdit}
+              />
+
+              <button
+                type="button"
+                onClick={() => {
+                  const updated = [...editModel];
+                  updated[index].subtasks = updated[index].subtasks.filter((_, i) => i !== sidx);
+                  SetEditmodel(updated);
+                }}
+                className={`ml-2 px-2 py-1 rounded ${
+                  isVerifiedEdit
+                    ? "text-gray-400 cursor-not-allowed"
+                    : "text-red-500 hover:text-red-700 hover:bg-red-100"
+                }`}
+                disabled={isVerifiedEdit}
+              >
+                ✕
+              </button>
+            </div>
+          );
+        })
+      ) : (
+        <div className="text-gray-500 italic mb-2">No subtasks found</div>
+      )}
+
+        <button
+          type="button"
+          onClick={() => {
+            const updated = [...editModel];
+            if (!updated[index].subtasks) updated[index].subtasks = [];
+            updated[index].subtasks.push({
+              id: `subtask_${Date.now()}_${Math.random()}`,
+              text: "",
+              title: "",
+              completed: false,
+              done: false
+            });
+            SetEditmodel(updated);
+          }}
+          className={`w-full mt-2 py-2 px-4 rounded transition-colors ${
+            isVerifiedEdit
+              ? "bg-gray-200 text-gray-500 cursor-not-allowed"
+              : "bg-blue-100 text-blue-700 hover:bg-blue-200"
+          }`}
+          disabled={isVerifiedEdit}
+        >
+          + Add Subtask
+        </button>
+      </div>
+
             </div>
             );
           })}

@@ -2195,7 +2195,8 @@ def edit_the_task(
             try:
                 # Get updated task data
                 updated_task = Tasks.find_one({"_id": ObjectId(taskid)})
-                task_title = updated_task.get("task", "Task") if updated_task else "Task"
+                full_task_title = updated_task.get("task", "Task") if updated_task else "Task"
+                task_title = (full_task_title[:30] + "...") if len(full_task_title) > 30 else full_task_title
                 
                 # Prepare changes for notification
                 changes = {}
@@ -2385,7 +2386,8 @@ def edit_the_task(
                 if "files" in update_fields and len(update_fields["files"]) > len(current_task.get("files", [])):
                     # New file uploaded
                     new_file = update_fields["files"][-1]  # Last file is the new one
-                    filename = new_file.get("name", "file")
+                    full_filename = new_file.get("name", "file")
+                    filename = (full_filename[:40] + "...") if len(full_filename) > 40 else full_filename
                     uploaded_by = new_file.get("uploadedBy", "")
                     
                     # Extract uploader name from uploadedBy field (format: "Name (Position)")
@@ -2563,7 +2565,8 @@ def edit_the_task(
                 if "subtasks" in update_fields and len(update_fields["subtasks"]) > len(current_task.get("subtasks", [])):
                     # New subtask added
                     new_subtask = update_fields["subtasks"][-1]  # Last subtask is the new one
-                    subtask_text = new_subtask.get("text", "")
+                    full_subtask_text = new_subtask.get("text", "")
+                    subtask_text = (full_subtask_text[:50] + "...") if len(full_subtask_text) > 50 else full_subtask_text
                     
                     # Get user who made the request (the one editing the task)
                     user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None

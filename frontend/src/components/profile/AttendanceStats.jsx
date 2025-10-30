@@ -353,7 +353,7 @@ const AttendanceStats = ({ onClose = () => {} }) => {
         metric: "Absent",
         count: absentDays,
         percentage: absentPercentage,
-        bgColor: "bg-yellow-500"
+        bgColor: "bg-yellow-700"
       }
     ];
   };

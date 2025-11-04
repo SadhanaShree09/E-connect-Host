@@ -50,7 +50,10 @@ client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,
     connectTimeoutMS=30000,
-    socketTimeoutMS=30000
+    socketTimeoutMS=60000,  # Increased to 60 seconds
+    maxPoolSize=50,  # Increase connection pool
+    retryWrites=True,  # Enable automatic retry of write operations
+    retryReads=True  # Enable automatic retry of read operations
 )
 
 

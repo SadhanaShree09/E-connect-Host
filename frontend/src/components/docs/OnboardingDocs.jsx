@@ -1,4 +1,3 @@
-// src/components/EmployeeDashboard.jsx
 import { useState, useEffect, useMemo, useCallback } from "react";
 import {
   X,
@@ -36,10 +35,7 @@ export default function EmployeeDashboard() {
   const { docName } = location.state || {}; 
   const [statusFilter, setStatusFilter] = useState("all");
 
-  
-
-
-  const pageSize = 4;
+  const pageSize = 7;
 
   /** Fetch assigned documents */
   const fetchAssignedDocs = useCallback(async () => {
@@ -71,7 +67,8 @@ export default function EmployeeDashboard() {
       setAssignedDocs(sorted);
     } catch (err) {
       console.error(err);
-      toast.error("❌ Failed to fetch documents");
+      const errorMessage = err.response?.data?.detail || err.message || "Failed to fetch documents";
+      toast.error(`❌ ${errorMessage}`);
       setAssignedDocs([]);
     } finally {
       setLoading(false);
@@ -136,18 +133,18 @@ const filteredDocs = useMemo(() => {
   const StatusBadge = ({ status, fileUrl }) => {
     if (status === "verified")
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-green-100 text-green-700">
+        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-white text-green-700">
           <CheckCircle size={14} />  Verified
         </span>
       );
     if (fileUrl)
       return (
-        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-blue-100 text-blue-700">
+        <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-white text-blue-800">
           <Upload size={14} /> Uploaded
         </span>
       );
     return (
-      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-yellow-100 text-yellow-700">
+      <span className="inline-flex items-center gap-1 px-2 py-1 text-xs rounded-md bg-white text-yellow-700">
         <Clock size={14} />  Pending
       </span>
     );
@@ -155,6 +152,29 @@ const filteredDocs = useMemo(() => {
 
   /** Action buttons component */
   const ActionButtons = ({ doc }) => {
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const handleDelete = async () => {
+    setDeleting(true);
+    try {
+      await axios.delete(`${ipadr}/documents/delete/${doc.fileId}`);
+      setAssignedDocs((prev) =>
+        prev.map((d) =>
+          d.docName === doc.docName
+            ? { ...d, fileUrl: null, fileId: null, status: "pending" }
+            : d
+        )
+      );
+      toast.success("File deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete file");
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+    }
+  };
+
   if (doc.fileUrl) {
     return (
       <div className="flex items-center gap-3 text-sm">
@@ -166,56 +186,36 @@ const filteredDocs = useMemo(() => {
         >
           <Eye size={16} /> View
         </a>
-        
         <button
-  onClick={() => {
-    toast(
-      ({ closeToast }) => (
-        <div className="flex flex-col gap-2">
-          <span>
-            Are you sure you want to delete <strong>{doc.docName}</strong>?
-          </span>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={async () => {
-                closeToast(); // close confirmation toast
-                try {
-                  await axios.delete(`${ipadr}/documents/delete/${doc.fileId}`);
-                  setAssignedDocs((prev) =>
-                    prev.map((d) =>
-                      d.docName === doc.docName
-                        ? { ...d, fileUrl: null, fileId: null, status: "pending" }
-                        : d
-                    )
-                  );
-                  toast.success("File deleted successfully!");
-                } catch (err) {
-                  console.error(err);
-                  toast.error("Failed to delete file");
-                }
-              }}
-              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-            >
-              Yes
-            </button>
-            <button
-              onClick={closeToast}
-              className="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-xs"
-            >
-              No
-            </button>
+          onClick={() => setShowDeleteModal(true)}
+          className="flex items-center gap-1 text-red-600 hover:underline"
+        >
+          <Trash2 size={16} /> Delete
+        </button>
+        {showDeleteModal && (
+          <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+            <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-xs relative">
+              <div className="text-lg font-semibold mb-2">Delete Document</div>
+              <div className="mb-4">Are you sure you want to delete <strong>{doc.docName}</strong>?</div>
+              <div className="flex justify-end gap-2">
+                <button
+                  onClick={handleDelete}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm disabled:opacity-50"
+                >
+                  {deleting ? "Deleting..." : "Yes, Delete"}
+                </button>
+                <button
+                  onClick={() => setShowDeleteModal(false)}
+                  disabled={deleting}
+                  className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
-      ),
-      { autoClose: false, closeOnClick: false }
-    );
-  }}
-  className="flex items-center gap-1 text-red-600 hover:underline"
->
-  <Trash2 size={16} /> Delete
-</button>
-
-
+        )}
       </div>
     );
   }
@@ -234,45 +234,45 @@ const filteredDocs = useMemo(() => {
 };
 
   return (
-  <div className="mx-10 my-6 p-8 bg-white min-h-[75vh] w-full shadow-md rounded-xl relative">
+  <div className="mx-auto my-6 p-6 md:p-8 bg-white h-[85vh] w-[95%] shadow-lg rounded-xl flex flex-col">
     <ToastContainer position="top-right" autoClose={4000} />
 
     {/* Header */}
-    <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center mb-6 gap-4">
-      <h1 className="text-5xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">
+    <div className="flex flex-col md:flex-row justify-between items-start md:items-center mb-5 gap-4 flex-shrink-0">
+      <h1 className="text-3xl md:text-4xl font-semibold font-inter pb-2 text-transparent bg-gradient-to-r from-zinc-600 to-zinc-950 bg-clip-text border-b-2">
         My Documentation
       </h1>
       <button
         onClick={fetchAssignedDocs}
         disabled={loading || !userid}
-        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50"
+        className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 transition-colors"
       >
-        <RefreshCcw size={18} />
+        <RefreshCcw size={18} className={loading ? "animate-spin" : ""} />
         {loading ? "Refreshing..." : "Refresh"}
       </button>
     </div>
 
     {/* Status Summary */}
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-      <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
-        <FileClock className="text-yellow-500 mb-2" size={28} />
-        <p className="text-yellow-600 font-bold text-xl">{statusCounts.pending}</p>
-        <p className="text-gray-600">Pending</p>
+    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-4 flex-shrink-0">
+      <div className="bg-white p-2 rounded-lg shadow-sm border border-yellow-100 flex flex-col items-center justify-center hover:shadow-md transition-shadow min-w-[120px]">
+        <FileClock className="text-yellow-500 mb-1" size={20} />
+        <p className="text-yellow-600 font-bold text-base">{statusCounts.pending}</p>
+        <p className="text-gray-600 text-xs font-medium">Pending</p>
       </div>
-      <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
-        <FileUp className="text-blue-600 mb-2" size={28} />
-        <p className="text-blue-600 font-bold text-xl">{statusCounts.uploaded}</p>
-        <p className="text-gray-600">Uploaded</p>
+      <div className="bg-white p-2 rounded-lg shadow-sm border border-blue-200 flex flex-col items-center justify-center hover:shadow-md transition-shadow min-w-[120px]">
+        <FileUp className="text-blue-600 mb-1" size={20} />
+        <p className="text-blue-600 font-bold text-base">{statusCounts.uploaded}</p>
+        <p className="text-gray-600 text-xs font-medium">Uploaded</p>
       </div>
-      <div className="bg-white p-5 rounded-xl shadow flex flex-col items-center">
-        <FileCheck className="text-green-600 mb-2" size={28} />
-        <p className="text-green-600 font-bold text-xl">{statusCounts.verified}</p>
-        <p className="text-gray-600">Verified</p>
+      <div className="bg-white p-2 rounded-lg shadow-sm border border-green-100 flex flex-col items-center justify-center hover:shadow-md transition-shadow min-w-[120px]">
+        <FileCheck className="text-green-600 mb-1" size={20} />
+        <p className="text-green-600 font-bold text-base">{statusCounts.verified}</p>
+        <p className="text-gray-600 text-xs font-medium">Verified</p>
       </div>
     </div>
 
     {/* Search + Filter */}
-    <div className="flex flex-col sm:flex-row gap-3 mb-4">
+    <div className="flex flex-col sm:flex-row gap-3 mb-4 flex-shrink-0">
       <input
         type="text"
         placeholder="Search documents..."
@@ -281,7 +281,7 @@ const filteredDocs = useMemo(() => {
           setSearchTerm(e.target.value);
           setCurrentPage(1);
         }}
-        className="flex-1 px-3 py-2 border rounded-lg focus:ring focus:ring-blue-200 shadow-sm"
+        className="flex-1 px-4 py-2 border border-gray-200 rounded-lg focus:ring-2 focus:ring-blue-200 shadow-sm outline-none transition-all"
       />
 
       <select
@@ -290,87 +290,118 @@ const filteredDocs = useMemo(() => {
           setStatusFilter(e.target.value);
           setCurrentPage(1);
         }}
-        className="px-3 py-2 border rounded-lg bg-white shadow-sm"
+        className="px-4 py-2 border border-gray-200 rounded-lg bg-white shadow-sm focus:ring-2 focus:ring-blue-400 focus:border-blue-400 outline-none transition-all cursor-pointer"
       >
-        <option value="all">All</option>
+        <option value="all">All Status</option>
         <option value="pending">Pending</option>
         <option value="uploaded">Uploaded</option>
         <option value="verified">Verified</option>
       </select>
     </div>
 
-    {/* Documents Table (no internal scroll) */}
-    <table className="w-full border-collapse table-fixed">
-      <thead className="bg-gray-100 text-sm">
-        <tr className="text-left text-gray-600">
-          <th className="p-4">Document</th>
-          <th className="p-4">Status</th>
-          <th className="p-4">Actions</th>
-          <th className="p-4">Assigned At</th>
-        </tr>
-      </thead>
-      <tbody>
-        {loading ? (
+    {/* Documents Table - Exact Clockdashboard Theme */}
+    <div>
+      <table className="table-auto w-full overflow-y-auto">
+        <thead className="text-xs font-semibold uppercase text-black bg-[#6d9eeb7a]">
           <tr>
-            <td colSpan="4" className="p-6 text-center text-gray-400">
-              <div className="flex justify-center items-center gap-2">
-                <span className="animate-spin border-2 border-gray-300 border-t-blue-600 rounded-full w-5 h-5"></span>
-                Loading documents...
-              </div>
-            </td>
+            <th className="p-2 text-center w-[28%]">Document</th>
+            <th className="p-2 text-center w-[18%]">Status</th>
+            <th className="p-2 text-center w-[22%]">Actions</th>
+            <th className="p-2 text-center w-[32%]">Assigned At</th>
           </tr>
-        ) : paginatedDocs.length === 0 ? (
-          <tr>
-            <td colSpan="4" className="p-6 text-center text-gray-400">
-              No documents found.
-            </td>
-          </tr>
-        ) : (
-          paginatedDocs.map((doc, index) => (
-            <tr
-              key={`${doc.fileId || index}-${doc.docName}`}
-              className="border-t hover:bg-gray-50 transition"
-            >
-              <td className="p-4 font-medium text-gray-800">{doc.docName}</td>
-              <td className="p-4">
-                <StatusBadge status={doc.status} fileUrl={doc.fileUrl} />
-              </td>
-              <td className="p-4">
-                <ActionButtons doc={doc} />
-              </td>
-              <td className="p-4 text-gray-500">
-                {doc.assignedAt
-                  ? new Date(doc.assignedAt).toLocaleString()
-                  : "—"}
+        </thead>
+        <tbody className="text-sm divide-y divide-gray-100">
+          {loading ? (
+            <tr>
+              <td colSpan="4" className="p-8 text-center text-gray-400">
+                <div className="flex justify-center items-center gap-2">
+                  <span className="animate-spin border-2 border-gray-300 border-t-blue-600 rounded-full w-5 h-5"></span>
+                  Loading documents...
+                </div>
               </td>
             </tr>
-          ))
-        )}
-      </tbody>
-    </table>
+          ) : paginatedDocs.length === 0 ? (
+            <tr>
+              <td colSpan="4" className="p-8 text-center text-gray-400">
+                No documents found.
+              </td>
+            </tr>
+          ) : (
+            paginatedDocs.map((doc, index) => (
+              <tr key={`${doc.fileId || index}-${doc.docName}`} className={`hover:bg-blue-50 transition-colors${index === filteredDocs.length - 1 ? ' relative' : ''}`}> 
+                <td className="p-2 text-center align-middle font-medium text-gray-800 truncate w-[28%]">{doc.docName}</td>
+                <td className="p-2 text-center align-middle w-[18%]">
+                  <div className={`flex items-center justify-center h-full${index === filteredDocs.length - 1 ? ' mb-8' : ''}`}>
+                    <span className="relative group flex items-center justify-center">
+                      {doc.status === 'verified' ? (
+                        <CheckCircle className="text-green-600" size={20} />
+                      ) : (
+                        <Clock className="text-yellow-700" size={20} />
+                      )}
+                      <span className={`absolute left-1/2 -translate-x-1/2 ${index === filteredDocs.length - 1 ? 'bottom-full mb-2' : 'top-full mt-1'} px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10`}>
+                        {doc.status === 'verified' ? 'Verified' : 'Pending'}
+                      </span>
+                    </span>
+                  </div>
+                </td>
+                <td className="p-2 text-center align-middle w-[22%]">
+                  <div className="flex items-center justify-center gap-3">
+                    {/* Actions Icons with Tooltip */}
+                    {doc.fileUrl && (
+                      <span className="relative group">
+                        <Eye className="text-blue-700 cursor-pointer" size={20} onClick={() => handleView(doc)} />
+                        <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">View</span>
+                      </span>
+                    )}
+                    {!doc.fileUrl && (
+                      <span className="relative group">
+                        <Upload className="text-blue-700 cursor-pointer" size={20} onClick={() => handleUpload(doc)} />
+                        <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">Upload</span>
+                      </span>
+                    )}
+                    <span className="relative group">
+                      <Trash2 className="text-red-600 cursor-pointer" size={20} onClick={() => handleDelete(doc)} />
+                      <span className="absolute left-1/2 -translate-x-1/2 mt-2 px-2 py-1 rounded bg-black text-white text-xs opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-10">Delete</span>
+                    </span>
+                  </div>
+                </td>
+                <td className="p-2 text-center align-middle text-gray-600 text-sm w-[32%]">
+                  {doc.assignedAt ? new Date(doc.assignedAt).toLocaleString() : "—"}
+                </td>
+              </tr>
+            ))
+          )}
+        </tbody>
+      </table>
+    </div>
 
-    {/* Pagination */}
-    {totalPages > 1 && (
-      <div className="flex justify-end gap-2 p-4 border-t bg-gray-50 text-sm mt-2">
-        <button
-          onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
-          disabled={currentPage === 1}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300"
-        >
-          Previous
-        </button>
-        <span className="px-3 py-1">
-          Page {currentPage} of {totalPages}
-        </span>
-        <button
-          onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
-          disabled={currentPage === totalPages}
-          className="px-3 py-1 bg-gray-200 rounded disabled:opacity-50 hover:bg-gray-300"
-        >
-          Next
-        </button>
+    {/* Pagination and Info - Improved Alignment */}
+    <div className="sticky bottom-0 left-0 w-full bg-white z-20 flex flex-col md:flex-row justify-between items-center gap-2 border-t border-gray-200 py-2 px-4">
+      <div className="text-xs text-gray-600 md:mb-0 mb-2">
+        Showing <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-semibold">{Math.min(currentPage * pageSize, filteredDocs.length)}</span> of <span className="font-semibold">{filteredDocs.length}</span> documents
       </div>
-    )}
+      {totalPages > 1 && (
+        <div className="flex items-center gap-2">
+          <button
+            onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))}
+            disabled={currentPage === 1}
+            className="px-3 py-1 bg-white border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors text-xs font-medium"
+          >
+            Previous
+          </button>
+          <span className="px-3 py-1 text-xs font-medium text-gray-700">
+            Page {currentPage} of {totalPages}
+          </span>
+          <button
+            onClick={() => setCurrentPage((p) => Math.min(p + 1, totalPages))}
+            disabled={currentPage === totalPages}
+            className="px-3 py-1 bg-white border border-gray-300 rounded disabled:opacity-50 disabled:cursor-not-allowed hover:bg-gray-100 transition-colors text-xs font-medium"
+          >
+            Next
+          </button>
+        </div>
+      )}
+    </div>
 
     {/* File Upload Modal */}
     {openUploader && selectedDoc && (

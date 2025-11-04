@@ -1,4 +1,11 @@
-
+// Debounce utility for scroll handler
+  function debounce(fn, delay) {
+    let timer = null;
+    return function (...args) {
+      if (timer) clearTimeout(timer);
+      timer = setTimeout(() => fn.apply(this, args), delay);
+    };
+  }
 import { useState, useEffect, useRef } from "react";
 import {
   FiSend,
@@ -9,15 +16,15 @@ import {
   FiTrash2,
   FiMessageSquare,
   FiEdit2,
-  
+  FiCheck,
+  FiAlertCircle,
   FiUsers,
 } from "react-icons/fi";
 import { LS, ipadr } from "../Utils/Resuse";
-import { toast, ToastContainer } from "react-toastify";
-import "react-toastify/dist/ReactToastify.css";
+import { toast } from "react-toastify";
 import Picker from "emoji-picker-react";
 
-
+const MESSAGES_PAGE_SIZE = 20;
 
 const formatTime = (isoString, withDate = false) => {
   if (!isoString) return "";
@@ -29,11 +36,14 @@ const formatTime = (isoString, withDate = false) => {
 };
 
 export default function Chat() {
+  const [showScrollToBottom, setShowScrollToBottom] = useState(false);
+  const chatContainerRef = useRef(null);
   const [messages, setMessages] = useState({});
-  const [newMessage, setNewMessage] = useState("");
+  // Store drafts per chatId
+  const [newMessage, setNewMessage] = useState({});
   const [activeChat, setActiveChat] = useState({ id: "", name: "", chatId: "", type: "user" });
+  // No need to reset newMessage on chat switch; drafts are preserved per chat
   const [contacts, setContacts] = useState([]);
-  const [unread, setUnread] = useState({});
   const [isConnected, setIsConnected] = useState(false);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const [selectedThread, setSelectedThread] = useState(null);
@@ -42,6 +52,8 @@ export default function Chat() {
   const [showEmojiPicker, setShowEmojiPicker] = useState(false);
   const [showThreadEmojiPicker, setShowThreadEmojiPicker] = useState(false);
   const [showGroupModal, setShowGroupModal] = useState(false);
+  const [showDeleteGroupModal, setShowDeleteGroupModal] = useState(false);
+  const [groupToDelete, setGroupToDelete] = useState(null);
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [groupName, setGroupName] = useState("");
   const [groups, setGroups] = useState([]);
@@ -49,17 +61,60 @@ export default function Chat() {
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [currentGroupMembers, setCurrentGroupMembers] = useState([]);
   const [currentGroupName, setCurrentGroupName] = useState("");
+  const [messageStatus, setMessageStatus] = useState({}); // Track message statuses
   const chatEndRef = useRef(null);
   const textareaRef = useRef(null);
   const ws = useRef(null);
+  // Typing indicator state and timers (per-chat)
+  const typingTimers = useRef({});
+  const [typingUsers, setTypingUsers] = useState({});
+
+  useEffect(() => {
+    return () => {
+      // cleanup any pending timers
+      Object.values(typingTimers.current || {}).forEach((t) => clearTimeout(t));
+      typingTimers.current = {};
+    };
+  }, []);
 
   const isManager = LS.get("position");
   const isDepart = LS.get("department");
-  const userid = LS.get("userid"); 
-  const username = LS.get("username"); 
-  const isAdmin = LS.get("isadmin");  
+  const userid = LS.get("userid");
+  const [unread, setUnread] = useState(() => {
+    try {
+      const stored = localStorage.getItem('unreadCounts');
+      return stored ? JSON.parse(stored) : {};
+    } catch {
+      return {};
+    }
+  });
+  const [lastMessageTime, setLastMessageTime] = useState({}); // Track last message time per chat/group
+  // Helper to reset unread count for a chat/group
+  const resetUnread = (chatId) => {
+    setUnread((prev) => {
+      const updated = { ...prev, [chatId]: 0 };
+      localStorage.setItem('unreadCounts', JSON.stringify(updated));
+      return updated;
+    });
+  };
+  // Helper to update last message time for a chat
+  const updateLastMessageTime = (chatId) => {
+    setLastMessageTime((prev) => ({
+      ...prev,
+      [chatId]: Date.now(),
+    }));
+  };
+  const username = LS.get("username");
+  const isAdmin = LS.get("isadmin");
 
   const buildChatId = (a, b) => [a, b].sort().join("_");
+
+  // Sort groups by last message time (newest first)
+  const sortedGroups = [...groups].sort((a, b) => {
+    const timeA = lastMessageTime[a._id] || 0;
+    const timeB = lastMessageTime[b._id] || 0;
+    return timeB - timeA;
+  });
 
   const groupMessagesByDate = (messages) => {
   const groups = {};
@@ -113,17 +168,120 @@ export default function Chat() {
   // Scroll to bottom on new messages
   useEffect(() => {
     chatEndRef.current?.scrollIntoView({ behavior: "smooth" });
+    // When active chat changes, reset unread count for that chat/group
+    if (activeChat.chatId) {
+      resetUnread(activeChat.chatId);
+    }
   }, [messages, activeChat]);
 
+  // Infinite scroll: load older messages when scrolled near top (debounced)
+  useEffect(() => {
+    const container = chatContainerRef.current;
+    if (!container || !activeChat.chatId) return;
+    let lastFetchTime = 0;
+    const SCROLL_DEBOUNCE = 200;
+    const NEAR_TOP = 60; // px from top to prefetch
+    const handleScroll = debounce(() => {
+      // Prefetch if near top (not just at 0)
+      if (
+        container.scrollTop <= NEAR_TOP &&
+        messages[activeChat.chatId]?.hasMore &&
+        !messages[activeChat.chatId]?.loading
+      ) {
+        const now = Date.now();
+        if (now - lastFetchTime > SCROLL_DEBOUNCE) {
+          fetchOlderMessages(activeChat.chatId, true); // true: auto-scroll after load
+          lastFetchTime = now;
+        }
+      }
+      // If scrolled to bottom, reset unread count for this chat/group
+      const atBottom = Math.abs(container.scrollHeight - container.scrollTop - container.clientHeight) < 2;
+      if (atBottom) {
+        resetUnread(activeChat.chatId);
+        setShowScrollToBottom(false);
+      } else {
+        setShowScrollToBottom(true);
+      }
+    }, SCROLL_DEBOUNCE);
+    container.addEventListener('scroll', handleScroll);
+    // Initial check in case user is already at bottom
+    setTimeout(() => {
+      if (container) {
+        const atBottom = Math.abs(container.scrollHeight - container.scrollTop - container.clientHeight) < 2;
+        setShowScrollToBottom(!atBottom);
+      }
+    }, 100);
+    return () => container.removeEventListener('scroll', handleScroll);
+  }, [activeChat.chatId, messages]);
+
+  // Fetch older messages
+  const fetchOlderMessages = async (chatId, autoScroll = false) => {
+    if (messages[chatId]?.loading) return;
+    setMessages((prev) => ({
+      ...prev,
+      [chatId]: {
+        ...prev[chatId],
+        loading: true,
+      },
+    }));
+    try {
+      const oldestId = messages[chatId]?.oldestId;
+      const url = activeChat.type === 'group'
+        ? `${ipadr}/group_history/${activeChat.id}?limit=${MESSAGES_PAGE_SIZE}${oldestId ? `&before=${oldestId}` : ''}`
+        : `${ipadr}/history/${chatId}?limit=${MESSAGES_PAGE_SIZE}${oldestId ? `&before=${oldestId}` : ''}`;
+      const res = await fetch(url);
+      if (res.ok) {
+        const older = await res.json();
+        setMessages((prev) => {
+          const prevMsgs = prev[chatId]?.messages || [];
+          const newMsgs = [...older, ...prevMsgs];
+          return {
+            ...prev,
+            [chatId]: {
+              ...prev[chatId],
+              messages: newMsgs,
+              hasMore: older.length === MESSAGES_PAGE_SIZE,
+              loading: false,
+              oldestId: older.length > 0 ? older[0].id : prev[chatId]?.oldestId,
+            },
+          };
+        });
+        // Auto-scroll to bottom after loading older messages
+        if (autoScroll && chatEndRef.current) {
+          setTimeout(() => {
+            chatEndRef.current.scrollIntoView({ behavior: "smooth" });
+          }, 100);
+        }
+      } else {
+        setMessages((prev) => ({
+          ...prev,
+          [chatId]: {
+            ...prev[chatId],
+            loading: false,
+            hasMore: false,
+          },
+        }));
+      }
+    } catch {
+      setMessages((prev) => ({
+        ...prev,
+        [chatId]: {
+          ...prev[chatId],
+          loading: false,
+        },
+      }));
+    }
+  };
+
   // WebSocket connection
-  const openWebSocket = (chatType = "user", chatId = "") => {
+  const openWebSocket = (chatType = "user", chatId = "", groupId = "") => {
     ws.current?.close();
 
     const wsProtocol = ipadr.startsWith("https") ? "wss" : "ws";
     const host = ipadr.replace(/^https?:\/\//, "");
     const url =
       chatType === "group"
-        ? `${wsProtocol}://${host}/ws/group/${chatId}`
+        ? `${wsProtocol}://${host}/ws/group/${groupId}`
         : `${wsProtocol}://${host}/ws/${userid}`;
 
     ws.current = new WebSocket(url);
@@ -136,12 +294,98 @@ export default function Chat() {
     };
 
     ws.current.onmessage = (event) => {
-  try {
-    const payload = JSON.parse(event.data);
+      try {
+        const payload = JSON.parse(event.data);
+        // Handle incoming presence updates and list
+        if (payload.type === "presence_list") {
+          try {
+            const list = Array.isArray(payload.users) ? payload.users : [];
+            setOnlineUsers(list);
+          } catch (e) {
+            console.error("Failed processing presence_list payload", e);
+          }
+          return;
+        }
 
+        if (payload.type === "presence") {
+          try {
+            const u = payload.user;
+            if (!u) return;
+            if (payload.status === "online") {
+              setOnlineUsers((prev) => Array.from(new Set([...(prev || []), u])));
+            } else if (payload.status === "offline") {
+              setOnlineUsers((prev) => (prev || []).filter((x) => x !== u));
+            }
+          } catch (e) {
+            console.error("Failed processing presence payload", e);
+          }
+          return;
+        }
 
-    //  THREAD messages
-    if (payload.type === "thread") {
+        // Handle incoming typing indicator events first
+        if (payload.type === "typing") {
+          try {
+            // Ignore our own typing echoes
+            if (payload.from_user === userid) return;
+            const cId = payload.chatId;
+            if (!cId) return;
+            if (payload.isTyping) {
+              setTypingUsers((prev) => ({ ...prev, [cId]: payload.from_user }));
+              // clear any existing clear-timer
+              if (typingTimers.current[cId]) clearTimeout(typingTimers.current[cId]);
+              typingTimers.current[cId] = setTimeout(() => {
+                setTypingUsers((prev) => {
+                  const copy = { ...prev };
+                  delete copy[cId];
+                  return copy;
+                });
+                delete typingTimers.current[cId];
+              }, 3500);
+            } else {
+              setTypingUsers((prev) => {
+                const copy = { ...prev };
+                delete copy[cId];
+                return copy;
+              });
+              if (typingTimers.current[cId]) {
+                clearTimeout(typingTimers.current[cId]);
+                delete typingTimers.current[cId];
+              }
+            }
+          } catch (e) {
+            console.error("Failed processing typing payload", e);
+          }
+          return;
+        }
+        // Only reset unread if this is the active chat
+        if (activeChat.chatId === chatId) {
+          resetUnread(chatId);
+        }
+        // Handle message status updates
+        if (payload.type === "message_status") {
+          const { messageId, status, timestamp } = payload;
+          setMessageStatus((prev) => ({
+            ...prev,
+            [messageId]: { status, time: timestamp || new Date().toISOString() }
+          }));
+          return;
+        }
+
+    // Update status to delivered when message is confirmed by server
+    if (payload.tempId && payload.id) {
+      setMessageStatus((prev) => ({
+        ...prev,
+        [payload.tempId]: { status: 'delivered', time: payload.timestamp }
+      }));
+    }
+
+    //  THREAD messages - check both type and isThread flag
+    if (payload.type === "thread" || payload.isThread === true || payload.rootId) {
+      // Skip empty thread messages
+      if (!payload.text || !payload.text.trim()) {
+        return;
+      }
+      
       const threadKey = `thread:${payload.rootId}`;
       setMessages((prev) => {
         const arr = prev[threadKey] || [];
@@ -150,30 +394,93 @@ export default function Chat() {
           arr[idx] = payload; 
           return { ...prev, [threadKey]: [...arr] };
         }
-        return { ...prev, [threadKey]: [...arr, payload] };
+        
+        // Update reply count on the parent message in the main chat
+        const updatedMessages = { ...prev };
+        const rootId = payload.rootId;
+        
+      // Removed buggy setUnread block referencing undefined 'group' variable
+        Object.keys(updatedMessages).forEach((chatKey) => {
+          if (!chatKey.startsWith('thread:')) {
+            const chatData = updatedMessages[chatKey];
+            if (chatData && chatData.messages) {
+              updatedMessages[chatKey] = {
+                ...chatData,
+                messages: chatData.messages.map((msg) => {
+                  if (msg.id === rootId || msg.tempId === rootId) {
+                    return { ...msg, reply_count: (msg.reply_count || 0) + 1 };
+                  }
+                  return msg;
+                }),
+              };
+            }
+          }
+        });
+        
+        updatedMessages[threadKey] = [...arr, payload];
+        return updatedMessages;
       });
       return; 
     }
 
     // MAIN chat messages
-    const msgChatId =
+    let msgChatId =
       payload.chatId ||
       (payload.type === "user"
         ? buildChatId(payload.from_user || payload.from, payload.to_user || payload.to)
         : payload.chatId);
 
+    // For group messages, ensure we have the group_ prefix for unread tracking
+    // Check if this is a group message (has chatId that looks like a group_id)
+    const isGroupMessage = payload.chatId && payload.chatId.toString().match(/^[a-f0-9]{24}$|^group_/);
+    const unreadTrackingKey = isGroupMessage && !msgChatId.startsWith('group_')
+      ? `group_${msgChatId}`
+      : msgChatId;
+
+    // Initialize reply_count if not present
+    if (payload.reply_count === undefined) {
+      payload.reply_count = 0;
+    }
+
+    // Skip empty messages
+    if (!payload.text || !payload.text.trim()) {
+      return;
+    }
+
     setMessages((prev) => {
-      const chatMessages = prev[msgChatId] || [];
+      const chatData = prev[msgChatId];
+      const chatMessages = chatData?.messages || [];
       const filtered = chatMessages.filter((m) => m.id !== payload.id && m.id !== payload.tempId);
-      return { ...prev, [msgChatId]: [...filtered, payload] };
+      return {
+        ...prev,
+        [msgChatId]: {
+          messages: [...filtered, payload],
+          hasMore: chatData?.hasMore || false,
+          loading: chatData?.loading || false,
+          oldestId: chatData?.oldestId || null,
+        },
+      };
     });
 
+    // Update last message time for this chat (to sort chats by activity)
+    // For groups, use just the group ID (without group_ prefix) for sorting
+    const lastMessageKey = unreadTrackingKey.replace('group_', '');
+    updateLastMessageTime(lastMessageKey);
+
+    // Real-time unread count for group chats and direct chats
     if (msgChatId !== activeChat.chatId) {
-      setUnread((prev) => ({ ...prev, [msgChatId]: (prev[msgChatId] || 0) + 1 }));
-      toast.info(
-        `New message from ${payload.from_user || payload.from}: ${payload.text ? payload.text.slice(0, 60) : "File"}`,
-        { position: "top-right", autoClose: 4000 }
-      );
+      setUnread((prev) => {
+        const updated = { ...prev, [unreadTrackingKey]: (prev[unreadTrackingKey] || 0) + 1 };
+        localStorage.setItem('unreadCounts', JSON.stringify(updated));
+        return updated;
+      });
+    } else {
+      // Reset unread count when viewing the chat
+      setUnread((prev) => {
+        const updated = { ...prev, [unreadTrackingKey]: 0 };
+        localStorage.setItem('unreadCounts', JSON.stringify(updated));
+        return updated;
+      });
     }
 
   } catch (err) {
@@ -194,6 +501,12 @@ export default function Chat() {
       .catch((err) => console.error("Failed to fetch thread:", err));
   }, [selectedThread]);
 
+  useEffect(() => {
+    if (selectedThread && selectedThread.chatId !== activeChat.chatId) {
+      setSelectedThread(null);
+    }
+  }, [activeChat.chatId, selectedThread]);
+
   // Contact click
   const handleContactClick = async (contact) => {
     try {
@@ -211,10 +524,35 @@ export default function Chat() {
       setUnread((prev) => ({ ...prev, [chatId]: 0 }));
       openWebSocket("user");
 
-      const historyRes = await fetch(`${ipadr}/history/${chatId}`);
+      const historyRes = await fetch(`${ipadr}/history/${chatId}?limit=${MESSAGES_PAGE_SIZE}`);
       if (historyRes.ok) {
         const history = await historyRes.json();
-        setMessages((prev) => ({ ...prev, [chatId]: history }));
+        setMessages((prev) => ({
+          ...prev,
+          [chatId]: {
+            messages: history,
+            hasMore: history.length === MESSAGES_PAGE_SIZE,
+            loading: false,
+            oldestId: history.length > 0 ? history[0].id : null,
+          },
+        }));
+        
+        // Send read receipts for unread messages
+        setTimeout(() => {
+          if (ws.current?.readyState === WebSocket.OPEN) {
+            const unreadMessages = history.filter(msg => msg.from_user === employeeId && msg.id);
+            unreadMessages.forEach(msg => {
+              ws.current.send(JSON.stringify({
+                type: "read_receipt",
+                messageId: msg.id,
+                to_user: msg.from_user, // Send to the original sender
+                from_user: userid,
+                readBy: userid,
+                timestamp: new Date().toISOString()
+              }));
+            });
+          }
+        }, 500);
       }
     } catch (err) {
       console.error("Failed to open chat:", err);
@@ -224,21 +562,48 @@ export default function Chat() {
 
   // Group click
  const handleGroupClick = async (group) => {
+  const groupChatId = `group_${group._id}`;
   setActiveChat({ 
     id: group._id, 
     name: group.name, 
-    chatId: `group_${group._id}`, 
+    chatId: groupChatId, 
     type: "group" 
   });
-  setUnread((prev) => ({ ...prev, [group._id]: 0 }));
-  openWebSocket("group", group._id);
+  resetUnread(groupChatId);
+  openWebSocket("group", groupChatId, group._id);
   
   try {
     
-    const res = await fetch(`${ipadr}/group_history/${group._id}`);
+    const res = await fetch(`${ipadr}/group_history/${group._id}?limit=${MESSAGES_PAGE_SIZE}`);
     if (res.ok) {
       const history = await res.json();
-      setMessages((prev) => ({ ...prev, [`group_${group._id}`]: history }));
+      setMessages((prev) => ({
+        ...prev,
+        [`group_${group._id}`]: {
+          messages: history,
+          hasMore: history.length === MESSAGES_PAGE_SIZE,
+          loading: false,
+          oldestId: history.length > 0 ? history[0].id : null,
+        },
+      }));
+      
+      // Send read receipts for group messages
+      setTimeout(() => {
+        if (ws.current?.readyState === WebSocket.OPEN) {
+          const unreadMessages = history.filter(msg => msg.from_user !== userid && msg.id);
+          unreadMessages.forEach(msg => {
+            ws.current.send(JSON.stringify({
+              type: "read_receipt",
+              messageId: msg.id,
+              to_user: msg.from_user, // Send to the original sender
+              from_user: userid,
+              readBy: userid,
+              chatId: `group_${group._id}`,
+              timestamp: new Date().toISOString()
+            }));
+          });
+        }
+      }, 500);
     }
   } catch (err) {
     console.error(err);
@@ -247,8 +612,6 @@ export default function Chat() {
 
 
   const handleRemoveGroup = async (group) => {
-    if (!confirm(`Are you sure you want to delete group "${group.name}"?`)) return;
-
     try {
       const res = await fetch(`${ipadr}/delete_group/${group._id}`, { method: "DELETE" });
       if (res.ok) {
@@ -261,11 +624,15 @@ export default function Chat() {
       console.error(err);
       toast.error("Error deleting group");
     }
+    setShowDeleteGroupModal(false);
+    setGroupToDelete(null);
   };
 
   // Send main message
   const sendMessage = async () => {
-    if (!newMessage.trim()) return;
+  const draft = newMessage[activeChat.chatId] || "";
+  const trimmedMessage = draft.trim();
+  if (!trimmedMessage) return;
 
     const attemptSend = async () => {
       if (!ws.current || ws.current.readyState !== WebSocket.OPEN) {
@@ -280,19 +647,36 @@ export default function Chat() {
         type: "message",
         from_user: userid,
         to_user: activeChat.type === "user" ? activeChat.id : undefined,
-        text: newMessage,
+        text: trimmedMessage,
         timestamp: new Date().toISOString(),
         chatId: activeChat.chatId,
+        reply_count: 0, // Initialize reply count
       };
 
 
       setMessages((prev) => {
-        const chatMessages = prev[activeChat.chatId] || [];
-        return { ...prev, [activeChat.chatId]: [...chatMessages, messageData] };
+        const chatData = prev[activeChat.chatId];
+        const chatMessages = chatData?.messages || [];
+        return {
+          ...prev,
+          [activeChat.chatId]: {
+            messages: [...chatMessages, messageData],
+            hasMore: chatData?.hasMore || false,
+            loading: chatData?.loading || false,
+            oldestId: chatData?.oldestId || null,
+          },
+        };
       });
 
+      // Update last message time to move chat to top in sidebar
+      updateLastMessageTime(activeChat.chatId);
+
+      // Set initial status to 'sent'
+      setMessageStatus((prev) => ({ ...prev, [tempId]: { status: 'sent', time: new Date().toISOString() } }));
+
       ws.current.send(JSON.stringify(messageData));
-      setNewMessage("");
+      // Clear draft for this chat only
+      setNewMessage((prev) => ({ ...prev, [activeChat.chatId]: "" }));
     };
 
     attemptSend();
@@ -338,6 +722,40 @@ export default function Chat() {
     setThreadInput("");
   };
 
+  // Typing helpers
+  const sendTypingStatus = (chatId, isTyping) => {
+    if (!ws.current || ws.current.readyState !== WebSocket.OPEN) return;
+    const payload = {
+      type: "typing",
+      from_user: userid,
+      chatId,
+      isTyping,
+      timestamp: new Date().toISOString(),
+    };
+    // For direct user chats, include recipient
+    if (activeChat.type === "user" && activeChat.chatId === chatId) {
+      payload.to_user = activeChat.id;
+    }
+    try {
+      ws.current.send(JSON.stringify(payload));
+    } catch (e) {
+      // ignore send errors
+    }
+  };
+
+  const scheduleTyping = (chatId) => {
+    // if timer exists, reset it; otherwise send isTyping=true
+    if (typingTimers.current[chatId]) {
+      clearTimeout(typingTimers.current[chatId]);
+    } else {
+      sendTypingStatus(chatId, true);
+    }
+    typingTimers.current[chatId] = setTimeout(() => {
+      sendTypingStatus(chatId, false);
+      delete typingTimers.current[chatId];
+    }, 2000);
+  };
+
   const getInitials = (name = "") =>
     name
       .split(" ")
@@ -346,10 +764,22 @@ export default function Chat() {
       .toUpperCase()
       .slice(0, 2);
 
-  const activeMessages = Array.isArray(messages[activeChat.chatId])
-    ? messages[activeChat.chatId].filter((m) =>
-        m.text ? m.text.toLowerCase().includes(searchTerm.toLowerCase()) : true
-      )
+  // Infinite scroll: get messages array for active chat
+  const activeMessages = Array.isArray(messages[activeChat.chatId]?.messages)
+    ? messages[activeChat.chatId].messages
+        .filter((m) => {
+          // Filter out thread messages - they should only appear in the thread panel
+          if (m.type === "thread" || m.isThread) return false;
+          // Exclude completely empty messages (no text, no file)
+          const hasText = m.text && String(m.text).trim().length > 0;
+          const hasFile = m.file || m.fileUrl;
+          if (!hasText && !hasFile) return false;
+          // Apply search term filter (only when text exists)
+          if (searchTerm && hasText) {
+            return m.text.toLowerCase().includes(searchTerm.toLowerCase());
+          }
+          return true;
+        })
     : [];
 
   const filteredContacts = contacts.filter((c) =>
@@ -358,6 +788,23 @@ export default function Chat() {
   const filteredGroups = groups.filter((g) =>
     g.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
+
+  // Sort filtered groups by last message time (newest first)
+  const sortedFilteredGroups = [...filteredGroups].sort((a, b) => {
+    const timeA = lastMessageTime[a._id] || 0;
+    const timeB = lastMessageTime[b._id] || 0;
+    return timeB - timeA;
+  });
+
+  // Sort filtered contacts by last message time (newest first)
+  const sortedFilteredContacts = [...filteredContacts].sort((a, b) => {
+    const chatIdA = buildChatId(userid, a.id);
+    const chatIdB = buildChatId(userid, b.id);
+    const timeA = lastMessageTime[chatIdA] || 0;
+    const timeB = lastMessageTime[chatIdB] || 0;
+    return timeB - timeA;
+  });
+
   const validGroupUsers = [
     { id: userid, name: username, position: isManager || "User" },
     ...contacts,
@@ -377,162 +824,251 @@ export default function Chat() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
 {/* Sidebar */}
-<div className="w-80 bg-gray-100 flex flex-col shadow-lg">
+<div className="w-80 bg-blue-100 flex flex-col shadow-2xl border-r border-blue-100 overflow-hidden rounded-r-2xl">
   {/* Header */}
-  <div className="p-5 flex justify-between items-center border-b border-gray-300">
-    <div className="flex items-center gap-3 text-gray-800 font-bold text-xl">
-      <FiMessageSquare className="text-2xl" />
-      Messages
+  <div className="p-6 bg-blue-300 text-white">
+    <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center gap-3">
+        <div className="p-2 bg-white/20 rounded-xl backdrop-blur-sm">
+          <FiMessageSquare className="text-2xl text-gray-700" />
+        </div>
+        <div>
+          <h2 className="font-bold text-xl text-gray-700">Messages</h2>
+          <p className="text-xs text-blue-400">Stay connected</p>
+        </div>
+      </div>
+      {(
+        isManager?.toLowerCase() === "manager" ||
+        isDepart?.toLowerCase() === "hr" ||
+        isAdmin
+      ) && (
+        <button
+          type="button"
+          aria-label="Create group"
+          className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 transition-all backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
+          onClick={() => setShowGroupModal(true)}
+          title="Create Group"
+        >
+          <FiPlus className="text-xl" />
+        </button>
+      )}
     </div>
-    {(
-  isManager?.toLowerCase() === "Manager" ||
-  isDepart?.toLowerCase() === "HR" ||
-  isAdmin
-)&&(
-      <button
-        className="p-2 rounded-full hover:bg-gray-200 transition-all"
-        onClick={() => setShowGroupModal(true)}
-        title="Create Group"
-      >
-        <FiPlus className="text-xl" />
-      </button>
-    )}
-  </div>
 
-  {/* Search */}
-  <div className="p-4">
-    <div className="flex items-center gap-2 bg-white rounded-full px-4 py-2 border border-gray-300 focus-within:ring-2 focus-within:ring-blue-200">
-      <FiSearch className="text-gray-500" />
+    {/* Search */}
+    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-xl px-4 py-2.5 border border-white/30 focus-within:bg-white/30 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
+      <FiSearch className="text-gray-800" />
       <input
         type="text"
-        placeholder="Search..."
-        className="w-full bg-transparent outline-none text-gray-700 text-sm placeholder-gray-400"
+        placeholder="Search messages..."
+        aria-label="Search messages"
+        className="w-full bg-transparent outline-none text-gray-700 placeholder-white/60 text-sm"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
       />
     </div>
   </div>
 
- 
-  {/* Groups */}
-<div className="flex-1 overflow-y-auto px-3 space-y-2">
-  <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
-    Groups
-  </div>
-
-  {filteredGroups.map((group) => (
-    <div
-      key={group._id}
-      className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between transition-all ${
-        activeChat.chatId === group._id ? "bg-gray-200 shadow" : "hover:bg-gray-150"
-      }`}
-      onClick={() => handleGroupClick(group)}
-    >
-      <div className="flex items-center gap-3 flex-1 min-w-0">
-        <div className="w-10 h-10 rounded-full flex items-center justify-center font-bold bg-gray-400 text-white flex-shrink-0">
-          {getInitials(group.name)}
+  {/* Groups & Contacts */}
+  <div role="list" aria-label="Chats and contacts" className="flex-1 overflow-y-auto px-4 py-3 space-y-1 custom-scrollbar">
+    {/* Groups Section */}
+    {sortedFilteredGroups.length > 0 && (
+      <>
+        <div className="px-2 py-3 flex items-center gap-2 text-xs text-blue-600 uppercase tracking-wider font-bold">
+          <FiUsers size={14} />
+          <span>Groups</span>
+          <span className="ml-auto text-blue-400 bg-blue-100 px-2 py-0.5 rounded-full">{sortedFilteredGroups.length}</span>
         </div>
-        <div className="flex flex-col min-w-0 flex-1">
-          <span className="truncate font-medium text-gray-800">{group.name}</span>
-          <span className="text-xs text-gray-500 truncate">
-            {group.members?.filter((m) => m !== userid).length} members
-          </span>
-        </div>
-      </div>
 
-     
-     {(
-  isManager?.toLowerCase() === "manager" ||
-  isDepart?.toLowerCase() === "hr" ||
-  isAdmin
-) && (
-        <div className="flex gap-2">
-          {/* Edit Button */}
-          <button
-            className="p-2 rounded-full hover:bg-gray-200 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              setEditingGroup(group);
-              setGroupName(group.name);
-              setSelectedUsers(group.members || []);
-              setShowGroupModal(true);
-            }}
-            title="Edit Group"
+        {sortedFilteredGroups.map((group) => (
+          <div
+            key={group._id}
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleGroupClick(group); }}
+            className={`group px-3 py-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
+              activeChat.chatId === `group_${group._id}`
+                ? "bg-blue-300 text-black shadow-lg scale-[1.02]"
+                : "hover:bg-blue-200 hover:shadow-md"
+            }`}
+            onClick={() => handleGroupClick(group)}
           >
-            <FiEdit2 size={16} />
-          </button>
+            <div className="flex items-center gap-3 flex-1 min-w-0">
+              <div className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white shadow-md flex-shrink-0 ${
+                activeChat.chatId === `group_${group._id}`
+                  ? "bg-blue-400"
+                  : "bg-blue-300"
+              }`}>
+                {getInitials(group.name)}
+              </div>
+              <div className="flex flex-col min-w-0 flex-1">
+                <span className={`truncate font-semibold text-sm ${
+                  activeChat.chatId === `group_${group._id}` ? "text-gray-500" : "text-gray-800"
+                }`}>
+                  {group.name}
+                </span>
+                <span className={`text-xs truncate flex items-center gap-1 ${
+                  activeChat.chatId === `group_${group._id}` ? "text-blue-500" : "text-gray-500"
+                }`}>
+                  <FiUsers size={10} />
+                  {group.members?.filter((m) => m !== userid).length} members
+                </span>
+              </div>
+            </div>
 
-          {/* Delete Button */}
-          <button
-            className="p-2 rounded-full hover:bg-gray-200 transition-all"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleRemoveGroup(group);
-            }}
-            title="Delete Group"
-          >
-            <FiTrash2 size={16} />
-          </button>
-        </div>
-      )}
+            {/* Unread badge - always visible, not just on hover */}
+            {unread[`group_${group._id}`] > 0 && (
+              <div className="ml-2 flex-shrink-0">
+                <span
+                  className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-full shadow-md animate-pulse inline-flex items-center justify-center min-w-[28px]"
+                  aria-label={`${unread[`group_${group._id}`]} unread message${unread[`group_${group._id}`] > 1 ? 's' : ''}`}
+                  title={`${unread[`group_${group._id}`]} unread message${unread[`group_${group._id}`] > 1 ? 's' : ''}`}
+                >
+                  {unread[`group_${group._id}`] > 99 ? '99+' : unread[`group_${group._id}`]}
+                </span>
+              </div>
+            )}
 
-      {/*  View Members visible to everyone */}
-      <button
-        className="p-2 rounded-full hover:bg-gray-200 transition-all"
-        onClick={(e) => {
-          e.stopPropagation();
-          handleViewMembers(group);
-        }}
-        title="View Members"
-      >
-        <FiUsers size={16} />
-      </button>
+            <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
+              {(
+                isManager?.toLowerCase() === "manager" ||
+                isDepart?.toLowerCase() === "hr" ||
+                isAdmin
+              ) && (
+                <>
+                  <button
+                    type="button"
+                    aria-label={`Edit group ${group.name}`}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      activeChat.chatId === `group_${group._id}`
+                        ? "hover:bg-white/50"
+                        : "hover:bg-blue-100"
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setEditingGroup(group);
+                      setGroupName(group.name);
+                      setSelectedUsers(group.members || []);
+                      setShowGroupModal(true);
+                    }}
+                    title="Edit Group"
+                  >
+                    <FiEdit2 size={14} />
+                  </button>
+
+                  <button
+                    type="button"
+                    aria-label={`Delete group ${group.name}`}
+                    className={`p-1.5 rounded-lg transition-all ${
+                      activeChat.chatId === `group_${group._id}`
+                        ? "hover:bg-white/50"
+                        : "hover:bg-red-100"
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200`}
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setGroupToDelete(group);
+                      setShowDeleteGroupModal(true);
+                    }}
+                    title="Delete Group"
+                  >
+                    <FiTrash2 size={14} />
+                  </button>
+  </>
+              )}
+              <button
+                type="button"
+                aria-label={`View members of ${group.name}`}
+                className={`p-1.5 rounded-lg transition-all ${
+                  activeChat.chatId === `group_${group._id}`
+                    ? "hover:bg-white/20"
+                    : "hover:bg-blue-100"
+                } focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200`}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleViewMembers(group);
+                }}
+                title="View Members"
+              >
+                <FiUsers size={14} />
+              </button>
+            </div>
+          </div>
+        ))}
+      </>
+    )}
+
+    {/* Contacts Section */}
+    <div className="px-2 py-3 flex items-center gap-2 text-xs text-blue-600 uppercase tracking-wider font-bold mt-4">
+      <FiMessageSquare size={14} />
+      <span>Contacts</span>
+      <span className="ml-auto text-blue-400 bg-blue-100 px-2 py-0.5 rounded-full">{sortedFilteredContacts.filter((contact) => contact.id !== userid).length}</span>
     </div>
-  ))}
 
-    {/* Contacts */}
-    <div className="px-3 py-2 text-xs text-gray-500 uppercase tracking-wider font-semibold mt-4">
-      Contacts
-    </div>
-    {filteredContacts .filter((contact) => contact.id !== userid) .map((contact) => {
+    {sortedFilteredContacts.filter((contact) => contact.id !== userid).map((contact) => {
       const chatId = buildChatId(userid, contact.id);
       const isOnline = onlineUsers.includes(contact.id);
       return (
         <div
           key={contact.id}
-          className={`px-3 py-2 rounded-lg cursor-pointer flex items-center justify-between transition-all ${
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleContactClick(contact); }}
+          className={`group px-3 py-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
             activeChat.chatId === chatId
-              ? "bg-gray-200 shadow"
-              : "hover:bg-gray-150"
+              ? "bg-blue-400 text-white shadow-lg scale-[1.02]"
+              : "hover:bg-blue-200 hover:shadow-md"
           }`}
           onClick={() => handleContactClick(contact)}
         >
           <div className="flex items-center gap-3 flex-1 min-w-0">
             <div className="relative">
               <div
-                className={`w-10 h-10 rounded-full flex items-center justify-center font-bold text-white shadow ${
-                  isOnline ? "bg-green-400" : "bg-gray-400"
+                className={`w-11 h-11 rounded-xl flex items-center justify-center font-bold text-white shadow-md ${
+                  activeChat.chatId === chatId
+                    ? "bg-white/20"
+                    : isOnline
+                    ? "bg-gradient-to-br from-green-400 to-emerald-500"
+                    : "bg-gradient-to-br from-gray-400 to-gray-500"
                 }`}
               >
                 {getInitials(contact.name)}
               </div>
               {isOnline && (
-                <div className="absolute bottom-0 right-0 w-3 h-3 bg-green-500 rounded-full border-2 border-white"></div>
+                <div className="absolute -bottom-0.5 -right-0.5 w-3.5 h-3.5 bg-green-500 rounded-full border-2 border-white ring-2 ring-green-200 animate-pulse"></div>
               )}
             </div>
             <div className="flex flex-col min-w-0 flex-1">
-              <span className="truncate font-medium text-gray-800">
+              <span className={`truncate font-semibold text-sm ${
+                activeChat.chatId === chatId ? "text-white" : "text-gray-800"
+              }`}>
                 {contact.name}
               </span>
-              <span className="text-xs text-gray-500 truncate">
-                {contact.position || ""}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className={`text-xs truncate ${
+                  activeChat.chatId === chatId ? "text-blue-100" : "text-gray-500"
+                }`}>
+                  {contact.position || "Employee"}
+                </span>
+                {/* keep dot indicator only; textual "Online" removed per preference */}
+              </div>
+
+              {/* Sidebar typing indicator (shows when this contact is typing to the current user) */}
+              {typingUsers[chatId] === contact.id && (
+                <div className="text-xs italic text-blue-200 mt-1">
+                  typing...
+                </div>
+              )}
             </div>
           </div>
           {unread[chatId] > 0 && (
-            <span className="bg-red-100 text-red-700 text-xs px-2 py-0.5 rounded-full font-semibold">
-              {unread[chatId]}
-            </span>
+            <div className="ml-2 flex-shrink-0">
+              <span
+                className="bg-gradient-to-r from-red-500 to-pink-500 text-white text-xs font-bold px-2.5 py-1.5 rounded-full shadow-md animate-pulse inline-flex items-center justify-center min-w-[28px]"
+                aria-label={`${unread[chatId]} unread message${unread[chatId] > 1 ? 's' : ''}`}
+                title={`${unread[chatId]} unread message${unread[chatId] > 1 ? 's' : ''}`}
+              >
+                {unread[chatId] > 99 ? '99+' : unread[chatId]}
+              </span>
+            </div>
           )}
         </div>
       );
@@ -555,7 +1091,6 @@ export default function Chat() {
                   <h1 className="text-lg font-semibold text-foreground">
                     {activeChat.name}
                   </h1>
-                  
                 </div>
               </>
             ) : (
@@ -564,7 +1099,7 @@ export default function Chat() {
           </div>
         </div>
         {!activeChat.id && (
-    <div className="flex-1 flex flex-col items-center justify-center bg-gradient-to-b from-white to-white-50 text-center p-6">
+    <div className="flex-1 flex flex-col items-center justify-center bg-white-50 text-center p-6">
       <FiMessageSquare className="text-7xl text-blue-200 mb-6 animate-pulse" />
       <h2 className="text-2xl font-semibold text-gray-800 mb-2">
         Welcome to Chat
@@ -579,8 +1114,45 @@ export default function Chat() {
 <div className="flex flex-1 overflow-hidden">
   {/* Messages */}
 <div className="flex-1 flex flex-col">
-  <div className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-white to-gray-50">
-    {Object.entries(groupMessagesByDate(activeMessages)).map(([dateKey, dayMessages]) => {
+  <div ref={chatContainerRef} className="flex-1 p-6 overflow-y-auto bg-gradient-to-b from-white to-gray-50 relative">
+    {/* Move to Bottom Button (small, sidebar color, only when scrolled up) */}
+    {showScrollToBottom && (
+      <button
+        className="fixed bottom-20 right-6 z-50 bg-blue-300 text-blue-700 px-2.5 py-1.5 rounded-full shadow-md hover:bg-blue-400 hover:text-white transition-all flex items-center gap-1 animate-in fade-in text-xs font-semibold"
+        style={{ boxShadow: "0 2px 8px rgba(0,0,0,0.10)" }}
+        onClick={() => {
+          chatEndRef.current?.scrollIntoView({ behavior: 'smooth' });
+        }}
+        aria-label="Scroll to bottom"
+        title="Go to latest messages"
+      >
+        <svg width="16" height="16" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" viewBox="0 0 24 24"><path d="M19 9l-7 7-7-7"/></svg>
+        Latest
+      </button>
+    )}
+    {/* Show content only when we have messages or finish loading */}
+    {activeMessages.length > 0 ? (
+      <>
+        {/* Infinite scroll: show loading spinner and load more button */}
+        {messages[activeChat.chatId]?.loading && (
+          <div className="flex flex-col justify-center items-center py-4 mb-4">
+            <div className="animate-spin mb-2">
+              <div className="h-8 w-8 border-4 border-blue-200 border-t-blue-500 rounded-full"></div>
+            </div>
+            <span className="text-sm text-blue-500 font-medium">Loading older messages...</span>
+          </div>
+        )}
+        {messages[activeChat.chatId]?.hasMore && !messages[activeChat.chatId]?.loading && (
+          <div className="flex justify-center items-center py-3 mb-4">
+            <button
+              className="px-6 py-2.5 bg-gradient-to-r from-blue-50 to-blue-100 text-blue-700 rounded-full hover:from-blue-100 hover:to-blue-200 transition-all font-medium shadow-sm hover:shadow-md"
+              onClick={() => fetchOlderMessages(activeChat.chatId)}
+            >
+              ↑ Load earlier messages
+            </button>
+          </div>
+        )}
+        {Object.entries(groupMessagesByDate(activeMessages)).map(([dateKey, dayMessages]) => {
       const dateObj = new Date(dateKey);
       const today = new Date();
       const yesterday = new Date();
@@ -604,9 +1176,14 @@ export default function Chat() {
 
           {/* Messages for that date */}
           {dayMessages.map((m, i) => {
+            // Defensive: skip rendering if message has no text and no file/url
+            const hasText = m.text && String(m.text).trim().length > 0;
+            const hasFile = m.file || m.fileUrl;
+            if (!hasText && !hasFile) return null;
             const isSender = m.from_user === userid;
             const msgId = m.id || m.tempId;
-            const threadCount = getThreadCount(msgId);
+            // Use reply_count from message if available, otherwise calculate from thread messages
+            const threadCount = m.reply_count !== undefined ? m.reply_count : getThreadCount(msgId);
 
             let displayName = "Unknown";
             if (isSender) {
@@ -632,18 +1209,22 @@ export default function Chat() {
                 } ${sameSenderAsPrev ? "mb-1" : "mb-3"}`}
               >
                 <div
+                  role="article"
+                  tabIndex={0}
+                  aria-label={`Message from ${displayName} at ${formatTime(m.timestamp)}`}
                   className={`max-w-xl p-4 rounded-2xl break-words shadow-md relative transition-all duration-300 hover:shadow-lg ${
                     isSender
-                      ? "bg-gradient-to-br from-blue-100 to-blue-200 text-primary-foreground rounded-br-sm"
-                      : "bg-gray-100 text-gray-800 rounded-bl-sm border border-gray-200"
+                      ? "bg-[#6d9eeb7a] text-primary-foreground rounded-br-sm"
+                      : "bg-blue-200 text-gray-800 rounded-bl-sm border border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">{displayName}</span>
+                  <div className="flex items-center mb-2">
+                    <span className="font-medium text-sm mr-3">{displayName}</span>
                     <span
                       className={`text-xs ${
                         isSender ? "text-primary-foreground/70" : "text-gray-400"
                       }`}
+                      style={{ marginLeft: 'auto', letterSpacing: '0.5px' }}
                     >
                       {formatTime(m.timestamp)}
                     </span>
@@ -656,7 +1237,10 @@ export default function Chat() {
 
                   <div className="flex items-center gap-3 mt-3 pt-2 border-t border-current/10">
                     <button
-                      onClick={() => setSelectedThread(m)}
+                      type="button"
+                      aria-label={`Reply to message from ${displayName}`}
+                      // onClick={() => setSelectedThread(m)}
+                      onClick={() => setSelectedThread({ ...m, chatId: activeChat.chatId })}
                       className={`text-xs font-medium hover:underline transition-all flex items-center gap-1 ${
                         isSender
                           ? "text-primary-foreground/80 hover:text-primary-foreground"
@@ -676,6 +1260,47 @@ export default function Chat() {
                         {threadCount} {threadCount === 1 ? "reply" : "replies"}
                       </div>
                     )}
+                    
+                    {/* Message status indicator for sender */}
+                    {isSender && (() => {
+                      const statusObj = messageStatus[msgId];
+                      const status = statusObj?.status || 'sent';
+                      let tooltip = "Sent";
+                      let icon = null;
+                      
+                      if (status === "sent") {
+                        tooltip = `Sent${statusObj?.time ? ` at ${formatTime(statusObj.time, true)}` : ""}`;
+                        // Single tick (gray)
+                        icon = <FiCheck className="text-gray-400" size={14} />;
+                      } else if (status === "delivered") {
+                        tooltip = `Delivered${statusObj?.time ? ` at ${formatTime(statusObj.time, true)}` : ""}`;
+                        // Double tick (gray) - two check marks side by side
+                        icon = (
+                          <div className="flex items-center -space-x-1">
+                            <FiCheck className="text-gray-400" size={14} />
+                            <FiCheck className="text-gray-400" size={14} />
+                          </div>
+                        );
+                      } else if (status === "read") {
+                        tooltip = `Read${statusObj?.time ? ` at ${formatTime(statusObj.time, true)}` : ""}`;
+                        // Double tick (blue)
+                        icon = (
+                          <div className="flex items-center -space-x-1">
+                            <FiCheck className="text-blue-500" size={14} />
+                            <FiCheck className="text-blue-500" size={14} />
+                          </div>
+                        );
+                      } else if (status === "failed") {
+                        tooltip = `Failed${statusObj?.time ? ` at ${formatTime(statusObj.time, true)}` : ""}`;
+                        icon = <FiAlertCircle className="text-red-500" size={14} />;
+                      }
+                      
+                      return (
+                        <span className="ml-auto flex items-center gap-1 text-xs" title={tooltip} style={{ cursor: "pointer" }}>
+                          {icon}
+                        </span>
+                      );
+                    })()}
                   </div>
                 </div>
               </div>
@@ -685,14 +1310,42 @@ export default function Chat() {
       );
     })}
     <div ref={chatEndRef}></div>
+      </>
+    ) : messages[activeChat.chatId]?.loading ? (
+      <div className="flex flex-col justify-center items-center h-full">
+        <div className="animate-spin mb-4">
+          <div className="h-12 w-12 border-4 border-blue-200 border-t-blue-500 rounded-full"></div>
+        </div>
+        <p className="text-blue-600 font-medium">Loading messages...</p>
+      </div>
+    ) : (
+      <div className="flex flex-col justify-center items-center h-full text-center">
+        <FiMessageSquare className="text-5xl text-gray-300 mb-4" />
+        <p className="text-gray-500 text-lg">No messages yet</p>
+        <p className="text-gray-400 text-sm">Start the conversation!</p>
+      </div>
+    )}
   </div>
 
             {/* Input */}
             {activeChat.id && (
               <div className="border-t border-border bg-card p-4">
+                {typingUsers[activeChat.chatId] && (
+                  <div className="mb-2 px-2">
+                    <div className="text-sm text-gray-500 italic">
+                      {(() => {
+                        const tUser = contacts.find((c) => c.id === typingUsers[activeChat.chatId]);
+                        const name = tUser ? tUser.name : typingUsers[activeChat.chatId];
+                        return `${name} is typing...`;
+                      })()}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3 relative">
                   <button
-                    className="p-2 rounded-full hover:bg-muted transition-all text-muted-foreground hover:text-foreground"
+                    type="button"
+                    aria-label="Toggle emoji picker"
+                    className="p-2 rounded-full hover:bg-muted transition-all text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
                     onClick={() => setShowEmojiPicker((prev) => !prev)}
                   >
                     <FiSmile className="text-xl" />
@@ -700,7 +1353,7 @@ export default function Chat() {
                   {showEmojiPicker && (
                     <div className="absolute bottom-16 left-3 z-50 shadow-xl rounded-lg overflow-hidden">
                       <Picker
-                        onEmojiClick={(e) => setNewMessage((prev) => prev + e.emoji)}
+                        onEmojiClick={(e) => setNewMessage((prev) => ({ ...prev, [activeChat.chatId]: (prev[activeChat.chatId] || "") + e.emoji }))}
                         searchPlaceholder="Search emojis..."
                       />
                     </div>
@@ -708,21 +1361,28 @@ export default function Chat() {
                   <input
                     ref={textareaRef}
                     className="flex-1 px-4 py-2.5 rounded-full border border-border bg-background focus:outline-none focus:ring-2 focus:ring-primary/50 placeholder-muted-foreground text-sm"
-                    value={newMessage}
-                    onChange={(e) => setNewMessage(e.target.value)}
+                    value={newMessage[activeChat.chatId] || ""}
+                    onChange={(e) => {
+                      setNewMessage((prev) => ({ ...prev, [activeChat.chatId]: e.target.value }));
+                      scheduleTyping(activeChat.chatId);
+                    }}
                     placeholder="Type a message..."
                     onKeyDown={(e) => {
                       if (e.key === "Enter" && !e.shiftKey) {
                         e.preventDefault();
-                        sendMessage();
+                        if ((newMessage[activeChat.chatId] || "").trim() && isConnected) {
+                          sendMessage();
+                        }
                       }
                     }}
                   />
                   <button
+                    type="button"
+                    aria-label="Send message"
                     onClick={sendMessage}
-                    disabled={!newMessage.trim() || !isConnected}
+                    disabled={!(newMessage[activeChat.chatId] || "").trim() || !isConnected}
                     className={`p-3 rounded-full transition-all duration-300 ${
-                      newMessage.trim() && isConnected
+                      (newMessage[activeChat.chatId] || "").trim() && isConnected
                         ? "bg-gradient-to-r from-primary to-accent text-primary-foreground shadow-lg hover:scale-105"
                         : "bg-muted text-muted-foreground cursor-not-allowed"
                     }`}
@@ -736,7 +1396,8 @@ export default function Chat() {
 
 
 {/* Thread Panel */}
-{selectedThread && (
+{/* {selectedThread && ( */}
+{selectedThread && selectedThread.chatId === activeChat.chatId && (
   <div className="w-96 bg-gradient-to-b from-white to-gray-50 border-l border-gray-200 flex flex-col shadow-lg">
     {/* Thread Header */}
     <div className="p-4 border-b border-gray-200 flex items-center gap-3 bg-gradient-to-r from-blue-50 to-purple-50">
@@ -759,7 +1420,11 @@ export default function Chat() {
       {/* Original Message */}
       <div className="p-4 bg-blue-50/50 rounded-2xl border border-blue-100 shadow-sm">
         <div className="text-xs text-blue-400 mb-2">
-          {selectedThread.from_user} • {formatTime(selectedThread.timestamp, true)}
+          {/* Show sender name instead of userid for original thread message */}
+          {(() => {
+            const contact = contacts.find((c) => c.id === selectedThread.from_user);
+            return contact ? contact.name : (selectedThread.from_user === userid ? "You" : selectedThread.from_user);
+          })()} • {formatTime(selectedThread.timestamp, true)}
         </div>
         <div className="text-sm text-gray-800">{selectedThread.text}</div>
         <div className="text-xs text-blue-400 mt-2 font-medium">Original message</div>
@@ -771,9 +1436,13 @@ export default function Chat() {
           key={t.id || t.tempId}
           className="p-3 border border-gray-200 rounded-xl bg-white shadow-sm hover:shadow-md transition-shadow"
         >
-          <div className="text-xs text-gray-400 mb-2">
-            {t.from_user} • {formatTime(t.timestamp, true)}
-          </div>
+            <div className="text-xs text-gray-400 mb-2">
+              {/* Show sender name instead of userid */}
+              {(() => {
+                const contact = contacts.find((c) => c.id === t.from_user);
+                return contact ? contact.name : (t.from_user === userid ? "You" : t.from_user);
+              })()} • {formatTime(t.timestamp, true)}
+            </div>
           <div className="text-sm text-gray-800">{t.text}</div>
         </div>
       ))}
@@ -783,7 +1452,9 @@ export default function Chat() {
     <div className="border-t border-gray-200 bg-white p-4">
       <div className="flex items-center gap-2 relative">
         <button
-          className="p-2 rounded-full hover:bg-gray-100 transition-all text-gray-400 hover:text-gray-700"
+          type="button"
+          aria-label="Toggle thread emoji picker"
+          className="p-2 rounded-full hover:bg-gray-100 transition-all text-gray-400 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
           onClick={() => setShowThreadEmojiPicker((prev) => !prev)}
         >
           <FiSmile size={18} />
@@ -802,13 +1473,17 @@ export default function Chat() {
           onKeyDown={(e) => {
             if (e.key === "Enter" && !e.shiftKey) {
               e.preventDefault();
-              sendThreadMessage();
+              if (threadInput.trim() && isConnected) {
+                sendThreadMessage();
+              }
             }
           }}
           placeholder="Reply in thread..."
           className="flex-1 px-3 py-2 rounded-full border border-gray-200 bg-gray-50 focus:outline-none focus:ring-2 focus:ring-blue-200 text-sm placeholder-gray-400"
         />
         <button
+          type="button"
+          aria-label="Send thread message"
           onClick={sendThreadMessage}
           disabled={!threadInput.trim() || !isConnected}
           className={`p-2.5 rounded-full transition-all ${
@@ -966,7 +1641,26 @@ export default function Chat() {
   </div>
 )}
 
-      <ToastContainer position="top-right" autoClose={4000} />
+{/* Delete Group Confirmation Modal */}
+{showDeleteGroupModal && groupToDelete && (
+  <div className="fixed inset-0 z-50 flex items-center justify-center bg-black bg-opacity-40">
+    <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-xs text-center">
+      <h2 className="text-lg font-semibold mb-2">Delete Group</h2>
+      <p className="mb-4">Are you sure you want to delete <span className="font-bold">{groupToDelete.name}</span>?</p>
+      <div className="flex gap-3 justify-center">
+        <button
+          className="px-4 py-2 rounded-lg bg-gray-200 hover:bg-gray-300 text-gray-700 font-medium"
+          onClick={() => { setShowDeleteGroupModal(false); setGroupToDelete(null); }}
+        >Cancel</button>
+        <button
+          className="px-4 py-2 rounded-lg bg-red-500 hover:bg-red-600 text-white font-medium"
+          onClick={() => handleRemoveGroup(groupToDelete)}
+        >Delete</button>
+      </div>
+    </div>
+  </div>
+)}
+
     </div>
   );
 }

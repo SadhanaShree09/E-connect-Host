@@ -447,6 +447,15 @@ atexit.register(lambda: scheduler.shutdown())
 async def startup_event():
     """Initialize task deadline scheduler when the application starts"""
     try:
+        # Create indexes for better query performance
+        try:
+            assignments_collection.create_index("_id")
+            Users.create_index("userid")
+            Users.create_index("_id")
+            print("✅ Database indexes created/verified")
+        except Exception as idx_err:
+            print(f"⚠️ Index creation warning: {idx_err}")
+        
         task_scheduler = Mongo.setup_task_scheduler()
         if task_scheduler:
             print("✅ Task deadline monitoring system initialized")
@@ -2816,10 +2825,51 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
         while True:
             data = await websocket.receive_text()
             msg = json.loads(data)
+            
+            # Skip empty messages completely, but allow control packets like typing/read receipts
+            text = msg.get("text", "").strip()
+            msg_type = msg.get("type", "chat")
+
+            # Allow 'typing' and 'read_receipt' messages even when text is empty
+            if not text and msg_type not in ("read_receipt", "typing"):
+                continue
+            
             msg["timestamp"] = datetime.utcnow().isoformat() + "Z"
             msg.pop("pending", None)
 
-            msg_type = msg.get("type", "chat")
+            # Handle read receipts separately
+            if msg_type == "read_receipt":
+                # Send read receipt notification to the original sender
+                to_user = msg.get("to_user")
+                if to_user:
+                    await direct_chat_manager.send_message(to_user, {
+                        "type": "message_status",
+                        "messageId": msg.get("messageId"),
+                        "status": "read",
+                        "timestamp": msg.get("timestamp")
+                    })
+                continue  # Don't save read receipts to database
+
+            # Handle typing indicator messages safely and route them without assuming to_user exists
+            if msg_type == "typing":
+                try:
+                    chat_id = msg.get("chatId")
+                    # For group typing events, forward to group manager
+                    if chat_id and str(chat_id).startswith("group_"):
+                        await group_ws_manager.send_message(chat_id, msg)
+                    else:
+                        # Direct chat: prefer explicit to_user, otherwise derive from chatId
+                        to_user = msg.get("to_user")
+                        if not to_user and chat_id:
+                            parts = str(chat_id).split("_")
+                            if len(parts) == 2:
+                                # pick the other participant
+                                to_user = parts[0] if parts[1] == userid else parts[1]
+                        if to_user:
+                            await direct_chat_manager.send_message(to_user, msg)
+                except Exception as e:
+                    print(f"Error routing typing event: {e}")
+                continue
 
             if msg_type == "thread":
                 temp_id = msg.get("tempId")
@@ -2900,8 +2950,23 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
 
 @app.get("/history/{chatId}")
-async def history(chatId: str):
-    cursor = chats_collection.find({"chatId": chatId}).sort("timestamp", 1)
+async def history(chatId: str, limit: int = Query(20, ge=1, le=100), before: str = Query(None)):
+    # Exclude thread messages - they should only be fetched via /thread/{rootId}
+    query = {
+        "chatId": chatId,
+        "type": {"$ne": "thread"},
+        "isThread": {"$ne": True}
+    }
+    
+    # If 'before' is provided, fetch messages before that ID (for pagination)
+    if before:
+        try:
+            before_obj_id = ObjectId(before)
+            query["_id"] = {"$lt": before_obj_id}
+        except:
+            pass
+    
+    cursor = chats_collection.find(query).sort("timestamp", -1).limit(limit)
     messages = []
     for doc in cursor:
         mid = str(doc.get("id") or doc.get("_id"))
@@ -2916,6 +2981,8 @@ async def history(chatId: str):
             "chatId": doc.get("chatId"),
             "reply_count": reply_count,  
         })
+    # Reverse to get chronological order
+    messages.reverse()
     return messages
 
 
@@ -2980,18 +3047,40 @@ async def websocket_group(websocket: WebSocket, group_id: str):
     try:
         while True:
             data = await websocket.receive_json()
+            
+            # Skip empty messages completely
+            text = data.get("text", "").strip()
+            if not text and data.get("type") != "read_receipt":
+                continue
+            
             # Add timestamp & unique id
             data["timestamp"] = datetime.utcnow().isoformat() + "Z"
             data["id"] = data.get("id") or str(ObjectId())
 
-            # Save to MongoDB
-            messages_collection.insert_one({
-                "chatId": group_id,
-                "from_user": data.get("from_user"),
-                "text": data.get("text"),
-                "file": data.get("file"),
-                "timestamp": data["timestamp"]
-            })
+            # Check if this is a thread message
+            msg_type = data.get("type", "message")
+            
+            if msg_type == "thread" or data.get("isThread") or data.get("rootId"):
+                # Thread message - save to threads_collection only
+                threads_collection.insert_one({
+                    "type": "thread",
+                    "chatId": group_id,
+                    "from_user": data.get("from_user"),
+                    "text": data.get("text"),
+                    "rootId": data.get("rootId"),
+                    "isThread": True,
+                    "timestamp": data["timestamp"],
+                    "id": data["id"]
+                })
+            elif msg_type != "read_receipt":
+                # Regular message - save to messages_collection
+                messages_collection.insert_one({
+                    "chatId": group_id,
+                    "from_user": data.get("from_user"),
+                    "text": data.get("text"),
+                    "file": data.get("file"),
+                    "timestamp": data["timestamp"]
+                })
 
             # Broadcast to all group members
             await group_ws_manager.broadcast(group_id, data)
@@ -3031,18 +3120,39 @@ async def websocket_group(websocket: WebSocket, group_id: str):
 
 # Fetch group chat history
 @app.get("/group_history/{group_id}")
-async def group_history(group_id: str):
-    cursor = messages_collection.find({"chatId": group_id}).sort("timestamp", 1)
+async def group_history(group_id: str, limit: int = Query(20, ge=1, le=100), before: str = Query(None)):
+    # Exclude thread messages from group history - threads should only be fetched via /thread/{rootId}
+    query = {
+        "chatId": group_id,
+        "type": {"$ne": "thread"},
+        "isThread": {"$ne": True}
+    }
+    
+    # If 'before' is provided, fetch messages before that ID (for pagination)
+    if before:
+        try:
+            before_obj_id = ObjectId(before)
+            query["_id"] = {"$lt": before_obj_id}
+        except:
+            pass
+    
+    cursor = messages_collection.find(query).sort("timestamp", -1).limit(limit)
     messages = []
     for doc in cursor:
+        mid = str(doc.get("_id"))
+        # Count thread replies for this message
+        reply_count = threads_collection.count_documents({"rootId": mid})
         messages.append({
-            "id": str(doc.get("_id")),
+            "id": mid,
             "from_user": doc.get("from_user"),
             "text": doc.get("text"),
             "file": doc.get("file"),
             "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
-            "chatId": doc.get("chatId")
+            "chatId": doc.get("chatId"),
+            "reply_count": reply_count,
         })
+    # Reverse to get chronological order
+    messages.reverse()
     return messages
 
 @app.delete("/delete_group/{group_id}")
@@ -3123,41 +3233,80 @@ def get_assigned_docs(userId: str = Query(...)):
 # ------------------ Fetch Assigned Documents ------------------
 @app.get("/documents/assigned/{userId}")
 def fetch_assigned_docs(userId: str):
-    # First try to find user in Users collection
-    user = Users.find_one({"userid": userId})
-    
-    # If not found, try with ObjectId format
-    if not user:
-        try:
-            user = Users.find_one({"_id": ObjectId(userId)})
-        except:
-            pass
-    
-    # If still not found, check admin collection
-    if not user:
-        try:
-            user = admin.find_one({"_id": ObjectId(userId)})
-        except:
-            pass
-    
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    assigned_docs = []
-    for doc in user.get("assigned_docs", []):
-        file_id = doc.get("fileId")
-        file_doc = assignments_collection.find_one({"_id": ObjectId(file_id)}) if file_id else None
+    try:
+        # First try to find user in Users collection
+        user = Users.find_one({"userid": userId})
         
-        assigned_docs.append({
-            "docName": doc.get("docName"),
-            "status": doc.get("status", "Pending"),
-            "fileUrl": f"/download_file/{file_id}" if file_doc else None,
-            "assignedBy": doc.get("assignedBy"),
-            "assignedAt": doc.get("assignedAt"),
-            "fileId": file_id,
-            "remarks": doc.get("remarks")
-        })
-    return assigned_docs
+        # If not found, try with ObjectId format
+        if not user:
+            try:
+                user = Users.find_one({"_id": ObjectId(userId)})
+            except Exception as e:
+                print(f"Error finding user by ObjectId: {e}")
+                pass
+        
+        # If still not found, check admin collection
+        if not user:
+            try:
+                user = admin.find_one({"_id": ObjectId(userId)})
+            except Exception as e:
+                print(f"Error finding user in admin collection: {e}")
+                pass
+        
+        if not user:
+            raise HTTPException(status_code=404, detail="User not found")
+        
+        assigned_docs = []
+        assigned_docs_list = user.get("assigned_docs", [])
+        
+        # Collect all valid file IDs first
+        file_ids = []
+        for doc in assigned_docs_list:
+            file_id = doc.get("fileId")
+            if file_id:
+                try:
+                    file_ids.append(ObjectId(file_id))
+                except Exception as e:
+                    print(f"Invalid file_id format {file_id}: {e}")
+        
+        # Batch query for all files at once to reduce database calls
+        file_docs_map = {}
+        if file_ids:
+            try:
+                # Use find with $in operator for batch retrieval with timeout
+                cursor = assignments_collection.find(
+                    {"_id": {"$in": file_ids}}
+                ).max_time_ms(5000)  # 5 second timeout for this query
+                
+                for file_doc in cursor:
+                    file_docs_map[str(file_doc["_id"])] = file_doc
+            except Exception as e:
+                print(f"Error batch fetching files: {e}")
+                # Continue without file docs if batch query fails
+        
+        # Build response
+        for doc in assigned_docs_list:
+            file_id = doc.get("fileId")
+            file_exists = file_id and str(file_id) in file_docs_map
+            
+            assigned_docs.append({
+                "docName": doc.get("docName"),
+                "status": doc.get("status", "Pending"),
+                "fileUrl": f"/download_file/{file_id}" if file_exists else None,
+                "assignedBy": doc.get("assignedBy"),
+                "assignedAt": doc.get("assignedAt"),
+                "fileId": file_id,
+                "remarks": doc.get("remarks")
+            })
+        
+        return assigned_docs
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error in fetch_assigned_docs: {e}")
+        import traceback
+        traceback.print_exc()
+        raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 
 

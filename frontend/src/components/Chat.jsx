@@ -6,7 +6,6 @@
       timer = setTimeout(() => fn.apply(this, args), delay);
     };
   }
-// ...existing code...
 import { useState, useEffect, useRef } from "react";
 import {
   FiSend,
@@ -425,11 +424,18 @@ export default function Chat() {
     }
 
     // MAIN chat messages
-    const msgChatId =
+    let msgChatId =
       payload.chatId ||
       (payload.type === "user"
         ? buildChatId(payload.from_user || payload.from, payload.to_user || payload.to)
         : payload.chatId);
+
+    // For group messages, ensure we have the group_ prefix for unread tracking
+    // Check if this is a group message (has chatId that looks like a group_id)
+    const isGroupMessage = payload.chatId && payload.chatId.toString().match(/^[a-f0-9]{24}$|^group_/);
+    const unreadTrackingKey = isGroupMessage && !msgChatId.startsWith('group_')
+      ? `group_${msgChatId}`
+      : msgChatId;
 
     // Initialize reply_count if not present
     if (payload.reply_count === undefined) {
@@ -457,19 +463,21 @@ export default function Chat() {
     });
 
     // Update last message time for this chat (to sort chats by activity)
-    updateLastMessageTime(msgChatId);
+    // For groups, use just the group ID (without group_ prefix) for sorting
+    const lastMessageKey = unreadTrackingKey.replace('group_', '');
+    updateLastMessageTime(lastMessageKey);
 
-    // Real-time unread count for group chats
+    // Real-time unread count for group chats and direct chats
     if (msgChatId !== activeChat.chatId) {
       setUnread((prev) => {
-        const updated = { ...prev, [msgChatId]: (prev[msgChatId] || 0) + 1 };
+        const updated = { ...prev, [unreadTrackingKey]: (prev[unreadTrackingKey] || 0) + 1 };
         localStorage.setItem('unreadCounts', JSON.stringify(updated));
         return updated;
       });
     } else {
       // Reset unread count when viewing the chat
       setUnread((prev) => {
-        const updated = { ...prev, [msgChatId]: 0 };
+        const updated = { ...prev, [unreadTrackingKey]: 0 };
         localStorage.setItem('unreadCounts', JSON.stringify(updated));
         return updated;
       });
@@ -816,7 +824,7 @@ export default function Chat() {
   return (
     <div className="flex h-screen w-full overflow-hidden bg-background">
 {/* Sidebar */}
-<div className="w-80 bg-blue-100 flex flex-col shadow-2xl border-r border-blue-100">
+<div className="w-80 bg-blue-100 flex flex-col shadow-2xl border-r border-blue-100 overflow-hidden rounded-r-2xl">
   {/* Header */}
   <div className="p-6 bg-blue-300 text-white">
     <div className="flex items-center justify-between mb-4">
@@ -835,7 +843,9 @@ export default function Chat() {
         isAdmin
       ) && (
         <button
-          className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 transition-all backdrop-blur-sm"
+          type="button"
+          aria-label="Create group"
+          className="p-2.5 rounded-xl bg-white/20 hover:bg-white/30 transition-all backdrop-blur-sm focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300"
           onClick={() => setShowGroupModal(true)}
           title="Create Group"
         >
@@ -845,11 +855,12 @@ export default function Chat() {
     </div>
 
     {/* Search */}
-    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-xl px-4 py-2.5 border border-white/30 focus-within:bg-white/30 transition-all">
+    <div className="flex items-center gap-2 bg-white/20 backdrop-blur-md rounded-xl px-4 py-2.5 border border-white/30 focus-within:bg-white/30 focus-within:ring-1 focus-within:ring-blue-200 transition-all">
       <FiSearch className="text-gray-800" />
       <input
         type="text"
         placeholder="Search messages..."
+        aria-label="Search messages"
         className="w-full bg-transparent outline-none text-gray-700 placeholder-white/60 text-sm"
         value={searchTerm}
         onChange={(e) => setSearchTerm(e.target.value)}
@@ -858,7 +869,7 @@ export default function Chat() {
   </div>
 
   {/* Groups & Contacts */}
-  <div className="flex-1 overflow-y-auto px-4 py-3 space-y-1 custom-scrollbar">
+  <div role="list" aria-label="Chats and contacts" className="flex-1 overflow-y-auto px-4 py-3 space-y-1 custom-scrollbar">
     {/* Groups Section */}
     {sortedFilteredGroups.length > 0 && (
       <>
@@ -871,7 +882,10 @@ export default function Chat() {
         {sortedFilteredGroups.map((group) => (
           <div
             key={group._id}
-            className={`group px-3 py-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-200 ${
+            role="button"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter') handleGroupClick(group); }}
+            className={`group px-3 py-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
               activeChat.chatId === `group_${group._id}`
                 ? "bg-blue-300 text-black shadow-lg scale-[1.02]"
                 : "hover:bg-blue-200 hover:shadow-md"
@@ -922,11 +936,13 @@ export default function Chat() {
               ) && (
                 <>
                   <button
+                    type="button"
+                    aria-label={`Edit group ${group.name}`}
                     className={`p-1.5 rounded-lg transition-all ${
                       activeChat.chatId === `group_${group._id}`
                         ? "hover:bg-white/50"
                         : "hover:bg-blue-100"
-                    }`}
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setEditingGroup(group);
@@ -940,11 +956,13 @@ export default function Chat() {
                   </button>
 
                   <button
+                    type="button"
+                    aria-label={`Delete group ${group.name}`}
                     className={`p-1.5 rounded-lg transition-all ${
                       activeChat.chatId === `group_${group._id}`
                         ? "hover:bg-white/50"
                         : "hover:bg-red-100"
-                    }`}
+                    } focus:outline-none focus-visible:ring-2 focus-visible:ring-red-200`}
                     onClick={(e) => {
                       e.stopPropagation();
                       setGroupToDelete(group);
@@ -952,16 +970,18 @@ export default function Chat() {
                     }}
                     title="Delete Group"
                   >
-      <FiTrash2 size={14} />
-    </button>
+                    <FiTrash2 size={14} />
+                  </button>
   </>
               )}
               <button
+                type="button"
+                aria-label={`View members of ${group.name}`}
                 className={`p-1.5 rounded-lg transition-all ${
                   activeChat.chatId === `group_${group._id}`
                     ? "hover:bg-white/20"
                     : "hover:bg-blue-100"
-                }`}
+                } focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200`}
                 onClick={(e) => {
                   e.stopPropagation();
                   handleViewMembers(group);
@@ -989,7 +1009,10 @@ export default function Chat() {
       return (
         <div
           key={contact.id}
-          className={`group px-3 py-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-200 ${
+          role="button"
+          tabIndex={0}
+          onKeyDown={(e) => { if (e.key === 'Enter') handleContactClick(contact); }}
+          className={`group px-3 py-3 rounded-xl cursor-pointer flex items-center justify-between transition-all duration-200 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-300 ${
             activeChat.chatId === chatId
               ? "bg-blue-400 text-white shadow-lg scale-[1.02]"
               : "hover:bg-blue-200 hover:shadow-md"
@@ -1003,7 +1026,7 @@ export default function Chat() {
                   activeChat.chatId === chatId
                     ? "bg-white/20"
                     : isOnline
-                    ? "bg-gradient-to-br from-gray-400 to-gray-500"
+                    ? "bg-gradient-to-br from-green-400 to-emerald-500"
                     : "bg-gradient-to-br from-gray-400 to-gray-500"
                 }`}
               >
@@ -1186,18 +1209,22 @@ export default function Chat() {
                 } ${sameSenderAsPrev ? "mb-1" : "mb-3"}`}
               >
                 <div
+                  role="article"
+                  tabIndex={0}
+                  aria-label={`Message from ${displayName} at ${formatTime(m.timestamp)}`}
                   className={`max-w-xl p-4 rounded-2xl break-words shadow-md relative transition-all duration-300 hover:shadow-lg ${
                     isSender
                       ? "bg-[#6d9eeb7a] text-primary-foreground rounded-br-sm"
                       : "bg-blue-200 text-gray-800 rounded-bl-sm border border-gray-200"
                   }`}
                 >
-                  <div className="flex items-center justify-between mb-2">
-                    <span className="font-medium text-sm">{displayName}</span>
+                  <div className="flex items-center mb-2">
+                    <span className="font-medium text-sm mr-3">{displayName}</span>
                     <span
                       className={`text-xs ${
                         isSender ? "text-primary-foreground/70" : "text-gray-400"
                       }`}
+                      style={{ marginLeft: 'auto', letterSpacing: '0.5px' }}
                     >
                       {formatTime(m.timestamp)}
                     </span>
@@ -1211,6 +1238,7 @@ export default function Chat() {
                   <div className="flex items-center gap-3 mt-3 pt-2 border-t border-current/10">
                     <button
                       type="button"
+                      aria-label={`Reply to message from ${displayName}`}
                       // onClick={() => setSelectedThread(m)}
                       onClick={() => setSelectedThread({ ...m, chatId: activeChat.chatId })}
                       className={`text-xs font-medium hover:underline transition-all flex items-center gap-1 ${
@@ -1317,7 +1345,8 @@ export default function Chat() {
                 <div className="flex items-center gap-3 relative">
                   <button
                     type="button"
-                    className="p-2 rounded-full hover:bg-muted transition-all text-muted-foreground hover:text-foreground"
+                    aria-label="Toggle emoji picker"
+                    className="p-2 rounded-full hover:bg-muted transition-all text-muted-foreground hover:text-foreground focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
                     onClick={() => setShowEmojiPicker((prev) => !prev)}
                   >
                     <FiSmile className="text-xl" />
@@ -1350,6 +1379,7 @@ export default function Chat() {
                   />
                   <button
                     type="button"
+                    aria-label="Send message"
                     onClick={sendMessage}
                     disabled={!(newMessage[activeChat.chatId] || "").trim() || !isConnected}
                     className={`p-3 rounded-full transition-all duration-300 ${
@@ -1424,7 +1454,8 @@ export default function Chat() {
       <div className="flex items-center gap-2 relative">
         <button
           type="button"
-          className="p-2 rounded-full hover:bg-gray-100 transition-all text-gray-400 hover:text-gray-700"
+          aria-label="Toggle thread emoji picker"
+          className="p-2 rounded-full hover:bg-gray-100 transition-all text-gray-400 hover:text-gray-700 focus:outline-none focus-visible:ring-2 focus-visible:ring-blue-200"
           onClick={() => setShowThreadEmojiPicker((prev) => !prev)}
         >
           <FiSmile size={18} />
@@ -1453,6 +1484,7 @@ export default function Chat() {
         />
         <button
           type="button"
+          aria-label="Send thread message"
           onClick={sendThreadMessage}
           disabled={!threadInput.trim() || !isConnected}
           className={`p-2.5 rounded-full transition-all ${

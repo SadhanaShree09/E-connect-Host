@@ -203,3 +203,10 @@ html, body {
   scrollbar-width: none; /* Firefox */
   -ms-overflow-style: none; /* IE and Edge */
 }
+
+/* Custom scrollbar for chat sidebar */
+.custom-scrollbar::-webkit-scrollbar { width: 6px; }
+.custom-scrollbar::-webkit-scrollbar-track { background: transparent; border-radius: 10px; }
+.custom-scrollbar::-webkit-scrollbar-thumb { background: linear-gradient(to bottom, #5d6064, #747d85); border-radius: 10px; transition: all 0.3s ease; }
+.custom-scrollbar::-webkit-scrollbar-thumb:hover { background: linear-gradient(to bottom, #8594a9, #697485); }
+.custom-scrollbar { scrollbar-width: thin; scrollbar-color: #79838e transparent; }

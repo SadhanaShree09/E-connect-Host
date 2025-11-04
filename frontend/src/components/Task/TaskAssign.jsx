@@ -618,9 +618,10 @@ const handleoneditSubmit = async () => {
                    <option value="High">High</option>
                  </select>
                </div>
-             <div>
+           <div>
       <label className="block mb-1 font-semibold">Subtasks</label>
-      {(item.subtasks && Array.isArray(item.subtasks) && item.subtasks.length > 0) ? (
+
+      {item.subtasks && Array.isArray(item.subtasks) && item.subtasks.length > 0 ? (
         item.subtasks.map((subtask, sidx) => {
           const text = subtask.text ?? subtask.title ?? "";
           const completed = subtask.completed ?? subtask.done ?? false;
@@ -639,23 +640,27 @@ const handleoneditSubmit = async () => {
               <input
                 type="text"
                 value={text}
-                onChange={e => {
+                onChange={(e) => {
+                  if (completed) return; 
                   const updated = [...editModel];
                   updated[index].subtasks[sidx].text = e.target.value;
                   SetEditmodel(updated);
                 }}
                 className={`flex-1 border border-gray-300 rounded px-2 py-1 ${
-                  completed ? "line-through text-gray-500 bg-gray-100" : ""
+                  completed ? "line-through text-gray-500 bg-gray-100 cursor-default select-none" : ""
                 }`}
                 placeholder="Enter subtask description..."
-                disabled={isVerifiedEdit}
+                disabled={isVerifiedEdit || completed} 
               />
 
+            {!completed && (
               <button
                 type="button"
                 onClick={() => {
                   const updated = [...editModel];
-                  updated[index].subtasks = updated[index].subtasks.filter((_, i) => i !== sidx);
+                  updated[index].subtasks = updated[index].subtasks.filter(
+                    (_, i) => i !== sidx
+                  );
                   SetEditmodel(updated);
                 }}
                 className={`ml-2 px-2 py-1 rounded ${
@@ -667,6 +672,7 @@ const handleoneditSubmit = async () => {
               >
                 ✕
               </button>
+            )}
             </div>
           );
         })
@@ -684,7 +690,7 @@ const handleoneditSubmit = async () => {
               text: "",
               title: "",
               completed: false,
-              done: false
+              done: false,
             });
             SetEditmodel(updated);
           }}

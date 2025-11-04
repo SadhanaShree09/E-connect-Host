@@ -32,7 +32,7 @@ export default {
           50: '#f8fafc',
           100: '#f1f5f9',
           200: '#e2e8f0',
-          300: '#cbd5e1',
+          300: '#bdccddff',
           400: '#94a3b8',
           500: '#6490c7ff',
           600: '#6393ceff',  // sidebar bg

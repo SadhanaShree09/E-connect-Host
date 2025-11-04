@@ -50,7 +50,10 @@ client = MongoClient(
     mongo_url,
     serverSelectionTimeoutMS=30000,
     connectTimeoutMS=30000,
-    socketTimeoutMS=30000
+    socketTimeoutMS=60000,  # Increased to 60 seconds
+    maxPoolSize=50,  # Increase connection pool
+    retryWrites=True,  # Enable automatic retry of write operations
+    retryReads=True  # Enable automatic retry of read operations
 )
 
 
@@ -6915,7 +6918,7 @@ async def create_document_assignment_notification(userid, doc_name, assigned_by_
             message=message,
             notification_type="document",
             priority="high",
-            action_url="/User/my-documents",
+            action_url="/User/docs/my-documents",
             related_id=assigned_by_id,
             metadata={
                 "doc_name": doc_name,
@@ -7045,7 +7048,7 @@ async def create_document_review_notification(userid, doc_name, reviewer_name, r
             message=message,
             notification_type="document",
             priority=priority,
-            action_url="/User/my-documents",
+            action_url="/User/docs/my-documents",
             related_id=reviewer_id,
             metadata={
                 "doc_name": doc_name,

@@ -1,4 +1,3 @@
-// src/components/Fileuploader.jsx
 import { useState, useRef } from "react";
 import { Upload, X, Trash2 } from "lucide-react";
 import axios from "axios";
@@ -59,7 +58,7 @@ export default function Fileuploader({ userid, docName, onUpload, onClose }) {
         />
         <button
           onClick={() => fileInputRef.current.click()}
-          className="px-4 py-2 bg-blue-600 text-white rounded flex items-center gap-2"
+          className="px-4 py-2 bg-blue-500 hover:bg-blue-400 text-white rounded flex items-center gap-2"
         >
           <Upload size={16} /> Choose File
         </button>
@@ -85,7 +84,7 @@ export default function Fileuploader({ userid, docName, onUpload, onClose }) {
         <button
           onClick={handleUpload}
           disabled={!selectedFile || uploading}
-          className="px-4 py-2 bg-green-600 text-white rounded hover:bg-green-700 disabled:opacity-50"
+          className="px-4 py-2 bg-green-700 text-white rounded hover:bg-green-900 disabled:opacity-50"
         >
           {uploading ? "Uploading..." : "Upload"}
         </button>

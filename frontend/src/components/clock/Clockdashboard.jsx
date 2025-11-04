@@ -180,7 +180,7 @@ export default function Clockdashboard() {
 
 
 <div className="rounded-md w-full px-[7rem] my-4">
-<div className="w-full h-full bg-whte shadow-lg rounded-md border border-gray-200">
+<div className="w-full h-full bg-white shadow-lg rounded-md border border-gray-200">
   <header className="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
     <h2 className="font-semibold text-gray-800">Timing</h2>
     <div className="flex items-center gap-4">

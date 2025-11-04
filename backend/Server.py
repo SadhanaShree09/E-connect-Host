@@ -2821,6 +2821,27 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
             msg_type = msg.get("type", "chat")
 
+            # Handle typing indicator messages safely and route them without assuming to_user exists
+            if msg_type == "typing":
+                try:
+                    chat_id = msg.get("chatId")
+                    # For group typing events, forward to group manager
+                    if chat_id and str(chat_id).startswith("group_"):
+                        await group_ws_manager.send_message(chat_id, msg)
+                    else:
+                        # Direct chat: prefer explicit to_user, otherwise derive from chatId
+                        to_user = msg.get("to_user")
+                        if not to_user and chat_id:
+                            parts = str(chat_id).split("_")
+                            if len(parts) == 2:
+                                # pick the other participant
+                                to_user = parts[0] if parts[1] == userid else parts[1]
+                        if to_user:
+                            await direct_chat_manager.send_message(to_user, msg)
+                except Exception as e:
+                    print(f"Error routing typing event: {e}")
+                continue
+
             if msg_type == "thread":
                 temp_id = msg.get("tempId")
                 msg["id"] = msg.get("id") or str(ObjectId())

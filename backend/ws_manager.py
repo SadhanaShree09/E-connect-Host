@@ -1,6 +1,8 @@
 # ws_manager.py
 from fastapi import WebSocket
 from collections import defaultdict
+import asyncio
+from typing import Dict, List
 
 
 
@@ -12,13 +14,48 @@ class DirectChatManager:
     async def connect(self, user_id: str, websocket: WebSocket):
         await websocket.accept()
         self.active_connections[user_id].append(websocket)
+        # Send current presence list to the newly connected websocket (other users)
+        try:
+            other_users = [uid for uid in self.active_connections.keys() if uid != user_id]
+            await websocket.send_json({"type": "presence_list", "users": other_users})
+        except Exception:
+            pass
+
+        # Broadcast presence to all other connected users
+        try:
+            payload = {"type": "presence", "user": user_id, "status": "online", "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z"}
+            for uid, sockets in list(self.active_connections.items()):
+                if uid == user_id:
+                    continue
+                for ws in list(sockets):
+                    try:
+                        await ws.send_json(payload)
+                    except Exception:
+                        # remove dead sockets
+                        if ws in self.active_connections.get(uid, []):
+                            self.active_connections[uid].remove(ws)
+        except Exception:
+            pass
 
     def disconnect(self, user_id: str, websocket: WebSocket):
         if user_id in self.active_connections:
             if websocket in self.active_connections[user_id]:
                 self.active_connections[user_id].remove(websocket)
             if not self.active_connections[user_id]:
+                # Last connection for this user closed — remove and broadcast offline
                 del self.active_connections[user_id]
+                try:
+                    payload = {"type": "presence", "user": user_id, "status": "offline", "timestamp": __import__("datetime").datetime.utcnow().isoformat() + "Z"}
+                    for uid, sockets in list(self.active_connections.items()):
+                        for ws in list(sockets):
+                            try:
+                                # schedule send without awaiting to keep disconnect sync
+                                asyncio.create_task(ws.send_json(payload))
+                            except Exception:
+                                if ws in self.active_connections.get(uid, []):
+                                    self.active_connections[uid].remove(ws)
+                except Exception:
+                    pass
     
     async def handle_message(self, message: dict):
         """

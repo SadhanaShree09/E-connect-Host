@@ -1053,7 +1053,7 @@ export default function Chat() {
 
               {/* Sidebar typing indicator (shows when this contact is typing to the current user) */}
               {typingUsers[chatId] === contact.id && (
-                <div className="text-xs italic text-green-600 mt-1">
+                <div className="text-xs italic text-blue-200 mt-1">
                   typing...
                 </div>
               )}
@@ -1310,18 +1310,6 @@ export default function Chat() {
       );
     })}
     <div ref={chatEndRef}></div>
-    {/* Typing indicator */}
-    {typingUsers[activeChat.chatId] && (
-      <div className="px-6 pb-2">
-        <div className="text-sm text-gray-500 italic">
-          {(() => {
-            const tUser = contacts.find((c) => c.id === typingUsers[activeChat.chatId]);
-            const name = tUser ? tUser.name : typingUsers[activeChat.chatId];
-            return `${name} is typing...`;
-          })()}
-        </div>
-      </div>
-    )}
       </>
     ) : messages[activeChat.chatId]?.loading ? (
       <div className="flex flex-col justify-center items-center h-full">
@@ -1342,6 +1330,17 @@ export default function Chat() {
             {/* Input */}
             {activeChat.id && (
               <div className="border-t border-border bg-card p-4">
+                {typingUsers[activeChat.chatId] && (
+                  <div className="mb-2 px-2">
+                    <div className="text-sm text-gray-500 italic">
+                      {(() => {
+                        const tUser = contacts.find((c) => c.id === typingUsers[activeChat.chatId]);
+                        const name = tUser ? tUser.name : typingUsers[activeChat.chatId];
+                        return `${name} is typing...`;
+                      })()}
+                    </div>
+                  </div>
+                )}
                 <div className="flex items-center gap-3 relative">
                   <button
                     type="button"

@@ -2826,11 +2826,12 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
             data = await websocket.receive_text()
             msg = json.loads(data)
             
-            # Skip empty messages completely
+            # Skip empty messages completely, but allow control packets like typing/read receipts
             text = msg.get("text", "").strip()
             msg_type = msg.get("type", "chat")
-            
-            if not text and msg_type != "read_receipt":
+
+            # Allow 'typing' and 'read_receipt' messages even when text is empty
+            if not text and msg_type not in ("read_receipt", "typing"):
                 continue
             
             msg["timestamp"] = datetime.utcnow().isoformat() + "Z"

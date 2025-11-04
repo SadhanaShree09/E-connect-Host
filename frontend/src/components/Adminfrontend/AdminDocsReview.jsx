@@ -11,13 +11,7 @@ import {
   Trash2,
   Eye,
   Search,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  Users,
   ClipboardList,
-  AlertTriangle,
-  BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -36,11 +30,10 @@ export default function AdminDocsReview() {
   const [searchTerm, setSearchTerm] = useState("");
   const [modalSearchTerm, setModalSearchTerm] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [showStats, setShowStats] = useState(false);
-  const [selectedUserId, setSelectedUserId] = useState(null);
   const [assignModal, setAssignModal] = useState(false);
-   const [currentPage, setCurrentPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
+  const [loadingDocs, setLoadingDocs] = useState({});
   const pageOptions = [20, 50, 100];
 
   useEffect(() => {
@@ -55,36 +48,46 @@ export default function AdminDocsReview() {
     setHeaderVar();
     window.addEventListener('resize', setHeaderVar);
     return () => window.removeEventListener('resize', setHeaderVar);
-  }, [showStats, searchTerm, statusFilter]);
+  }, [statusFilter, searchTerm]);
 
- const fetchUsers = async () => {
-  try {
-    setLoadingUsers(true);
-    const res = await axios.get(`${ipadr}/get_all_users`);
-    const normalizedUsers = res.data
-      .map((u) => ({
-        ...u,
-        userId: u.id || u._id || u.userId,
-      }))
-      .filter((u) => u.position?.toLowerCase() !== "admin");
+  // OPTIMIZED: Fetch users without loading all docs immediately
+  const fetchUsers = async () => {
+    try {
+      setLoadingUsers(true);
+      const res = await axios.get(`${ipadr}/get_all_users`);
+      const normalizedUsers = res.data
+        .map((u) => ({
+          ...u,
+          userId: u.id || u._id || u.userId,
+        }))
+        .filter((u) => u.position?.toLowerCase() !== "admin");
 
-    setUsers(normalizedUsers);
-    await Promise.all(normalizedUsers.map((user) => fetchAssignedDocs(user.userId)));
-  } catch (err) {
-    console.error("Error fetching employees:", err);
-    toast.error("Failed to fetch employees");
-  } finally {
-    setLoadingUsers(false);
-  }
-};
+      setUsers(normalizedUsers);
+      // DON'T load all docs at once - load lazily when needed
+    } catch (err) {
+      console.error("Error fetching employees:", err);
+      toast.error("Failed to fetch employees");
+    } finally {
+      setLoadingUsers(false);
+    }
+  };
 
-
+  // OPTIMIZED: Lazy loading with caching
   const fetchAssignedDocs = async (userId) => {
+    // Don't refetch if already loaded
+    if (assignedDocs[userId]) {
+      return;
+    }
+
+    setLoadingDocs(prev => ({ ...prev, [userId]: true }));
     try {
       const res = await axios.get(`${ipadr}/documents/assigned/${userId}`);
       setAssignedDocs((prev) => ({ ...prev, [userId]: res.data }));
     } catch (err) {
       console.error(`Error fetching docs for user ${userId}:`, err);
+      toast.error(`Failed to load documents for user`);
+    } finally {
+      setLoadingDocs(prev => ({ ...prev, [userId]: false }));
     }
   };
 
@@ -107,24 +110,21 @@ export default function AdminDocsReview() {
 
     try {
       setLoadingAssign(true);
-      setAssignedDocs((prev) => {
-        const updated = { ...prev };
-        selectedUsers.forEach((uid) => {
-          const prevDocs = prev[uid] || [];
-          updated[uid] = [
-            ...prevDocs,
-            { docName: docNameTrimmed, status: "pending", assignedBy: "Admin", fileUrl: null },
-          ];
-        });
-        return updated;
-      });
-
+      
       await axios.post(`${ipadr}/assign_docs`, {
         userIds: selectedUsers,
         docName: docNameTrimmed,
       });
 
-      await Promise.all(selectedUsers.map((uid) => fetchAssignedDocs(uid)));
+      // Invalidate cache for affected users
+      setAssignedDocs((prev) => {
+        const updated = { ...prev };
+        selectedUsers.forEach((uid) => {
+          delete updated[uid]; // Clear cache to force reload
+        });
+        return updated;
+      });
+
       setNewDocName("");
       setSelectedUsers([]);
       toast.success("Document assigned successfully!");
@@ -145,6 +145,15 @@ export default function AdminDocsReview() {
         status: "verified",
         remarks: "Verified by HR",
       });
+      
+      // Clear cache to force reload
+      setAssignedDocs(prev => {
+        const updated = { ...prev };
+        delete updated[userId];
+        return updated;
+      });
+      
+      // Reload docs
       await fetchAssignedDocs(userId);
       toast.success("Document verified successfully!");
     } catch (err) {
@@ -166,6 +175,8 @@ export default function AdminDocsReview() {
                   await axios.delete(`${ipadr}/assigned_doc_delete`, {
                     data: { userId, docName },
                   });
+                  
+                  // Update cache
                   setAssignedDocs((prev) => ({
                     ...prev,
                     [userId]: (prev[userId] || []).filter((d) => d.docName !== docName),
@@ -225,58 +236,13 @@ export default function AdminDocsReview() {
     });
   };
 
- const UserCard = ({ user }) => {
-  const handleCardClick = () => {
-    setSelectedUserId(user.userId);
-    setReviewUser(user); 
+  // OPTIMIZED: Load docs when user card is clicked
+  const handleUserClick = async (user) => {
+    setReviewUser(user);
+    if (!assignedDocs[user.userId] && !loadingDocs[user.userId]) {
+      await fetchAssignedDocs(user.userId);
+    }
   };
-  const userDocs = assignedDocs[user.userId] || [];
-  const statusCount = filterDocsByStatus(userDocs).length;
-
-  return (
-    <div
-      onClick={handleCardClick}
-      className="bg-white rounded-lg p-3 shadow-md border cursor-pointer hover:shadow-lg transition-all mb-3 h-[100px] flex flex-col justify-between"
-    >
-      <div className="flex justify-between items-start">
-        <div className="flex items-center gap-3">
-          <div className="w-9 h-9 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-            {user.name?.[0]?.toUpperCase() || <User size={14} />}
-          </div>
-          <div className="leading-tight">
-            <div className="flex items-center gap-2">
-              <h4 className="font-semibold text-gray-800 text-sm">{user.name}</h4>
-            </div>
-          </div>
-        </div>
-      </div>
-
-      <div className="flex items-center justify-between mt-1">
-        <div className="flex items-center">
-          {statusFilter !== 'all' && (
-            <span className="text-xs px-2 py-0.5 rounded-full bg-blue-50 text-blue-800 font-medium">
-              {statusCount} {statusFilter === 'pending' ? 'pending' : statusFilter === 'uploaded' ? 'uploaded' : 'verified'}
-            </span>
-          )}
-        </div>
-
-        <div className="flex items-center justify-end">
-          <button
-            onClick={(e) => {
-              e.stopPropagation();
-              setReviewUser(user);
-            }}
-            className="text-blue-600 hover:text-blue-800 text-xs flex items-center gap-1 hover:bg-blue-50 px-2 py-0.5 rounded transition-colors -mt-1"
-          >
-            <Eye size={11} /> Review
-          </button>
-        </div>
-      </div>
-    </div>
-  );
-
-};
-
 
   if (loadingUsers) {
     return (
@@ -288,6 +254,10 @@ export default function AdminDocsReview() {
       </div>
     );
   }
+
+  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
+  const start = (currentPage - 1) * pageSize;
+  const pageUsers = filteredUsers.slice(start, start + pageSize);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-gray-50">
@@ -306,489 +276,442 @@ export default function AdminDocsReview() {
       <div ref={headerRef} className="bg-white shadow-sm border-b border-gray-200 p-4 shrink-0">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className="text-3xl font-bold font-inter pb-2 text-gray-800 bg-clip-text border-b-2">Documents Management</h2>
+            <h2 className="text-3xl font-bold font-inter pb-2 text-gray-800 bg-clip-text border-b-2">
+              Documents Management
+            </h2>
           </div>
         </div>
 
-<div className="flex justify-between items-start mb-4">
-  <div className="bg-blue-100 p-2 rounded-xl border border-gray-200 shadow-sm w-[80%]">
-    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
-        <div className="relative">
-          <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
-          <input
-            type="text"
-            placeholder="Search employees by name..."
-            value={searchTerm}
-            onChange={(e) => setSearchTerm(e.target.value)}
-            className="pl-10 pr-3 py-1.5 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-          />
-        </div>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
-        <select
-          value={statusFilter}
-          onChange={(e) => setStatusFilter(e.target.value)}
-          className="w-full p-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
-        >
-          <option value="all">All Status</option>
-          <option value="pending">Pending</option>
-          <option value="uploaded">Uploaded</option>
-          <option value="verified">Verified</option>
-        </select>
-      </div>
-
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-2">Actions</label>
-        <button
-          onClick={() => {
-            setSearchTerm('');
-            setStatusFilter('all');
-            setSelectedUsers([]);
-          }}
-          className="w-full px-3 py-1.5 bg-blue-400 text-white rounded-md hover:bg-gray-400 transition-colors text-sm"
-        >
-          Clear Filters
-        </button>
-      </div>
-    </div>
-  </div>
-
-  <div className="ml-4 mt-[30px]">
-    <button
-      onClick={() => setAssignModal("select")}
-      className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all text-sm font-medium"
-    >
-      Assign Documents
-    </button>
-  </div>
-</div>
-
-      </div>
-     <div className="flex-1 overflow-hidden px-2 bg-white">
-
-  <div
-    className="overflow-y-auto border rounded-lg bg-gray-50"
-    style={{ maxHeight: 'calc(100vh - var(--adr-header-height) - 32px)' }}
-  >
-   {filteredUsers.length === 0 ? (
-  <div className="text-center py-12">
-    <ClipboardList className="mx-auto text-gray-400 mb-4" size={48} />
-    <p className="text-gray-500 text-lg">No employees found</p>
-  </div>
-) : (
-  <>
-    {(() => {
-  const totalPages = Math.max(1, Math.ceil(filteredUsers.length / pageSize));
-  const start = (currentPage - 1) * pageSize;
-  const pageUsers = filteredUsers.slice(start, start + pageSize);
-
-  return (
-    <>
-      {/* Scrollable user list */}
-      <div
-        className="overflow-y-auto border rounded-lg bg-gray-50"
-        style={{ maxHeight: "calc(100vh - var(--adr-header-height) - 120px)" }} // space for header + pagination
-      >
-        {filteredUsers.length === 0 ? (
-          <div className="text-center py-12">
-            <ClipboardList className="mx-auto text-gray-400 mb-4" size={48} />
-            <p className="text-gray-500 text-lg">No employees found</p>
-          </div>
-        ) : (
-          <ul className="divide-y divide-gray-200 rounded-md overflow-hidden shadow-sm">
-            {pageUsers.map((user, idx) => (
-              <li
-                id={`user-${start + idx}`}
-                key={user.userId}
-                onClick={() => setReviewUser(user)}
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 transition-colors bg-white"
-              >
-                <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
-                    {user.name?.[0]?.toUpperCase() || <User size={14} />}
-                  </div>
-                  <span className="font-medium text-gray-800">{user.name}</span>
+        <div className="flex justify-between items-start mb-4">
+          <div className="bg-blue-100 p-2 rounded-xl border border-gray-200 shadow-sm w-[80%]">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
+                <div className="relative">
+                  <Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+                  <input
+                    type="text"
+                    placeholder="Search employees by name..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="pl-10 pr-3 py-1.5 w-full border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                  />
                 </div>
+              </div>
 
-                {statusFilter !== "all" && (
-                  <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
-                    {filterDocsByStatus(assignedDocs[user.userId] || []).length}{" "}
-                    {statusFilter}
-                  </span>
-                )}
-              </li>
-            ))}
-          </ul>
-        )}
-      </div>
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Status</label>
+                <select
+                  value={statusFilter}
+                  onChange={(e) => setStatusFilter(e.target.value)}
+                  className="w-full p-1.5 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm"
+                >
+                  <option value="all">All Status</option>
+                  <option value="pending">Pending</option>
+                  <option value="uploaded">Uploaded</option>
+                  <option value="verified">Verified</option>
+                </select>
+              </div>
 
-      {/* Static Pagination controls */}
-      <div className="flex items-center justify-between mt-4 p-3 border-t bg-white rounded-lg shadow-sm">
-        <div className="flex items-center gap-2">
-          <button
-            onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
-            disabled={currentPage === 1}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Prev
-          </button>
-          <button
-            onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
-            disabled={currentPage === totalPages}
-            className="px-3 py-1 border rounded disabled:opacity-50"
-          >
-            Next
-          </button>
-          <span className="text-sm text-gray-600">
-            Page {currentPage} of {totalPages}
-          </span>
-        </div>
-
-        <div className="flex items-center gap-2">
-          <label className="text-sm text-gray-600">Per page</label>
-          <select
-            value={pageSize}
-            onChange={(e) => {
-              setPageSize(Number(e.target.value));
-              setCurrentPage(1);
-            }}
-            className="border rounded px-2 py-1 text-sm"
-          >
-            {pageOptions.map((opt) => (
-              <option key={opt} value={opt}>
-                {opt}
-              </option>
-            ))}
-          </select>
-        </div>
-      </div>
-    </>
-  );
-})()}
-
-  </>
-)}
-
-  </div>
-</div>
-
-
-{reviewUser && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-  onClick={() => setReviewUser(null)}
-  >
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col"
-    onClick={(e) => e.stopPropagation()}
-    >
-      <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
-        <div className="flex items-center gap-3">
-          <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md">
-            {reviewUser.name?.[0]?.toUpperCase() || <User size={24} />}
+              <div>
+                <label className="block text-sm font-medium text-gray-700 mb-2">Actions</label>
+                <button
+                  onClick={() => {
+                    setSearchTerm('');
+                    setStatusFilter('all');
+                    setSelectedUsers([]);
+                  }}
+                  className="w-full px-3 py-1.5 bg-blue-400 text-white rounded-md hover:bg-gray-400 transition-colors text-sm"
+                >
+                  Clear Filters
+                </button>
+              </div>
+            </div>
           </div>
-          <div>
-            <h2 className="text-2xl font-bold text-gray-800">{reviewUser.name}</h2>
-            <p className="text-sm text-gray-500">Document Review & Management</p>
+
+          <div className="ml-4 mt-[30px]">
+            <button
+              onClick={() => setAssignModal("select")}
+              className="bg-blue-600 text-white px-4 py-2 rounded-lg shadow hover:bg-blue-700 transition-all text-sm font-medium"
+            >
+              Assign Documents
+            </button>
           </div>
         </div>
-        <button
-          className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+      </div>
+
+      <div className="flex-1 overflow-hidden px-2 bg-white">
+        <div
+          className="overflow-y-auto border rounded-lg bg-gray-50"
+          style={{ maxHeight: 'calc(100vh - var(--adr-header-height) - 120px)' }}
+        >
+          {filteredUsers.length === 0 ? (
+            <div className="text-center py-12">
+              <ClipboardList className="mx-auto text-gray-400 mb-4" size={48} />
+              <p className="text-gray-500 text-lg">No employees found</p>
+            </div>
+          ) : (
+            <ul className="divide-y divide-gray-200 rounded-md overflow-hidden shadow-sm">
+              {pageUsers.map((user, idx) => (
+                <li
+                  key={user.userId}
+                  onClick={() => handleUserClick(user)}
+                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 transition-colors bg-white"
+                >
+                  <div className="flex items-center gap-3">
+                    <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
+                      {user.name?.[0]?.toUpperCase() || <User size={14} />}
+                    </div>
+                    <span className="font-medium text-gray-800">{user.name}</span>
+                  </div>
+
+                  {statusFilter !== "all" && assignedDocs[user.userId] && (
+                    <span className="text-xs px-2 py-0.5 rounded-full bg-blue-100 text-blue-700 font-medium">
+                      {filterDocsByStatus(assignedDocs[user.userId] || []).length} {statusFilter}
+                    </span>
+                  )}
+                </li>
+              ))}
+            </ul>
+          )}
+        </div>
+
+        {/* Pagination */}
+        <div className="flex items-center justify-between mt-4 p-3 border-t bg-white rounded-lg shadow-sm">
+          <div className="flex items-center gap-2">
+            <button
+              onClick={() => setCurrentPage((p) => Math.max(1, p - 1))}
+              disabled={currentPage === 1}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Prev
+            </button>
+            <button
+              onClick={() => setCurrentPage((p) => Math.min(totalPages, p + 1))}
+              disabled={currentPage === totalPages}
+              className="px-3 py-1 border rounded disabled:opacity-50"
+            >
+              Next
+            </button>
+            <span className="text-sm text-gray-600">
+              Page {currentPage} of {totalPages}
+            </span>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <label className="text-sm text-gray-600">Per page</label>
+            <select
+              value={pageSize}
+              onChange={(e) => {
+                setPageSize(Number(e.target.value));
+                setCurrentPage(1);
+              }}
+              className="border rounded px-2 py-1 text-sm"
+            >
+              {pageOptions.map((opt) => (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+      </div>
+
+      {/* Review Modal */}
+      {reviewUser && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
           onClick={() => setReviewUser(null)}
         >
-          <X size={24} />
-        </button>
-      </div>
-
-<div className="flex-1 p-6">
-  <div className="border rounded-t-lg bg-[#6d9eeb7a]">
-    <table className="min-w-full border-collapse">
-      <thead className="text-xs font-semibold uppercase text-black">
-        <tr>
-          <th className="p-3 text-left w-[45%]">Document</th>
-          <th className="p-3 text-center w-[20%]">
-            <div className="flex justify-center items-center gap-1">
-              <span>Status</span>
-            </div>
-          </th>
-          <th className="p-3 text-center w-[20%]">
-            <div className="flex justify-center items-center gap-1">
-              <span>Actions</span>
-            </div>
-          </th>
-        </tr>
-      </thead>
-    </table>
-  </div>
-
-  <div className="overflow-y-auto max-h-[400px] border border-t-0 rounded-b-lg">
-    <table className="min-w-full border-collapse table-fixed">
-    <tbody className="text-sm divide-y divide-gray-100">
-  {filterDocsByStatus(assignedDocs[reviewUser.userId] || []).length === 0 ? (
-    <tr>
-      <td colSpan="4" className="p-8 text-center text-gray-400">
-        No documents found.
-      </td>
-    </tr>
-  ) : (
-    filterDocsByStatus(assignedDocs[reviewUser.userId] || [])
-      .slice() 
-      .reverse()
-      .map((doc) => (
-        <tr key={doc.docName} className="hover:bg-blue-50 transition-colors">
-          <td className="p-3 align-middle w-[45%]">
-            <div className="flex items-center gap-2 text-gray-800">
-              <FileText size={18} className="text-blue-500 flex-shrink-0" />
-              <span className="font-medium truncate">{doc.docName}</span>
-            </div>
-          </td>
-
-         <td className="p-3 text-center align-middle w-[20%]">
-  <div className="flex justify-center gap-4">
-    {doc.status === "verified" ? (
-      <div
-        className="text-green-600 hover:text-green-800 transition"
-        title="Verified"
-      >
-        <CheckCircle size={18} />
-      </div>
-    ) : doc.fileUrl ? (
-      <div
-        className="text-blue-600 hover:text-blue-800 transition"
-        title="Uploaded"
-      >
-        <Upload size={18} />
-      </div>
-    ) : (
-      <div
-        className="text-gray-600 hover:text-gray-800 transition"
-        title="Pending"
-      >
-        <Clock size={18} />
-      </div>
-    )}
-  </div>
-</td>
-
-
-          <td className="p-3 text-center align-middle w-[20%]">
-            <div className="flex justify-center gap-4">
-              {doc.fileUrl && (
-                <a
-                  href={`${ipadr}${doc.fileUrl}`}
-                  target="_blank"
-                  rel="noreferrer"
-                  className="text-blue-600 hover:text-blue-800 transition"
-                  title="View Document"
-                >
-                  <Eye size={18} />
-                </a>
-              )}
-            
-              {doc.fileUrl && doc.status !== "verified" && (
-                <button
-                  onClick={() => handleVerify(reviewUser.userId, doc.docName)}
-                  className="text-green-600 hover:text-green-800 transition"
-                  title="Verify Document"
-                >
-                  <Check size={18} />
-                </button>
-              )}
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-5xl max-h-[85vh] flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-6 border-b border-gray-200 flex-shrink-0">
+              <div className="flex items-center gap-3">
+                <div className="w-12 h-12 bg-gradient-to-br from-blue-400 to-blue-600 text-white rounded-full flex items-center justify-center font-bold text-xl shadow-md">
+                  {reviewUser.name?.[0]?.toUpperCase() || <User size={24} />}
+                </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-gray-800">{reviewUser.name}</h2>
+                  <p className="text-sm text-gray-500">Document Review & Management</p>
+                </div>
+              </div>
               <button
-                onClick={() => handleDelete(reviewUser.userId, doc.docName)}
-                className="text-red-600 hover:text-red-800 transition"
-                title="Delete Document"
+                className="text-gray-400 hover:text-gray-600 transition-colors p-2 hover:bg-gray-100 rounded-full"
+                onClick={() => setReviewUser(null)}
               >
-                <Trash2 size={18} />
+                <X size={24} />
               </button>
             </div>
-          </td>
-        </tr>
-      ))
-  )}
-</tbody>
 
-    </table>
-  </div>
-</div>
+            <div className="flex-1 p-6 overflow-y-auto">
+              {loadingDocs[reviewUser.userId] ? (
+                <div className="flex justify-center items-center py-12">
+                  <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-blue-600"></div>
+                </div>
+              ) : (
+                <>
+                  <div className="border rounded-t-lg bg-[#6d9eeb7a]">
+                    <table className="min-w-full border-collapse">
+                      <thead className="text-xs font-semibold uppercase text-black">
+                        <tr>
+                          <th className="p-3 text-left w-[45%]">Document</th>
+                          <th className="p-3 text-center w-[20%]">Status</th>
+                          <th className="p-3 text-center w-[20%]">Actions</th>
+                        </tr>
+                      </thead>
+                    </table>
+                  </div>
 
-    </div>
-  </div>
-)}
+                  <div className="overflow-y-auto max-h-[400px] border border-t-0 rounded-b-lg">
+                    <table className="min-w-full border-collapse table-fixed">
+                      <tbody className="text-sm divide-y divide-gray-100">
+                        {filterDocsByStatus(assignedDocs[reviewUser.userId] || []).length === 0 ? (
+                          <tr>
+                            <td colSpan="3" className="p-8 text-center text-gray-400">
+                              No documents found.
+                            </td>
+                          </tr>
+                        ) : (
+                          filterDocsByStatus(assignedDocs[reviewUser.userId] || [])
+                            .slice()
+                            .reverse()
+                            .map((doc) => (
+                              <tr key={doc.docName} className="hover:bg-blue-50 transition-colors">
+                                <td className="p-3 align-middle w-[45%]">
+                                  <div className="flex items-center gap-2 text-gray-800">
+                                    <FileText size={18} className="text-blue-500 flex-shrink-0" />
+                                    <span className="font-medium truncate">{doc.docName}</span>
+                                  </div>
+                                </td>
 
-{assignModal === "select" && (
-  <div
-    className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-    onClick={() => setAssignModal(false)}
-  >
-    <div
-      className="bg-white rounded-2xl shadow-2xl w-full max-w-lg"
-      onClick={(e) => e.stopPropagation()}
-    >
+                                <td className="p-3 text-center align-middle w-[20%]">
+                                  <div className="flex justify-center gap-4">
+                                    {doc.status === "verified" ? (
+                                      <div className="text-green-600" title="Verified">
+                                        <CheckCircle size={18} />
+                                      </div>
+                                    ) : doc.fileUrl ? (
+                                      <div className="text-blue-600" title="Uploaded">
+                                        <Upload size={18} />
+                                      </div>
+                                    ) : (
+                                      <div className="text-gray-600" title="Pending">
+                                        <Clock size={18} />
+                                      </div>
+                                    )}
+                                  </div>
+                                </td>
 
-      <div className="flex justify-between items-center p-4 border-b border-gray-200">
-        <h3 className="text-xl font-semibold text-gray-800">Select Employees</h3>
-        <button
+                                <td className="p-3 text-center align-middle w-[20%]">
+                                  <div className="flex justify-center gap-4">
+                                    {doc.fileUrl && (
+                                      <a
+                                        href={`${ipadr}${doc.fileUrl}`}
+                                        target="_blank"
+                                        rel="noreferrer"
+                                        className="text-blue-600 hover:text-blue-800 transition"
+                                        title="View Document"
+                                      >
+                                        <Eye size={18} />
+                                      </a>
+                                    )}
+
+                                    {doc.fileUrl && doc.status !== "verified" && (
+                                      <button
+                                        onClick={() => handleVerify(reviewUser.userId, doc.docName)}
+                                        className="text-green-600 hover:text-green-800 transition"
+                                        title="Verify Document"
+                                      >
+                                        <Check size={18} />
+                                      </button>
+                                    )}
+                                    <button
+                                      onClick={() => handleDelete(reviewUser.userId, doc.docName)}
+                                      className="text-red-600 hover:text-red-800 transition"
+                                      title="Delete Document"
+                                    >
+                                      <Trash2 size={18} />
+                                    </button>
+                                  </div>
+                                </td>
+                              </tr>
+                            ))
+                        )}
+                      </tbody>
+                    </table>
+                  </div>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Select Users Modal */}
+      {assignModal === "select" && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
           onClick={() => setAssignModal(false)}
-          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
         >
-          <X size={20} />
-        </button>
-      </div>
-
-      <div className="p-4">
-        <p className="text-sm text-gray-600 mb-3">
-          Select one or more employees to assign documents.
-        </p>
-
-        <div className="relative mb-3">
-        <input
-        type="text"
-        placeholder="Search employees..."
-        value={modalSearchTerm}
-        onChange={(e) => setModalSearchTerm(e.target.value)}
-        className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-      />
-
-          <Search
-            size={16}
-            className="absolute right-3 top-2.5 text-gray-400"
-          />
-        </div>
-        
-<div className="max-h-60 overflow-y-auto border rounded-md p-2">
-  {users
-    .filter((u) =>
-      u.name?.toLowerCase().includes(modalSearchTerm.toLowerCase())
-    )
-    .map((u) => (
-      <label
-        key={u.userId}
-        className="flex items-center gap-2 py-2 px-3 text-sm cursor-pointer rounded-md hover:bg-blue-100 transition-colors duration-150"
-      >
-        <input
-          type="checkbox"
-          checked={selectedUsers.includes(u.userId)}
-          onChange={() => toggleUserSelection(u.userId)}
-          className="text-blue-600 rounded border-gray-300"
-        />
-        <span className="text-gray-700">{u.name}</span>
-      </label>
-    ))}
-
-  {users.filter((u) =>
-    u.name?.toLowerCase().includes(modalSearchTerm.toLowerCase())
-  ).length === 0 && (
-    <p className="text-gray-500 text-sm text-center py-2">
-      No employees found.
-    </p>
-  )}
-</div>
-      </div>
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-t border-gray-200">
-        <p className="text-sm text-gray-600 text-center w-full sm:w-auto">
-          <strong>{selectedUsers.length}</strong> user
-          {selectedUsers.length > 1 ? "s are" : " is"} selected.
-        </p>
-
-        <div className="flex justify-end gap-3 w-full sm:w-auto">
-          <button
-  onClick={() => {
-    setSelectedUsers([]);
-    setModalSearchTerm(""); 
-    setAssignModal(false); 
-  }}
-  className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
->
-  Cancel
-</button>
-
-          <button
-            onClick={() => {
-              if (selectedUsers.length === 0) {
-                toast.warning("Select at least one user");
-                return;
-              }
-              setAssignModal("confirm");
-            }}
-            className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-lg"
+            onClick={(e) => e.stopPropagation()}
           >
-            Next
-          </button>
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-800">Select Employees</h3>
+              <button
+                onClick={() => setAssignModal(false)}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
+
+            <div className="p-4">
+              <p className="text-sm text-gray-600 mb-3">
+                Select one or more employees to assign documents.
+              </p>
+
+              <div className="relative mb-3">
+                <input
+                  type="text"
+                  placeholder="Search employees..."
+                  value={modalSearchTerm}
+                  onChange={(e) => setModalSearchTerm(e.target.value)}
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                />
+                <Search size={16} className="absolute right-3 top-2.5 text-gray-400" />
+              </div>
+
+              <div className="max-h-60 overflow-y-auto border rounded-md p-2">
+                {users
+                  .filter((u) => u.name?.toLowerCase().includes(modalSearchTerm.toLowerCase()))
+                  .map((u) => (
+                    <label
+                      key={u.userId}
+                      className="flex items-center gap-2 py-2 px-3 text-sm cursor-pointer rounded-md hover:bg-blue-100 transition-colors duration-150"
+                    >
+                      <input
+                        type="checkbox"
+                        checked={selectedUsers.includes(u.userId)}
+                        onChange={() => toggleUserSelection(u.userId)}
+                        className="text-blue-600 rounded border-gray-300"
+                      />
+                      <span className="text-gray-700">{u.name}</span>
+                    </label>
+                  ))}
+
+                {users.filter((u) => u.name?.toLowerCase().includes(modalSearchTerm.toLowerCase()))
+                  .length === 0 && (
+                  <p className="text-gray-500 text-sm text-center py-2">No employees found.</p>
+                )}
+              </div>
+            </div>
+
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 border-t border-gray-200">
+              <p className="text-sm text-gray-600 text-center w-full sm:w-auto">
+                <strong>{selectedUsers.length}</strong> user{selectedUsers.length > 1 ? "s are" : " is"} selected.
+              </p>
+
+              <div className="flex justify-end gap-3 w-full sm:w-auto">
+                <button
+                  onClick={() => {
+                    setSelectedUsers([]);
+                    setModalSearchTerm("");
+                    setAssignModal(false);
+                  }}
+                  className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+                >
+                  Cancel
+                </button>
+
+                <button
+                  onClick={() => {
+                    if (selectedUsers.length === 0) {
+                      toast.warning("Select at least one user");
+                      return;
+                    }
+                    setAssignModal("confirm");
+                  }}
+                  className="px-4 py-2 text-sm rounded-md bg-blue-600 text-white hover:bg-blue-700"
+                >
+                  Next
+                </button>
+              </div>
+            </div>
+          </div>
         </div>
-      </div>
-    </div>
-  </div>
-)}
+      )}
 
-
-{assignModal === "confirm" && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
-   onClick={() => setAssignModal("select")}
-   >
-    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
-     onClick={(e) => e.stopPropagation()}
-     >
-      <div className="flex justify-between items-center p-4 border-b border-gray-200">
-        <h3 className="text-xl font-semibold text-gray-800">Assign Documents</h3>
-        <button
+      {/* Confirm Assignment Modal */}
+      {assignModal === "confirm" && (
+        <div
+          className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
           onClick={() => setAssignModal("select")}
-          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
         >
-          <X size={20} />
-        </button>
-      </div>
+          <div
+            className="bg-white rounded-2xl shadow-2xl w-full max-w-md"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center p-4 border-b border-gray-200">
+              <h3 className="text-xl font-semibold text-gray-800">Assign Documents</h3>
+              <button
+                onClick={() => setAssignModal("select")}
+                className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+              >
+                <X size={20} />
+              </button>
+            </div>
 
-      <div className="p-4">
-        <p className="text-sm text-gray-600 mb-3"> 
-          Enter the document name to assign.
-        </p>
+            <div className="p-4">
+              <p className="text-sm text-gray-600 mb-3">Enter the document name to assign.</p>
 
-        <div className="relative">
-          <FileText
-            size={16}
-            className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
-          />
-          <input
-            type="text"
-            placeholder="Enter document name..."
-            value={newDocName}
-            onChange={(e) => setNewDocName(e.target.value)}
-            className="w-full pl-9 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
-          />
+              <div className="relative">
+                <FileText
+                  size={16}
+                  className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400"
+                />
+                <input
+                  type="text"
+                  placeholder="Enter document name..."
+                  value={newDocName}
+                  onChange={(e) => setNewDocName(e.target.value)}
+                  className="w-full pl-9 pr-3 py-2 border rounded-md focus:ring-2 focus:ring-blue-500 text-sm"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end gap-3 p-4 border-t border-gray-200">
+              <button
+                onClick={() => setAssignModal("select")}
+                className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+              >
+                Back
+              </button>
+              <button
+                onClick={handleAssignDocument}
+                disabled={loadingAssign}
+                className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
+              >
+                {loadingAssign ? (
+                  <>
+                    <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
+                    Assigning...
+                  </>
+                ) : (
+                  <>
+                    <PlusCircle size={16} />
+                    Assign
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
         </div>
-      </div>
-
-      <div className="flex justify-end gap-3 p-4 border-t border-gray-200">
-        <button
-          onClick={() => setAssignModal("select")}
-          className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
-        >
-          Back
-        </button>
-        <button
-          onClick={handleAssignDocument}
-          disabled={loadingAssign}
-          className="flex items-center gap-2 px-4 py-2 text-sm bg-blue-600 text-white rounded-md hover:bg-blue-700 disabled:opacity-60"
-        >
-          {loadingAssign ? (
-            <>
-              <div className="animate-spin rounded-full h-4 w-4 border-b-2 border-white"></div>
-              Assigning...
-            </>
-          ) : (
-            <>
-              <PlusCircle size={16} />
-              Assign
-            </>
-          )}
-        </button>
-      </div>
-    </div>
-  </div>
-)}
+      )}
     </div>
   );
 }

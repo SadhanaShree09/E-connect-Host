@@ -900,6 +900,7 @@ export default function Chat() {
               }`}>
                 {getInitials(group.name)}
               </div>
+              {/* (Typing indicator shown in place of the members line below) */}
               <div className="flex flex-col min-w-0 flex-1">
                 <span className={`truncate font-semibold text-sm ${
                   activeChat.chatId === `group_${group._id}` ? "text-gray-500" : "text-gray-800"
@@ -910,7 +911,20 @@ export default function Chat() {
                   activeChat.chatId === `group_${group._id}` ? "text-blue-500" : "text-gray-500"
                 }`}>
                   <FiUsers size={10} />
-                  {group.members?.filter((m) => m !== userid).length} members
+                  {typingUsers[`group_${group._id}`]
+                    ? (() => {
+                        const tId = typingUsers[`group_${group._id}`];
+                        let tUser = contacts.find((c) => String(c.id) === String(tId));
+                        if (!tUser && Array.isArray(group.members)) {
+                          const member = group.members.find((m) => String(m) === String(tId));
+                          if (member) {
+                            tUser = contacts.find((c) => String(c.id) === String(member)) || { name: member };
+                          }
+                        }
+                        const name = tUser ? tUser.name : tId;
+                        return `${name} is typing...`;
+                      })()
+                    : `${group.members?.filter((m) => m !== userid).length} members`}
                 </span>
               </div>
             </div>
@@ -1331,10 +1345,25 @@ export default function Chat() {
               <div className="border-t border-border bg-card p-4">
                 {typingUsers[activeChat.chatId] && (
                   <div className="mb-2 px-2">
-                    <div className="text-sm text-gray-500 italic">
+                    <div className="text-sm italic text-blue-400 font-medium">
                       {(() => {
-                        const tUser = contacts.find((c) => c.id === typingUsers[activeChat.chatId]);
-                        const name = tUser ? tUser.name : typingUsers[activeChat.chatId];
+                        const typingUserId = typingUsers[activeChat.chatId];
+                        let tUser = contacts.find((c) => String(c.id) === String(typingUserId));
+
+                        // If not found and this is a group chat, try resolving from group members
+                        if (!tUser && activeChat.type === "group") {
+                          const group = groups.find(
+                            (g) => String(g._id) === String(activeChat.id) || String(g._id) === String(activeChat.chatId).replace(/^group_/, "")
+                          );
+                          if (group && Array.isArray(group.members)) {
+                            const memberId = group.members.find((m) => String(m) === String(typingUserId));
+                            if (memberId) {
+                              tUser = contacts.find((c) => String(c.id) === String(memberId)) || { name: memberId };
+                            }
+                          }
+                        }
+
+                        const name = tUser ? tUser.name : typingUserId;
                         return `${name} is typing...`;
                       })()}
                     </div>

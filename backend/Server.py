@@ -3047,12 +3047,39 @@ async def websocket_group(websocket: WebSocket, group_id: str):
     try:
         while True:
             data = await websocket.receive_json()
-            
-            # Skip empty messages completely
+
+            # Skip empty messages completely, but allow control packets like typing/read receipts
             text = data.get("text", "").strip()
-            if not text and data.get("type") != "read_receipt":
+            msg_type = data.get("type", "message")
+            if not text and msg_type not in ("read_receipt", "typing"):
                 continue
-            
+
+            # If this is a typing control frame for the group, broadcast it and don't persist
+            if msg_type == "typing":
+                try:
+                    await group_ws_manager.broadcast(group_id, data)
+                    # Also forward typing events to each member's personal socket so
+                    # users receive group typing notifications even when they are
+                    # connected to their personal socket (not the group socket).
+                    try:
+                        group = groups_collection.find_one({"_id": group_id})
+                        if group:
+                            members = group.get("members", [])
+                            sender = data.get("from_user")
+                            for member_id in members:
+                                try:
+                                    if member_id and member_id != sender:
+                                        # send typing payload to member's personal connection
+                                        await direct_chat_manager.send_message(member_id, data)
+                                except Exception:
+                                    # ignore per-member send errors
+                                    pass
+                    except Exception as e:
+                        print(f"Error forwarding group typing to personal sockets: {e}")
+                except Exception as e:
+                    print(f"Error broadcasting group typing event: {e}")
+                continue
+
             # Add timestamp & unique id
             data["timestamp"] = datetime.utcnow().isoformat() + "Z"
             data["id"] = data.get("id") or str(ObjectId())

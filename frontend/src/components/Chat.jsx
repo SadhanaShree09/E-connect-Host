@@ -1193,7 +1193,7 @@ export default function Chat() {
           </div>
         </div>
         {!activeChat.id && (
-    <div className="flex-1 flex flex-col items-center justify-center bg-white-50 text-center p-6">
+    <div className="flex-1 flex flex-col items-center justify-center bg-white text-center p-6">
       <FiMessageSquare className="text-7xl text-blue-200 mb-6 animate-pulse" />
       <h2 className="text-2xl font-semibold text-gray-800 mb-2">
         Welcome to Chat
@@ -1433,11 +1433,13 @@ export default function Chat() {
         <p className="text-blue-600 font-medium">Loading messages...</p>
       </div>
     ) : (
-      <div className="flex flex-col justify-center items-center h-full text-center">
+       (activeChat.id ? (
+       <div className="flex flex-col justify-center items-center h-full text-center">
         <FiMessageSquare className="text-5xl text-gray-300 mb-4" />
         <p className="text-gray-500 text-lg">No messages yet</p>
         <p className="text-gray-400 text-sm">Start the conversation!</p>
       </div>
+       ) : null)
     )}
   </div>
 

@@ -366,7 +366,7 @@ const filteredDocs = useMemo(() => {
                   </div>
                 </td>
                 <td className="p-2 text-center align-middle text-gray-600 text-sm w-[32%]">
-                  {doc.assignedAt ? new Date(doc.assignedAt).toLocaleString() : "—"}
+                  {doc.assignedAt ? new Date(doc.assignedAt + 'Z').toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' }) : "—"}
                 </td>
               </tr>
             ))

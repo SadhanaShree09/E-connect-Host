@@ -21,6 +21,7 @@ const AttendanceStats = ({ onClose = () => {} }) => {
   const [attendanceRecords, setAttendanceRecords] = useState([]);
   const [holidays, setHolidays] = useState([]);
   const [leaveHistory, setLeaveHistory] = useState([]);
+  const [remoteHistory, setRemoteHistory] = useState([]);
   const [activeTab, setActiveTab] = useState('analytics');
   const [currentMonth, setCurrentMonth] = useState(new Date().getMonth());
   const [currentCalendarYear, setCurrentCalendarYear] = useState(new Date().getFullYear());
@@ -97,6 +98,31 @@ const AttendanceStats = ({ onClose = () => {} }) => {
     } catch (error) {
       console.error("Error parsing date:", dateStr, error);
       return null;
+    }
+  };
+
+  // Fetch remote work history
+  const fetchRemoteHistory = async () => {
+    if (!userid) return;
+
+    try {
+      const remoteResponse = await fetch(`${API_BASE_URL}/Remote-History/${userid}`);
+      
+      if (remoteResponse.ok) {
+        const remoteData = await remoteResponse.json();
+        const remoteRecords = remoteData.Remote_History || [];
+        
+        // Filter only approved remote work
+        const approvedRemote = remoteRecords.filter(remote => {
+          const status = (remote.status || '').toLowerCase();
+          const recommendation = (remote.Recommendation || '').toLowerCase();
+          return status === 'approved' || recommendation === 'approved';
+        });
+        
+        setRemoteHistory(approvedRemote);
+      }
+    } catch (err) {
+      console.error("Error fetching remote history:", err);
     }
   };
 
@@ -197,11 +223,36 @@ const AttendanceStats = ({ onClose = () => {} }) => {
     if (userid) {
       fetchAttendanceData(selectedYear);
       fetchLeaveHistory();
+      fetchRemoteHistory();
     }
   }, [selectedYear, userid]);
 
   const handleYearChange = (year) => {
     setSelectedYear(year);
+  };
+
+  // Check if a date has approved remote work
+  const isDateRemote = (year, month, day) => {
+    if (!remoteHistory || remoteHistory.length === 0) return false;
+
+    const checkDate = new Date(year, month, day);
+    checkDate.setHours(0, 0, 0, 0);
+
+    for (const remote of remoteHistory) {
+      const fromDate = parseDate(remote.fromDate);
+      const toDate = parseDate(remote.toDate);
+
+      if (fromDate && toDate) {
+        fromDate.setHours(0, 0, 0, 0);
+        toDate.setHours(23, 59, 59, 999);
+
+        if (checkDate >= fromDate && checkDate <= toDate) {
+          return true;
+        }
+      }
+    }
+
+    return false;
   };
 
   // Get detailed information for a specific date
@@ -213,6 +264,7 @@ const AttendanceStats = ({ onClose = () => {} }) => {
       date: currentDate,
       holiday: null,
       leaves: [],
+      remoteWork: [],
       isPresent: false,
       attendanceRecord: null
     };
@@ -227,6 +279,23 @@ const AttendanceStats = ({ onClose = () => {} }) => {
     
     if (holidayFound) {
       details.holiday = holidayFound;
+    }
+    
+    // Check remote work
+    if (remoteHistory && remoteHistory.length > 0) {
+      for (const remote of remoteHistory) {
+        const fromDate = parseDate(remote.fromDate);
+        const toDate = parseDate(remote.toDate);
+
+        if (fromDate && toDate) {
+          fromDate.setHours(0, 0, 0, 0);
+          toDate.setHours(23, 59, 59, 999);
+
+          if (currentDate >= fromDate && currentDate <= toDate) {
+            details.remoteWork.push(remote);
+          }
+        }
+      }
     }
     
     // Check all leaves for this date
@@ -392,6 +461,11 @@ const AttendanceStats = ({ onClose = () => {} }) => {
       statuses.push('holiday');
     }
     
+    // Check remote work
+    if (isDateRemote(year, month, day)) {
+      statuses.push('remote');
+    }
+    
     // Check leave
     if (isDateOnLeave(year, month, day)) {
       statuses.push('leave');
@@ -499,6 +573,8 @@ const AttendanceStats = ({ onClose = () => {} }) => {
           bgColor = 'bg-red-50 hover:bg-red-100';
         } else if (status.includes('holiday')) {
           bgColor = 'bg-orange-50 hover:bg-orange-100';
+        } else if (status.includes('remote')) {
+          bgColor = 'bg-blue-50 hover:bg-blue-100';
         }
       }
       
@@ -525,7 +601,8 @@ const AttendanceStats = ({ onClose = () => {} }) => {
                     className={`w-1.5 h-1.5 rounded-full ${
                       s === 'present' ? 'bg-green-500' :
                       s === 'leave' ? 'bg-red-500' :
-                      s === 'holiday' ? 'bg-orange-500' : ''
+                      s === 'holiday' ? 'bg-orange-500' :
+                      s === 'remote' ? 'bg-blue-500' : ''
                     }`}
                     title={s}
                   ></div>
@@ -623,6 +700,10 @@ const AttendanceStats = ({ onClose = () => {} }) => {
                       <span className="text-sm text-gray-600">Present</span>
                     </div>
                     <div className="flex items-center gap-2">
+                      <div className="w-4 h-4 rounded bg-blue-500"></div>
+                      <span className="text-sm text-gray-600">Remote Work</span>
+                    </div>
+                    <div className="flex items-center gap-2">
                       <div className="w-4 h-4 rounded bg-red-500"></div>
                       <span className="text-sm text-gray-600">Leave</span>
                     </div>
@@ -664,31 +745,77 @@ const AttendanceStats = ({ onClose = () => {} }) => {
                       </div>
                     )}
 
-                    {/* Leave Information */}
-                    {selectedDateDetails.leaves.length > 0 && (
+                    {/* Remote Work Information */}
+                    {selectedDateDetails.remoteWork.length > 0 && (
                       <div className="space-y-2">
-                        {selectedDateDetails.leaves.map((leave, idx) => (
-                          <div key={idx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                        {selectedDateDetails.remoteWork.map((remote, idx) => (
+                          <div key={idx} className="bg-blue-50 border border-blue-200 rounded-lg p-3">
                             <div className="flex items-start gap-2">
-                              <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5"></div>
+                              <div className="w-2 h-2 rounded-full bg-blue-500 mt-1.5"></div>
                               <div className="flex-1">
-                                <p className="text-sm font-semibold text-red-900">
-                                  {leave.leaveType || leave.LeaveType || 'Leave'}
+                                <p className="text-sm font-semibold text-blue-900">
+                                  Remote Work
                                 </p>
-                                {leave.reason && (
-                                  <p className="text-sm text-red-800 mt-1">
-                                    <span className="font-medium">Reason:</span> {leave.reason}
+                                {remote.reason && (
+                                  <p className="text-sm text-blue-800 mt-1">
+                                    <span className="font-medium">Reason:</span> {remote.reason}
                                   </p>
                                 )}
-                                {leave.selectedOption && (
-                                  <p className="text-xs text-red-700 mt-1">
-                                    Type: {leave.selectedOption}
+                                {remote.ip && (
+                                  <p className="text-xs text-blue-700 mt-1">
+                                    IP: {remote.ip}
                                   </p>
                                 )}
+                                <p className="text-xs text-blue-700 mt-1">
+                                  Period: {remote.fromDate} to {remote.toDate}
+                                </p>
                               </div>
                             </div>
                           </div>
                         ))}
+                      </div>
+                    )}
+
+                    {/* Leave Information */}
+                    {selectedDateDetails.leaves.length > 0 && (
+                      <div className="space-y-2">
+                        {selectedDateDetails.leaves.map((leave, idx) => {
+                          const fromDate = leave.fromDate || leave.FromDate || leave.selectedDate || leave.requestDate;
+                          const toDate = leave.toDate || leave.ToDate || leave.selectedDate || leave.requestDate;
+                          
+                          return (
+                            <div key={idx} className="bg-red-50 border border-red-200 rounded-lg p-3">
+                              <div className="flex items-start gap-2">
+                                <div className="w-2 h-2 rounded-full bg-red-500 mt-1.5"></div>
+                                <div className="flex-1">
+                                  <p className="text-sm font-semibold text-red-900">
+                                    {leave.leaveType || leave.LeaveType || 'Leave'}
+                                  </p>
+                                  {leave.reason && (
+                                    <p className="text-sm text-red-800 mt-1">
+                                      <span className="font-medium">Reason:</span> {leave.reason}
+                                    </p>
+                                  )}
+                                  {leave.selectedOption && (
+                                    <p className="text-xs text-red-700 mt-1">
+                                      Type: {leave.selectedOption}
+                                    </p>
+                                  )}
+                                  {fromDate && toDate && (
+                                    <p className="text-xs text-red-700 mt-1">
+                                      Period: {fromDate} to {toDate}
+                                    </p>
+                                  )}
+                                  {leave.timeSlot && (
+                                    <p className="text-xs text-red-700 mt-1">
+                                      Time Slot: {leave.timeSlot}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                       </div>
                     )}
 
@@ -710,10 +837,11 @@ const AttendanceStats = ({ onClose = () => {} }) => {
                     {/* No Information */}
                     {!selectedDateDetails.holiday && 
                      selectedDateDetails.leaves.length === 0 && 
+                     selectedDateDetails.remoteWork.length === 0 &&
                      !selectedDateDetails.isPresent && (
                       <div className="bg-gray-50 border border-gray-200 rounded-lg p-3">
                         <p className="text-sm text-gray-600 text-center">
-                          No attendance or leave records for this date
+                          No attendance, leave, or remote work records for this date
                         </p>
                       </div>
                     )}

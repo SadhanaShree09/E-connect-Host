@@ -35,6 +35,9 @@ export default function AdminDocsReview() {
   const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(20);
   const [loadingDocs, setLoadingDocs] = useState({});
+  const [deleteModal, setDeleteModal] = useState(false);
+  const [deleteInfo, setDeleteInfo] = useState({ userId: null, docName: "" });
+
   const pageOptions = [20, 50, 100];
 
   useEffect(() => {
@@ -139,75 +142,38 @@ export default function AdminDocsReview() {
   };
 
   const handleVerify = async (userId, docName) => {
-    try {
-      await axios.put(`${ipadr}/review_document`, {
-        userId,
-        docName,
-        status: "verified",
-        remarks: "Verified by HR",
-      });
-      
-      // Clear cache to force reload
-      setAssignedDocs(prev => {
-        const updated = { ...prev };
-        delete updated[userId];
-        return updated;
-      });
-      
-      // Reload docs
-      await fetchAssignedDocs(userId);
-      toast.success("Document verified successfully!");
-    } catch (err) {
-      console.error(err);
-      toast.error("Verification failed");
-    }
-  };
+  try {
+    await axios.put(`${ipadr}/review_document`, {
+      userId,
+      docName,
+      status: "verified",
+      remarks: "Verified by HR",
+    });
+
+    // ✅ Update local state instantly (don’t delete)
+    setAssignedDocs((prev) => {
+      const updated = { ...prev };
+      if (updated[userId]) {
+        updated[userId] = updated[userId].map((doc) =>
+          doc.docName === docName ? { ...doc, status: "verified" } : doc
+        );
+      }
+      return updated;
+    });
+
+    toast.success("Document verified successfully!");
+  } catch (err) {
+    console.error(err);
+    toast.error("Verification failed");
+  }
+};
+
 
   const handleDelete = (userId, docName) => {
-    toast(
-      ({ closeToast }) => (
-        <div className="flex flex-col gap-2">
-          <span>Are you sure you want to delete <strong>{docName}</strong>?</span>
-          <div className="flex justify-end gap-2">
-            <button
-              onClick={async () => {
-                closeToast();
-                try {
-                  await axios.delete(`${ipadr}/assigned_doc_delete`, {
-                    data: { userId, docName },
-                  });
-                  
-                  // Update cache
-                  setAssignedDocs((prev) => ({
-                    ...prev,
-                    [userId]: (prev[userId] || []).filter((d) => d.docName !== docName),
-                  }));
-                  toast.success("Document deleted successfully!");
-                } catch (err) {
-                  console.error(err);
-                  toast.error("Failed to delete document");
-                }
-              }}
-              className="px-3 py-1 bg-red-500 text-white rounded hover:bg-red-600 text-xs"
-            >
-              Yes
-            </button>
-            <button
-              onClick={closeToast}
-              className="px-3 py-1 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-xs"
-            >
-              No
-            </button>
-          </div>
-        </div>
-      ),
-      {
-        autoClose: false,
-        closeOnClick: false,
-        draggable: false,
-      }
-    );
-  };
+  setDeleteInfo({ userId, docName });
+  setDeleteModal(true);
+};
+
 
   const filteredUsers = useMemo(() => {
     return users.filter((user) => {
@@ -716,6 +682,69 @@ export default function AdminDocsReview() {
           </div>
         </div>
       )}
+
+      {deleteModal && (
+  <div
+    className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50 p-4"
+    onClick={() => setDeleteModal(false)}
+  >
+    <div
+      className="bg-white rounded-2xl shadow-2xl w-full max-w-sm"
+      onClick={(e) => e.stopPropagation()}
+    >
+      <div className="flex justify-between items-center p-4 border-b border-gray-200">
+        <h3 className="text-lg font-semibold text-gray-800">Confirm Delete</h3>
+        <button
+          onClick={() => setDeleteModal(false)}
+          className="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100"
+        >
+          <X size={20} />
+        </button>
+      </div>
+
+      <div className="p-4 text-center">
+        <p className="text-gray-700 text-sm mb-4">
+          Are you sure you want to delete <strong>{deleteInfo.docName}</strong>?
+        </p>
+        <div className="flex justify-center gap-3">
+          <button
+            onClick={async () => {
+              try {
+                await axios.delete(`${ipadr}/assigned_doc_delete`, {
+                  data: { userId: deleteInfo.userId, docName: deleteInfo.docName },
+                });
+                setAssignedDocs((prev) => ({
+                  ...prev,
+                  [deleteInfo.userId]: (prev[deleteInfo.userId] || []).filter(
+                    (d) => d.docName !== deleteInfo.docName
+                  ),
+                }));
+                toast.success("Document deleted successfully!");
+              } catch (err) {
+                console.error(err);
+                toast.error("Failed to delete document");
+              } finally {
+                setDeleteModal(false);
+              }
+            }}
+            className="px-4 py-2 text-sm rounded-md bg-red-500 text-white hover:bg-red-600"
+          >
+            Yes, Delete
+          </button>
+
+          <button
+            onClick={() => setDeleteModal(false)}
+            className="px-4 py-2 text-sm rounded-md bg-gray-200 text-gray-700 hover:bg-gray-300"
+          >
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+)}
+
+
     </div>
   );
 }

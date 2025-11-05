@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { LS, ipadr } from '../../../Utils/Resuse';
@@ -15,7 +15,8 @@ const RemoteDetails = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [searchTerm, setSearchTerm] = useState('');
-  
+  const datePickerRef = useRef(null);
+
   // Filter state
   const [statusFilter, setStatusFilter] = useState('All');
   const [departmentFilter, setDepartmentFilter] = useState('All');
@@ -72,6 +73,23 @@ const RemoteDetails = () => {
     const [day, month, year] = dateString.split('-');
     return `${year}-${month}-${day}`;
   };
+
+  // Handle click outside to close date picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   // Fetch remote work data based on user role
   const fetchRemoteData = async () => {
@@ -476,7 +494,7 @@ const RemoteDetails = () => {
               </button>
 
               {/* Date Range */}
-              <div className="relative">
+                <div className="relative" ref={datePickerRef}>
                 <button
                   onClick={() => setShowDatePicker(!showDatePicker)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"

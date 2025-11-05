@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import axios from "axios";
 import { LS, ipadr } from "../../../Utils/Resuse";
@@ -7,6 +7,7 @@ import { DateRangePicker } from "react-date-range";
 import "react-date-range/dist/styles.css";
 import "react-date-range/dist/theme/default.css";
 import { format, isWithinInterval, parseISO } from 'date-fns';
+
 const Leaveapproval = () => {
   const [refresh, setRefresh] = useState(false);
   const [leaveData, setLeaveData] = useState([]);
@@ -17,6 +18,7 @@ const Leaveapproval = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const Position = LS.get('position');
+  const datePickerRef = useRef(null);
   const [showDatePicker, setShowDatePicker] = useState(false);
   // NEW: Added state for attendance data
   const [attendanceData, setAttendanceData] = useState({});
@@ -44,6 +46,23 @@ const Leaveapproval = () => {
         .catch(error => console.error("Error auto-approving manager leaves:", error));
     }
   }, []);
+
+  // Handle click outside to close date picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   // NEW: Function to fetch attendance percentage
   const fetchAttendancePercentage = async (userId) => {
@@ -431,7 +450,7 @@ const Leaveapproval = () => {
                   <RotateCw className="w-4 h-4" />
                   Reset
                 </button>
-                <div className="relative">
+                <div className="relative" ref={datePickerRef}>
                   <button
                     onClick={() => setShowDatePicker(!showDatePicker)}
                     className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"

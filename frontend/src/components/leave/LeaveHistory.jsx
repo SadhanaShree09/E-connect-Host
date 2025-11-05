@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import { LS, ipadr } from "../../Utils/Resuse";
 import axios from "axios";
@@ -11,6 +11,7 @@ const LeaveHistory = () => {
   const [filteredData, setFilteredData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
+  const datePickerRef = useRef(null);
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
   const [selectedOption, setSelectedOption] = useState("Leave");
@@ -30,6 +31,23 @@ const LeaveHistory = () => {
   useEffect(() => {
     fetchData();
   }, [selectedOption]);
+
+  // Handle click outside to close date picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   const fetchData = async () => {
     try {
@@ -305,7 +323,7 @@ const LeaveHistory = () => {
                 <RotateCw className="w-4 h-4" />
                 Reset
               </button>
-              <div className="relative">
+                <div className="relative" ref={datePickerRef}>
                 <button
                   onClick={() => setShowDatePicker(!showDatePicker)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"

@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import axios from "axios";
 import { LS, ipadr } from "../../Utils/Resuse";
 import { ArrowUp, ArrowDown, ArrowUpDown, RotateCw } from "lucide-react";
@@ -12,6 +12,7 @@ const Remote_details = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
   const [currentPage, setCurrentPage] = useState(1);
+  const datePickerRef = useRef(null);
   const [itemsPerPage] = useState(5);
   const [showDatePicker, setShowDatePicker] = useState(false);
   const [dateRange, setDateRange] = useState([
@@ -52,6 +53,23 @@ const Remote_details = () => {
       setError("Error fetching data. Please try again later.");
     }
   };
+
+  // Handle click outside to close date picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   const convertDateFormat = (dateString) => {
     if (!dateString) return '';
@@ -186,6 +204,7 @@ const Remote_details = () => {
               <RotateCw className="w-4 h-4" />
               Reset
             </button>
+            <div className="relative" ref={datePickerRef}>
             <button
               onClick={() => setShowDatePicker(!showDatePicker)}
               className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"
@@ -205,6 +224,7 @@ const Remote_details = () => {
                 />
               </div>
             )}
+            </div>
           </div>
         </header>
 

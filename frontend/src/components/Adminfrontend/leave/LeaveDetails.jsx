@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from 'react-router-dom';
 import axios from 'axios';
 import { LS, ipadr } from '../../../Utils/Resuse';
@@ -22,7 +22,7 @@ const LeaveDetails = () => {
   const [leaveTypeFilter, setLeaveTypeFilter] = useState('All');
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [positionFilter, setPositionFilter] = useState('All');
-  
+  const datePickerRef = useRef(null);
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -69,6 +69,23 @@ const LeaveDetails = () => {
     const [day, month, year] = dateString.split('-');
     return `${year}-${month}-${day}`;
   };
+
+  // Handle click outside to close date picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   // Fetch leave data based on user role
   const fetchLeaveData = async () => {
@@ -481,7 +498,7 @@ const LeaveDetails = () => {
               </button>
 
               {/* Date Range */}
-              <div className="relative">
+                <div className="relative" ref={datePickerRef}>
                 <button
                   onClick={() => setShowDatePicker(!showDatePicker)}
                   className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"

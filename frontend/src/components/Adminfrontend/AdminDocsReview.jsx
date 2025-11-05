@@ -11,13 +11,8 @@ import {
   Trash2,
   Eye,
   Search,
-  Filter,
-  ChevronDown,
-  ChevronUp,
-  Users,
+  ChevronRight,
   ClipboardList,
-  AlertTriangle,
-  BarChart3,
 } from "lucide-react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -388,10 +383,9 @@ export default function AdminDocsReview() {
 
   return (
     <>
-      {/* Scrollable user list */}
       <div
         className="overflow-y-auto border rounded-lg bg-gray-50"
-        style={{ maxHeight: "calc(100vh - var(--adr-header-height) - 120px)" }} // space for header + pagination
+        style={{ maxHeight: "calc(100vh - var(--adr-header-height) - 120px)" }} 
       >
         {filteredUsers.length === 0 ? (
           <div className="text-center py-12">
@@ -405,7 +399,7 @@ export default function AdminDocsReview() {
                 id={`user-${start + idx}`}
                 key={user.userId}
                 onClick={() => setReviewUser(user)}
-                className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 transition-colors bg-white"
+                className="group flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 transition-colors bg-white"
               >
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
@@ -420,13 +414,15 @@ export default function AdminDocsReview() {
                     {statusFilter}
                   </span>
                 )}
+                <div className="ml-3 flex items-center">
+                  <ChevronRight size={16} className="text-blue-800 opacity-0 group-hover:opacity-100 transition-transform transform group-hover:translate-x-1" />
+                </div>
               </li>
             ))}
           </ul>
         )}
       </div>
 
-      {/* Static Pagination controls */}
       <div className="flex items-center justify-between mt-4 p-3 border-t bg-white rounded-lg shadow-sm">
         <div className="flex items-center gap-2">
           <button

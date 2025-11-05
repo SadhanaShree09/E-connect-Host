@@ -1048,12 +1048,11 @@ export default function Chat() {
                 }`}>
                   {contact.position || "Employee"}
                 </span>
-                {/* keep dot indicator only; textual "Online" removed per preference */}
               </div>
 
               {/* Sidebar typing indicator (shows when this contact is typing to the current user) */}
               {typingUsers[chatId] === contact.id && (
-                <div className="text-xs italic text-blue-200 mt-1">
+                <div className="text-xs italic text-blue-900 mt-1">
                   typing...
                 </div>
               )}

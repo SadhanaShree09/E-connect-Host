@@ -674,7 +674,7 @@ const TaskPage = () => {
       </div>
 
       {/* Kanban Board */}
-      <div className="flex gap-6 p-3 h-[calc(100vh-200px)] overflow-x-auto">
+      <div className="bg-white flex gap-6 p-3 h-[calc(100vh-200px)] overflow-x-auto">
         {statusColumns.map((column) => {
           // compute column tasks and, if filterDueDate is set, put matching due_date tasks first
           let colTasks = tasks.filter(task => task.status === column.id);

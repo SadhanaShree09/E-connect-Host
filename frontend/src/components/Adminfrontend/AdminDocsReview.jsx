@@ -12,6 +12,7 @@ import {
   Eye,
   Search,
   ClipboardList,
+  ChevronRight,
 } from "lucide-react";
 import axios from "axios";
 import { toast, ToastContainer } from "react-toastify";
@@ -356,7 +357,7 @@ export default function AdminDocsReview() {
                 <li
                   key={user.userId}
                   onClick={() => handleUserClick(user)}
-                  className="flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 transition-colors bg-white"
+                  className="group flex items-center justify-between p-3 cursor-pointer hover:bg-gray-100 transition-colors bg-white"
                 >
                   <div className="flex items-center gap-3">
                     <div className="w-8 h-8 rounded-full bg-blue-600 flex items-center justify-center text-white font-semibold text-sm">
@@ -370,6 +371,9 @@ export default function AdminDocsReview() {
                       {filterDocsByStatus(assignedDocs[user.userId] || []).length} {statusFilter}
                     </span>
                   )}
+                  <div className="ml-3 flex items-center">
+                <ChevronRight size={16} className="text-gray-400 opacity-0 group-hover:opacity-100 transition-transform transform group-hover:translate-x-1" />
+              </div>
                 </li>
               ))}
             </ul>

@@ -2802,6 +2802,65 @@ async def get_admin_attendance_overview(year: int = Query(None)):
         raise HTTPException(status_code=500, detail=str(e))
 
 
+# Helper function to send delivered status after a short delay
+async def send_delivered_status_delayed(message_id: str, sender_id: str, recipient_id: str):
+    """Send delivered status to sender after a short delay"""
+    await asyncio.sleep(0.5)  # Small delay to ensure message is received
+    try:
+        await direct_chat_manager.send_message(sender_id, {
+            "type": "message_status",
+            "messageId": message_id,
+            "status": "delivered",
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        })
+        
+        # Update status in database
+        if ObjectId.is_valid(message_id):
+            msg_obj_id = ObjectId(message_id)
+        else:
+            msg_obj_id = message_id
+        
+        chats_collection.update_one(
+            {"$or": [{"_id": msg_obj_id}, {"id": message_id}]},
+            {"$set": {
+                "status": "delivered",
+                "status_updated_at": datetime.utcnow().isoformat() + "Z"
+            }}
+        )
+    except Exception as e:
+        print(f"Error sending delivered status: {e}")
+
+
+# Helper function to send delivered status for group messages
+async def send_group_delivered_status(message_id: str, sender_id: str, group_id: str):
+    """Send delivered status to sender for group messages after a short delay"""
+    await asyncio.sleep(0.5)  # Small delay to ensure message is received
+    try:
+        # Send delivered status update to the sender
+        await direct_chat_manager.send_message(sender_id, {
+            "type": "message_status",
+            "messageId": message_id,
+            "status": "delivered",
+            "timestamp": datetime.utcnow().isoformat() + "Z"
+        })
+        
+        # Update status in database
+        if ObjectId.is_valid(message_id):
+            msg_obj_id = ObjectId(message_id)
+        else:
+            msg_obj_id = message_id
+        
+        messages_collection.update_one(
+            {"$or": [{"_id": msg_obj_id}, {"id": message_id}]},
+            {"$set": {
+                "status": "delivered",
+                "status_updated_at": datetime.utcnow().isoformat() + "Z"
+            }}
+        )
+    except Exception as e:
+        print(f"Error sending group delivered status: {e}")
+
+
 @app.websocket("/ws/notify/{user_id}")
 async def ws_notify(websocket: WebSocket, user_id: str):
     await notify_manager.connect(user_id, websocket)
@@ -2831,11 +2890,46 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
             msg_type = msg.get("type", "chat")
 
             # Allow 'typing' and 'read_receipt' messages even when text is empty
-            if not text and msg_type not in ("read_receipt", "typing"):
+            if not text and msg_type not in ("read_receipt", "typing", "message_status"):
                 continue
             
             msg["timestamp"] = datetime.utcnow().isoformat() + "Z"
             msg.pop("pending", None)
+
+            # Handle message status updates (delivered, read, etc.)
+            if msg_type == "message_status":
+                message_id = msg.get("messageId")
+                status = msg.get("status")  # 'delivered' or 'read'
+                to_user = msg.get("to_user")
+                
+                if message_id and status and to_user:
+                    try:
+                        # Update the message status in database
+                        if ObjectId.is_valid(message_id):
+                            msg_obj_id = ObjectId(message_id)
+                        else:
+                            msg_obj_id = message_id
+                        
+                        update_data = {
+                            f"status": status,
+                            f"status_updated_at": datetime.utcnow().isoformat() + "Z"
+                        }
+                        
+                        chats_collection.update_one(
+                            {"$or": [{"_id": msg_obj_id}, {"id": message_id}]},
+                            {"$set": update_data}
+                        )
+                        
+                        # Send status update back to sender
+                        await direct_chat_manager.send_message(to_user, {
+                            "type": "message_status",
+                            "messageId": message_id,
+                            "status": status,
+                            "timestamp": msg.get("timestamp")
+                        })
+                    except Exception as e:
+                        print(f"Error updating message status: {e}")
+                continue  # Don't process as regular message
 
             # Handle read receipts separately
             if msg_type == "read_receipt":
@@ -2906,7 +3000,14 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
             else:  # normal chat
                 msg["chatId"] = msg.get("chatId") or "_".join(sorted([userid, msg["to_user"]]))
-                chats_collection.insert_one(msg.copy())
+                # Set initial status to 'sent' when message is saved to database
+                msg["status"] = "sent"
+                msg["status_updated_at"] = msg.get("timestamp")
+                
+                # Insert message and capture the inserted ID
+                insert_result = chats_collection.insert_one(msg.copy())
+                msg_id = str(insert_result.inserted_id)
+                msg["id"] = msg_id  # Set the actual database ID
                 msg.pop("_id", None)
 
                 # Create direct chat notification
@@ -2939,8 +3040,12 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
                     except Exception as e:
                         print(f"Error creating direct chat notification: {e}")
 
-                # send to both sender and recipient
+                # Send message to recipient
                 await direct_chat_manager.send_message(msg["to_user"], msg)
+                
+                # After recipient receives the message, send delivered status back to sender
+                # This will be done automatically when recipient receives and acknowledges
+                asyncio.create_task(send_delivered_status_delayed(msg_id, userid, msg["to_user"]))
 
     except WebSocketDisconnect:
         direct_chat_manager.disconnect(userid, websocket)
@@ -2979,7 +3084,9 @@ async def history(chatId: str, limit: int = Query(20, ge=1, le=100), before: str
             "file": doc.get("file"),
             "timestamp": doc["timestamp"].isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
             "chatId": doc.get("chatId"),
-            "reply_count": reply_count,  
+            "reply_count": reply_count,
+            "status": doc.get("status", "sent"),  # Include message status
+            "status_updated_at": doc.get("status_updated_at", doc.get("timestamp")),  # Include status update time
         })
     # Reverse to get chronological order
     messages.reverse()
@@ -3048,10 +3155,37 @@ async def websocket_group(websocket: WebSocket, group_id: str):
         while True:
             data = await websocket.receive_json()
 
-            # Skip empty messages completely, but allow control packets like typing/read receipts
+            # Skip empty messages completely, but allow control packets like typing/read receipts/message_status
             text = data.get("text", "").strip()
             msg_type = data.get("type", "message")
-            if not text and msg_type not in ("read_receipt", "typing"):
+            if not text and msg_type not in ("read_receipt", "typing", "message_status"):
+                continue
+
+            # If this is a message status update, handle it separately
+            if msg_type == "message_status":
+                message_id = data.get("messageId")
+                status = data.get("status")  # 'delivered' or 'read'
+                
+                if message_id and status:
+                    try:
+                        # Update the message status in database
+                        if ObjectId.is_valid(message_id):
+                            msg_obj_id = ObjectId(message_id)
+                        else:
+                            msg_obj_id = message_id
+                        
+                        messages_collection.update_one(
+                            {"$or": [{"_id": msg_obj_id}, {"id": message_id}]},
+                            {"$set": {
+                                "status": status,
+                                "status_updated_at": datetime.utcnow().isoformat() + "Z"
+                            }}
+                        )
+                        
+                        # Broadcast status update to all group members
+                        await group_ws_manager.broadcast(group_id, data)
+                    except Exception as e:
+                        print(f"Error updating group message status: {e}")
                 continue
 
             # If this is a typing control frame for the group, broadcast it and don't persist
@@ -3100,17 +3234,24 @@ async def websocket_group(websocket: WebSocket, group_id: str):
                     "id": data["id"]
                 })
             elif msg_type != "read_receipt":
-                # Regular message - save to messages_collection
-                messages_collection.insert_one({
+                # Regular message - save to messages_collection with initial status
+                insert_result = messages_collection.insert_one({
                     "chatId": group_id,
                     "from_user": data.get("from_user"),
                     "text": data.get("text"),
                     "file": data.get("file"),
-                    "timestamp": data["timestamp"]
+                    "timestamp": data["timestamp"],
+                    "status": "sent",  # Initial status is 'sent'
+                    "status_updated_at": data["timestamp"]
                 })
+                data["id"] = str(insert_result.inserted_id)  # Update data with real ID
 
             # Broadcast to all group members
             await group_ws_manager.broadcast(group_id, data)
+            
+            # Send delivered status to sender after a short delay (for regular messages only)
+            if msg_type == "message" and not data.get("isThread") and data.get("id"):
+                asyncio.create_task(send_group_delivered_status(data.get("id"), data.get("from_user"), group_id))
             
             # Create group chat notifications
             try:
@@ -3177,6 +3318,8 @@ async def group_history(group_id: str, limit: int = Query(20, ge=1, le=100), bef
             "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
             "chatId": doc.get("chatId"),
             "reply_count": reply_count,
+            "status": doc.get("status", "sent"),  # Include message status
+            "status_updated_at": doc.get("status_updated_at", doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp")),  # Include status update time
         })
     # Reverse to get chronological order
     messages.reverse()

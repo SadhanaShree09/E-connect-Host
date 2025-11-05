@@ -232,6 +232,19 @@ export default function Chat() {
       const res = await fetch(url);
       if (res.ok) {
         const older = await res.json();
+        
+        // Load status information from older messages
+        const statusMap = {};
+        older.forEach(msg => {
+          if (msg.id && msg.status) {
+            statusMap[msg.id] = { 
+              status: msg.status, 
+              time: msg.status_updated_at || msg.timestamp 
+            };
+          }
+        });
+        setMessageStatus(prev => ({ ...prev, ...statusMap }));
+        
         setMessages((prev) => {
           const prevMsgs = prev[chatId]?.messages || [];
           const newMsgs = [...older, ...prevMsgs];
@@ -461,6 +474,41 @@ export default function Chat() {
         },
       };
     });
+    
+    // If the message has both tempId and real id, update the messageStatus mapping
+    // This handles the case where tempId is replaced with the real database ID
+    if (payload.tempId && payload.id && payload.tempId !== payload.id) {
+      setMessageStatus((prev) => {
+        const tempStatus = prev[payload.tempId];
+        if (tempStatus) {
+          // Keep the old status or update to current status from database
+          const newStatus = payload.status || tempStatus.status || 'delivered';
+          return {
+            ...prev,
+            [payload.id]: { status: newStatus, time: payload.status_updated_at || payload.timestamp || tempStatus.time },
+            // Remove the tempId entry to clean up
+            [payload.tempId]: undefined,
+          };
+        }
+        // If no tempId status, use the payload's status
+        return {
+          ...prev,
+          [payload.id]: { 
+            status: payload.status || 'delivered', 
+            time: payload.status_updated_at || payload.timestamp 
+          },
+        };
+      });
+    } else if (payload.id && payload.status) {
+      // Regular message with status from server
+      setMessageStatus((prev) => ({
+        ...prev,
+        [payload.id]: { 
+          status: payload.status, 
+          time: payload.status_updated_at || payload.timestamp 
+        },
+      }));
+    }
 
     // Update last message time for this chat (to sort chats by activity)
     // For groups, use just the group ID (without group_ prefix) for sorting
@@ -537,17 +585,34 @@ export default function Chat() {
           },
         }));
         
-        // Send read receipts for unread messages
+        // Initialize messageStatus from history (so status doesn't reset on page refresh)
+        const statusMap = {};
+        history.forEach(msg => {
+          if (msg.id && msg.status) {
+            statusMap[msg.id] = { 
+              status: msg.status, 
+              time: msg.status_updated_at || msg.timestamp 
+            };
+          }
+        });
+        setMessageStatus(prev => ({ ...prev, ...statusMap }));
+        
+        // Send read receipts for unread messages that aren't already read
         setTimeout(() => {
           if (ws.current?.readyState === WebSocket.OPEN) {
-            const unreadMessages = history.filter(msg => msg.from_user === employeeId && msg.id);
+            const unreadMessages = history.filter(msg => 
+              msg.from_user === employeeId && 
+              msg.id && 
+              (!msg.status || msg.status !== 'read')
+            );
             unreadMessages.forEach(msg => {
               ws.current.send(JSON.stringify({
-                type: "read_receipt",
+                type: "message_status",
                 messageId: msg.id,
-                to_user: msg.from_user, // Send to the original sender
+                status: "read",
+                to_user: msg.from_user,
                 from_user: userid,
-                readBy: userid,
+                chatId: chatId,
                 timestamp: new Date().toISOString()
               }));
             });
@@ -587,18 +652,34 @@ export default function Chat() {
         },
       }));
       
-      // Send read receipts for group messages
+      // Initialize messageStatus from history (so status doesn't reset on page refresh)
+      const statusMap = {};
+      history.forEach(msg => {
+        if (msg.id && msg.status) {
+          statusMap[msg.id] = { 
+            status: msg.status, 
+            time: msg.status_updated_at || msg.timestamp 
+          };
+        }
+      });
+      setMessageStatus(prev => ({ ...prev, ...statusMap }));
+      
+      // Send read receipts for group messages that aren't already read
       setTimeout(() => {
         if (ws.current?.readyState === WebSocket.OPEN) {
-          const unreadMessages = history.filter(msg => msg.from_user !== userid && msg.id);
+          const unreadMessages = history.filter(msg => 
+            msg.from_user !== userid && 
+            msg.id && 
+            (!msg.status || msg.status !== 'read')
+          );
           unreadMessages.forEach(msg => {
             ws.current.send(JSON.stringify({
-              type: "read_receipt",
+              type: "message_status",
               messageId: msg.id,
-              to_user: msg.from_user, // Send to the original sender
+              status: "read",
+              to_user: msg.from_user,
               from_user: userid,
-              readBy: userid,
-              chatId: `group_${group._id}`,
+              chatId: groupChatId,
               timestamp: new Date().toISOString()
             }));
           });
@@ -1214,13 +1295,31 @@ export default function Chat() {
             const prev = dayMessages[i - 1];
             const sameSenderAsPrev = prev && prev.from_user === m.from_user;
 
+            const statusObj = messageStatus[msgId];
+            const isUnread = !isSender && statusObj?.status !== 'read';
+            
+            // Check if this is the first unread message in this group
+            const prevStatus = prev && messageStatus[prev.id || prev.tempId];
+            const prevIsSender = prev && prev.from_user === userid;
+            const prevIsUnread = prev && !prevIsSender && prevStatus?.status !== 'read';
+            const isFirstUnreadInGroup = isUnread && !prevIsUnread;
+            
             return (
-              <div
-                key={msgId}
-                className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${
-                  isSender ? "justify-end" : "justify-start"
-                } ${sameSenderAsPrev ? "mb-1" : "mb-3"}`}
-              >
+              <>
+                {/* Unread divider - show before first unread message with smooth animation */}
+                {isFirstUnreadInGroup && (
+                  <div className="flex justify-center my-4 unread-divider">
+                    <span className="unread-badge bg-red-100 text-red-600 text-xs px-3 py-1 rounded-full shadow-sm font-semibold select-none">
+                      📌 Unread Messages
+                    </span>
+                  </div>
+                )}
+                <div
+                  key={msgId}
+                  className={`flex animate-in fade-in slide-in-from-bottom-2 duration-300 ${
+                    isSender ? "justify-end" : "justify-start"
+                  } ${sameSenderAsPrev ? "mb-1" : "mb-3"}`}
+                >
                 <div
                   role="article"
                   tabIndex={0}
@@ -1228,9 +1327,10 @@ export default function Chat() {
                   className={`max-w-xl p-4 rounded-2xl break-words shadow-md relative transition-all duration-300 hover:shadow-lg ${
                     isSender
                       ? "bg-[#6d9eeb7a] text-primary-foreground rounded-br-sm"
-                      : "bg-blue-200 text-gray-800 rounded-bl-sm border border-gray-200"
+                      : `bg-blue-200 text-gray-800 rounded-bl-sm border border-gray-200`
                   }`}
                 >
+
                   <div className="flex items-center mb-2">
                     <span className="font-medium text-sm mr-3">{displayName}</span>
                     <span
@@ -1317,6 +1417,7 @@ export default function Chat() {
                   </div>
                 </div>
               </div>
+              </>
             );
           })}
         </div>

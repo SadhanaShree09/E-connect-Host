@@ -1,5 +1,5 @@
 import { Link } from "react-router-dom";
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Baseaxios, LS, ipadr } from "../../Utils/Resuse";
 import { DateRangePicker } from "react-date-range";
 import "react-date-range/dist/styles.css";
@@ -14,6 +14,7 @@ export default function Clockdashboard() {
   const [selectedMonth, setSelectedMonth] = useState("");
   const [selectedYear, setSelectedYear] = useState("");
   const [currentPage, setCurrentPage] = useState(1);
+  const datePickerRef = useRef(null);
   const [itemsPerPage, setItemsPerPage] = useState(5);
   const [sortDirection, setSortDirection] = useState("desc");
   const [sortConfig, setSortConfig] = useState({
@@ -62,6 +63,23 @@ export default function Clockdashboard() {
       setAttendanceData([]);
     }
   };
+
+  // Handle click outside to close date picker
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (datePickerRef.current && !datePickerRef.current.contains(event.target)) {
+        setShowDatePicker(false);
+      }
+    };
+
+    if (showDatePicker) {
+      document.addEventListener('mousedown', handleClickOutside);
+    }
+
+    return () => {
+      document.removeEventListener('mousedown', handleClickOutside);
+    };
+  }, [showDatePicker]);
 
   const handleDateRangeChange = (ranges) => {
     const selection = ranges.selection;
@@ -184,7 +202,7 @@ export default function Clockdashboard() {
   <header className="px-5 py-4 border-b border-gray-200 flex justify-between items-center">
     <h2 className="font-semibold text-gray-800">Timing</h2>
     <div className="flex items-center gap-4">
-      <div className="relative">
+      <div className="relative" ref={datePickerRef}>
         <button
           onClick={() => setShowDatePicker(!showDatePicker)}
           className="px-4 py-2 bg-blue-500 text-white rounded-md hover:bg-blue-600"

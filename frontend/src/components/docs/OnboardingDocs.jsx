@@ -30,12 +30,55 @@ export default function EmployeeDashboard() {
 
   const [openUploader, setOpenUploader] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
+  const [showDeleteModal, setShowDeleteModal] = useState(false);
+  const [deleting, setDeleting] = useState(false);
+  const [docToDelete, setDocToDelete] = useState(null);
   const navigate = useNavigate();
   const location = useLocation();
   const { docName } = location.state || {}; 
   const [statusFilter, setStatusFilter] = useState("all");
 
   const pageSize = 7;
+
+  // Fix: Define handleView, handleUpload, handleDelete
+  const handleView = (doc) => {
+    if (doc.fileUrl) {
+      window.open(`${ipadr}${doc.fileUrl}`, '_blank');
+    }
+  };
+
+  const handleUpload = (doc) => {
+    setSelectedDoc(doc);
+    setOpenUploader(true);
+  };
+
+  const handleDelete = (doc) => {
+    setDocToDelete(doc);
+    setShowDeleteModal(true);
+  };
+
+  const confirmDelete = async () => {
+    if (!docToDelete) return;
+    setDeleting(true);
+    try {
+      await axios.delete(`${ipadr}/documents/delete/${docToDelete.fileId}`);
+      setAssignedDocs((prev) =>
+        prev.map((d) =>
+          d.docName === docToDelete.docName
+            ? { ...d, fileUrl: null, fileId: null, status: "pending" }
+            : d
+        )
+      );
+      toast.success("File deleted successfully!");
+    } catch (err) {
+      console.error(err);
+      toast.error("Failed to delete file");
+    } finally {
+      setDeleting(false);
+      setShowDeleteModal(false);
+      setDocToDelete(null);
+    }
+  };
 
   /** Fetch assigned documents */
   const fetchAssignedDocs = useCallback(async () => {
@@ -376,6 +419,31 @@ const filteredDocs = useMemo(() => {
     </div>
 
     {/* Pagination and Info - Improved Alignment */}
+    {/* Delete Confirmation Modal */}
+    {showDeleteModal && docToDelete && (
+      <div className="fixed inset-0 bg-black/30 flex items-center justify-center z-50">
+        <div className="bg-white rounded-xl shadow-xl p-6 w-full max-w-xs relative">
+          <div className="text-lg font-semibold mb-2">Delete Document</div>
+          <div className="mb-4">Are you sure you want to delete <strong>{docToDelete.docName}</strong>?</div>
+          <div className="flex justify-end gap-2">
+            <button
+              onClick={confirmDelete}
+              disabled={deleting}
+              className="px-4 py-2 bg-red-500 text-white rounded hover:bg-red-600 text-sm disabled:opacity-50"
+            >
+              {deleting ? "Deleting..." : "Yes, Delete"}
+            </button>
+            <button
+              onClick={() => { setShowDeleteModal(false); setDocToDelete(null); }}
+              disabled={deleting}
+              className="px-4 py-2 bg-gray-300 text-gray-800 rounded hover:bg-gray-400 text-sm"
+            >
+              Cancel
+            </button>
+          </div>
+        </div>
+      </div>
+    )}
     <div className="sticky bottom-0 left-0 w-full bg-white z-20 flex flex-col md:flex-row justify-between items-center gap-2 border-t border-gray-200 py-2 px-4">
       <div className="text-xs text-gray-600 md:mb-0 mb-2">
         Showing <span className="font-semibold">{(currentPage - 1) * pageSize + 1}</span> to <span className="font-semibold">{Math.min(currentPage * pageSize, filteredDocs.length)}</span> of <span className="font-semibold">{filteredDocs.length}</span> documents

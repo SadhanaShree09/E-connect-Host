@@ -5977,6 +5977,32 @@ def get_allowed_contacts(user_id: str):
         manager = Users.find_one({"id": TL_id}, {"_id": 0})
         return [manager] if manager else []
 
+def should_permanently_delete(message, is_group, group_members=None):
+    """
+    Check if message should be permanently deleted from database.
+    Returns True if all participants have deleted the message.
+    """
+    deleted_for = message.get("deleted_for", [])
+    
+    if not deleted_for:
+        return False
+    
+    if is_group:
+        # For group messages, check if all group members have deleted
+        if group_members and len(deleted_for) >= len(group_members):
+            # Verify all members are in deleted_for list
+            return set(deleted_for) >= set(group_members)
+        return False
+    else:
+        # For direct messages, check if both users have deleted
+        from_user = message.get("from_user")
+        to_user = message.get("to_user")
+        
+        if from_user and to_user and len(deleted_for) >= 2:
+            # Both sender and receiver have deleted
+            return from_user in deleted_for and to_user in deleted_for
+        return False
+
 def get_user_info(userid):
     result = Users.find_one({"userid":userid},{"_id":0,"password":0})
     return result

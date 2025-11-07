@@ -1,7 +1,7 @@
 from fastapi import FastAPI
 app = FastAPI()
-from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
-from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage, AttendanceManage
+from Mongo import should_permanently_delete, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
+from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave,TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage, AttendanceManage, DeleteMessageRequest
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
 from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, task_assign_to_multiple_users_with_notification, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
@@ -16,7 +16,7 @@ from auth.auth_bearer import JWTBearer
 from http.client import HTTPException
 from datetime import datetime, timedelta, date
 from dateutil import parser
-from typing import Union, Dict, List, Optional
+from typing import Union, Dict, List, Optional, Literal
 from bson import ObjectId
 from bson import json_util
 import json
@@ -3058,15 +3058,17 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
 
 
 @app.get("/history/{chatId}")
-async def history(chatId: str, limit: int = Query(20, ge=1, le=100), before: str = Query(None)):
-    # Exclude thread messages - they should only be fetched via /thread/{rootId}
+async def history(chatId: str, limit: int = Query(20, ge=1, le=100), before: str = Query(None), user_id: str = Query(None)):
     query = {
         "chatId": chatId,
         "type": {"$ne": "thread"},
         "isThread": {"$ne": True}
     }
     
-    # If 'before' is provided, fetch messages before that ID (for pagination)
+    # Filter out messages deleted for this user
+    if user_id:
+        query["deleted_for"] = {"$ne": user_id}
+    
     if before:
         try:
             before_obj_id = ObjectId(before)
@@ -3088,10 +3090,9 @@ async def history(chatId: str, limit: int = Query(20, ge=1, le=100), before: str
             "timestamp": doc["timestamp"].isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
             "chatId": doc.get("chatId"),
             "reply_count": reply_count,
-            "status": doc.get("status", "sent"),  # Include message status
-            "status_updated_at": doc.get("status_updated_at", doc.get("timestamp")),  # Include status update time
+            "status": doc.get("status", "sent"),
+            "status_updated_at": doc.get("status_updated_at", doc.get("timestamp")),
         })
-    # Reverse to get chronological order
     messages.reverse()
     return messages
 
@@ -3104,8 +3105,14 @@ async def save_thread(payload: dict = Body(...)):
     return {"status": "success", "thread": payload}
 
 @app.get("/thread/{rootId}")
-async def get_threads(rootId: str):
-    threads = list(threads_collection.find({"rootId": rootId}).sort("timestamp", 1))
+async def get_threads(rootId: str, user_id: str = Query(None)):
+    query = {"rootId": rootId}
+    
+    # Filter out thread messages deleted for this user
+    if user_id:
+        query["deleted_for"] = {"$ne": user_id}
+    
+    threads = list(threads_collection.find(query).sort("timestamp", 1))
     result = []
     for t in threads:
         result.append({
@@ -3291,15 +3298,17 @@ async def websocket_group(websocket: WebSocket, group_id: str):
 
 # Fetch group chat history
 @app.get("/group_history/{group_id}")
-async def group_history(group_id: str, limit: int = Query(20, ge=1, le=100), before: str = Query(None)):
-    # Exclude thread messages from group history - threads should only be fetched via /thread/{rootId}
+async def group_history(group_id: str, limit: int = Query(20, ge=1, le=100), before: str = Query(None), user_id: str = Query(None)):
     query = {
         "chatId": group_id,
         "type": {"$ne": "thread"},
         "isThread": {"$ne": True}
     }
     
-    # If 'before' is provided, fetch messages before that ID (for pagination)
+    # Filter out messages deleted for this user
+    if user_id:
+        query["deleted_for"] = {"$ne": user_id}
+    
     if before:
         try:
             before_obj_id = ObjectId(before)
@@ -3311,7 +3320,6 @@ async def group_history(group_id: str, limit: int = Query(20, ge=1, le=100), bef
     messages = []
     for doc in cursor:
         mid = str(doc.get("_id"))
-        # Count thread replies for this message
         reply_count = threads_collection.count_documents({"rootId": mid})
         messages.append({
             "id": mid,
@@ -3321,10 +3329,9 @@ async def group_history(group_id: str, limit: int = Query(20, ge=1, le=100), bef
             "timestamp": doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp"),
             "chatId": doc.get("chatId"),
             "reply_count": reply_count,
-            "status": doc.get("status", "sent"),  # Include message status
-            "status_updated_at": doc.get("status_updated_at", doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp")),  # Include status update time
+            "status": doc.get("status", "sent"),
+            "status_updated_at": doc.get("status_updated_at", doc.get("timestamp").isoformat() if isinstance(doc.get("timestamp"), datetime) else doc.get("timestamp")),
         })
-    # Reverse to get chronological order
     messages.reverse()
     return messages
 
@@ -3350,6 +3357,277 @@ async def update_group(group_id: str, group: GroupUpdate):
     return {"status": "success", "group_id": group_id, "name": group.name}
 
 
+@app.post("/delete_message")
+async def delete_message(request: DeleteMessageRequest):
+    """Delete a message either for one user or for everyone"""
+    try:
+        message_id = request.message_id
+        delete_type = request.delete_type
+        user_id = request.user_id
+        chat_id = request.chat_id
+        is_group = request.is_group
+        
+        # Convert message_id to ObjectId if valid
+        if ObjectId.is_valid(message_id):
+            msg_obj_id = ObjectId(message_id)
+        else:
+            msg_obj_id = message_id
+        
+        # Select appropriate collection
+        collection = messages_collection if is_group else chats_collection
+        
+        # Find the message
+        message = collection.find_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+        
+        if not message:
+            raise HTTPException(status_code=404, detail="Message not found")
+        
+        if delete_type == "for_everyone":
+            # Check if user is the sender
+            if message.get("from_user") != user_id:
+                raise HTTPException(status_code=403, detail="Only sender can delete for everyone")
+            
+            # Delete the message from database
+            collection.delete_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+            
+            # Delete all associated threads
+            threads_collection.delete_many({"rootId": message_id})
+            
+            # Broadcast deletion to all participants
+            deletion_event = {
+                "type": "message_deleted",
+                "messageId": message_id,
+                "deleteType": "for_everyone",
+                "chatId": chat_id,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+            
+            if is_group:
+                # Broadcast to group
+                await group_ws_manager.broadcast(chat_id, deletion_event)
+            else:
+                # Send to both users in direct chat
+                to_user = message.get("to_user")
+                from_user = message.get("from_user")
+                if to_user:
+                    await direct_chat_manager.send_message(to_user, deletion_event)
+                if from_user:
+                    await direct_chat_manager.send_message(from_user, deletion_event)
+            
+            return {"status": "success", "message": "Message deleted for everyone"}
+        
+        else:  # delete_type == "for_me"
+            # Add user to deleted_for array
+            result = collection.update_one(
+                {"$or": [{"_id": msg_obj_id}, {"id": message_id}]},
+                {
+                    "$addToSet": {"deleted_for": user_id},
+                    "$set": {"deleted_at": datetime.utcnow().isoformat() + "Z"}
+                }
+            )
+            
+            if result.modified_count == 0:
+                raise HTTPException(status_code=400, detail="Failed to update message")
+            
+            # Fetch updated message to check if should be permanently deleted
+            updated_message = collection.find_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+            
+            # Get group members if it's a group message
+            group_members = None
+            if is_group:
+                group_id = chat_id.replace("group_", "")
+                group = groups_collection.find_one({"_id": group_id})
+                if group:
+                    group_members = group.get("members", [])
+            
+            # Check if message should be permanently deleted
+            if should_permanently_delete(updated_message, is_group, group_members):
+                # All participants have deleted - permanently remove from DB
+                collection.delete_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+                
+                # Delete all associated threads
+                threads_collection.delete_many({"rootId": message_id})
+                
+                print(f"Message {message_id} permanently deleted - all participants deleted it")
+                
+                # Optionally broadcast permanent deletion
+                permanent_deletion_event = {
+                    "type": "message_permanently_deleted",
+                    "messageId": message_id,
+                    "chatId": chat_id,
+                    "timestamp": datetime.utcnow().isoformat() + "Z"
+                }
+                
+                if is_group:
+                    await group_ws_manager.broadcast(chat_id, permanent_deletion_event)
+                else:
+                    to_user = updated_message.get("to_user")
+                    from_user = updated_message.get("from_user")
+                    if to_user:
+                        await direct_chat_manager.send_message(to_user, permanent_deletion_event)
+                    if from_user:
+                        await direct_chat_manager.send_message(from_user, permanent_deletion_event)
+                
+                return {
+                    "status": "success", 
+                    "message": "Message deleted for you and permanently removed from server",
+                    "permanently_deleted": True
+                }
+            
+            # Send deletion event only to this user
+            deletion_event = {
+                "type": "message_deleted",
+                "messageId": message_id,
+                "deleteType": "for_me",
+                "chatId": chat_id,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+            
+            await direct_chat_manager.send_message(user_id, deletion_event)
+            
+            return {
+                "status": "success", 
+                "message": "Message deleted for you",
+                "permanently_deleted": False
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.post("/delete_thread_message")
+async def delete_thread_message(request: DeleteMessageRequest):
+    """Delete a thread message"""
+    try:
+        message_id = request.message_id
+        delete_type = request.delete_type
+        user_id = request.user_id
+        chat_id = request.chat_id
+        is_group = request.is_group
+        
+        # Convert message_id to ObjectId if valid
+        if ObjectId.is_valid(message_id):
+            msg_obj_id = ObjectId(message_id)
+        else:
+            msg_obj_id = message_id
+        
+        # Find the thread message
+        thread_msg = threads_collection.find_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+        
+        if not thread_msg:
+            raise HTTPException(status_code=404, detail="Thread message not found")
+        
+        if delete_type == "for_everyone":
+            # Check if user is the sender
+            if thread_msg.get("from_user") != user_id:
+                raise HTTPException(status_code=403, detail="Only sender can delete for everyone")
+            
+            # Delete the thread message
+            threads_collection.delete_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+            
+            # Broadcast deletion to all participants
+            deletion_event = {
+                "type": "thread_deleted",
+                "messageId": message_id,
+                "rootId": thread_msg.get("rootId"),
+                "deleteType": "for_everyone",
+                "chatId": chat_id,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+            
+            if is_group:
+                await group_ws_manager.broadcast(chat_id, deletion_event)
+            else:
+                to_user = thread_msg.get("to_user")
+                from_user = thread_msg.get("from_user")
+                if to_user:
+                    await direct_chat_manager.send_message(to_user, deletion_event)
+                if from_user:
+                    await direct_chat_manager.send_message(from_user, deletion_event)
+            
+            return {"status": "success", "message": "Thread message deleted for everyone"}
+        
+        else:  # delete_type == "for_me"
+            # Add user to deleted_for array
+            result = threads_collection.update_one(
+                {"$or": [{"_id": msg_obj_id}, {"id": message_id}]},
+                {
+                    "$addToSet": {"deleted_for": user_id},
+                    "$set": {"deleted_at": datetime.utcnow().isoformat() + "Z"}
+                }
+            )
+            
+            if result.modified_count == 0:
+                raise HTTPException(status_code=400, detail="Failed to update thread message")
+            
+            # Fetch updated message to check if should be permanently deleted
+            updated_message = threads_collection.find_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+            
+            # Get group members if it's a group message
+            group_members = None
+            if is_group:
+                group_id = chat_id.replace("group_", "")
+                group = groups_collection.find_one({"_id": group_id})
+                if group:
+                    group_members = group.get("members", [])
+            
+            # Check if message should be permanently deleted
+            if should_permanently_delete(updated_message, is_group, group_members):
+                # All participants have deleted - permanently remove from DB
+                threads_collection.delete_one({"$or": [{"_id": msg_obj_id}, {"id": message_id}]})
+                
+                print(f"Thread message {message_id} permanently deleted - all participants deleted it")
+                
+                # Optionally broadcast permanent deletion
+                permanent_deletion_event = {
+                    "type": "thread_permanently_deleted",
+                    "messageId": message_id,
+                    "rootId": updated_message.get("rootId"),
+                    "chatId": chat_id,
+                    "timestamp": datetime.utcnow().isoformat() + "Z"
+                }
+                
+                if is_group:
+                    await group_ws_manager.broadcast(chat_id, permanent_deletion_event)
+                else:
+                    to_user = updated_message.get("to_user")
+                    from_user = updated_message.get("from_user")
+                    if to_user:
+                        await direct_chat_manager.send_message(to_user, permanent_deletion_event)
+                    if from_user:
+                        await direct_chat_manager.send_message(from_user, permanent_deletion_event)
+                
+                return {
+                    "status": "success", 
+                    "message": "Thread message deleted for you and permanently removed from server",
+                    "permanently_deleted": True
+                }
+            
+            deletion_event = {
+                "type": "thread_deleted",
+                "messageId": message_id,
+                "rootId": updated_message.get("rootId"),
+                "deleteType": "for_me",
+                "chatId": chat_id,
+                "timestamp": datetime.utcnow().isoformat() + "Z"
+            }
+            
+            await direct_chat_manager.send_message(user_id, deletion_event)
+            
+            return {
+                "status": "success", 
+                "message": "Thread message deleted for you",
+                "permanently_deleted": False
+            }
+            
+    except HTTPException:
+        raise
+    except Exception as e:
+        print(f"Error deleting thread message: {e}")
+        raise HTTPException(status_code=500, detail=str(e))
 
 # ------------------ Assign Document ------------------
 @app.post("/assign_docs")

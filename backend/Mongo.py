@@ -4463,12 +4463,26 @@ async def handle_overdue_task(task):
         task_id = str(task.get("_id"))
         userid = task.get("userid")
         task_title = task.get("task")
-        due_date = task.get("due_date")
+        due_date_str = task.get("due_date")
         tl_name = task.get("TL")
+        
+        if not userid or not due_date_str:
+            return
         
         # Get user information
         user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
         user_name = user.get("name", "User") if user else "User"
+        
+        # Calculate days overdue
+        try:
+            due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
+            current_date = datetime.now(pytz.timezone("Asia/Kolkata"))
+            days_overdue = (current_date - due_date).days
+        except:
+            days_overdue = 0
+        
+        if days_overdue <= 0:
+            return  # Not overdue yet
         
         # Check if we already notified about this overdue task today
         today = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%d-%m-%Y")
@@ -4480,38 +4494,58 @@ async def handle_overdue_task(task):
         })
         
         if existing_notification:
-            print(f"⏭️ Already notified user {userid} about overdue task {task_id} today")
+            print(f"⏭️ Already notified user {userid} about overdue task {task_id} today ({days_overdue} days overdue)")
         else:
-            # Notify user about overdue task
-            await create_overdue_task_notification(userid, task_title, due_date, task_id)
+            # Notify user about overdue task with days calculation
+            await create_overdue_task_notification(userid, task_title, days_overdue, task_id, priority="urgent")
         
         # Notify manager/TL about overdue task
-        await notify_manager_about_overdue_task(userid, user_name, task_title, due_date, tl_name, task_id)
+        await notify_manager_about_overdue_task(userid, user_name, task_title, due_date_str, tl_name, task_id, days_overdue)
         
     except Exception as e:
         print(f"Error handling overdue task: {e}")
 
-async def create_overdue_task_notification(userid, task_title, due_date, task_id):
-    """Create notification for user about overdue task"""
+async def create_overdue_task_notification(userid, task_title, due_date_or_days=None, task_id=None, priority="high"):
+    """Create notification for user about overdue task
+    
+    Args:
+        userid: User ID to notify
+        task_title: Title of the overdue task
+        due_date_or_days: Can be due date string (DD-MM-YYYY) or number of days overdue
+        task_id: ID of the task
+        priority: Notification priority (default: high)
+    """
     try:
         user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
         user_name = user.get("name", "User") if user else "User"
         
-        title = "Task Overdue"
-        message = f"Hi {user_name}, your task '{task_title}' was due on {due_date} and is now overdue. Please complete it as soon as possible."
+        title = "Task Overdue - Immediate Action Required"
+        
+        # Handle both date string and days overdue formats
+        if isinstance(due_date_or_days, int):
+            days_overdue = due_date_or_days
+            if days_overdue == 1:
+                message = f"Hi {user_name}, your task '{task_title}' is **1 day overdue**. Please complete it immediately to avoid further delays."
+            else:
+                message = f"Hi {user_name}, your task '{task_title}' is **{days_overdue} days overdue**. This requires urgent attention. Please prioritize completion."
+        else:
+            # Assume it's a date string
+            due_date = due_date_or_days if due_date_or_days else "unknown date"
+            message = f"Hi {user_name}, your task '{task_title}' was due on {due_date} and is now **overdue**. Please complete it as soon as possible."
         
         notification_id = create_notification(
             userid=userid,
             title=title,
             message=message,
             notification_type="task_overdue",
-            priority="high",
-            action_url="/user/todo",
+            priority=priority,
+            action_url="/User/Task/Todo",
             related_id=task_id,
             metadata={
                 "task_title": task_title,
-                "due_date": due_date,
-                "notification_date": datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%d-%m-%Y")
+                "notification_date": datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%d-%m-%Y"),
+                "task_id": task_id,
+                "is_overdue": True
             }
         )
         
@@ -4525,8 +4559,8 @@ async def create_overdue_task_notification(userid, task_title, due_date, task_id
                 "title": title,
                 "message": message,
                 "type": "task_overdue",
-                "priority": "high",
-                "action_url": "/user/todo",
+                "priority": priority,
+                "action_url": "/User/Task/Todo",
                 "related_id": task_id,
                 "is_read": False,
                 "created_at": get_current_timestamp_iso()
@@ -4545,7 +4579,7 @@ async def create_overdue_task_notification(userid, task_title, due_date, task_id
         print(f"Error creating overdue task notification: {e}")
         return None
 
-async def notify_manager_about_overdue_task(userid, user_name, task_title, due_date, tl_name, task_id):
+async def notify_manager_about_overdue_task(userid, user_name, task_title, due_date_str, tl_name, task_id, days_overdue=0):
     """Notify manager/TL about employee's overdue task"""
     try:
         # Find manager/TL by name first, then by position
@@ -4575,23 +4609,28 @@ async def notify_manager_about_overdue_task(userid, user_name, task_title, due_d
             if existing_notification:
                 continue
             
-            title = "Employee Task Overdue"
-            message = f"Hi {manager_name}, {user_name}'s task '{task_title}' was due on {due_date} and is now overdue."
+            title = "Employee Task Overdue - Action Required"
+            if days_overdue == 1:
+                message = f"Hi {manager_name}, {user_name}'s task '{task_title}' was due on {due_date_str} and is **1 day overdue**. Please follow up."
+            else:
+                message = f"Hi {manager_name}, {user_name}'s task '{task_title}' was due on {due_date_str} and is **{days_overdue} days overdue**. Immediate attention required."
             
             notification_id = create_notification(
                 userid=manager_id,
                 title=title,
                 message=message,
                 notification_type="employee_task_overdue",
-                priority="high",
-                action_url="/Manager/tasks",
+                priority="urgent",
+                action_url="/admin/task",
                 related_id=task_id,
                 metadata={
                     "employee_name": user_name,
                     "employee_id": userid,
                     "task_title": task_title,
-                    "due_date": due_date,
-                    "notification_date": today
+                    "due_date": due_date_str,
+                    "days_overdue": days_overdue,
+                    "notification_date": today,
+                    "is_overdue": True
                 }
             )
             
@@ -6514,47 +6553,6 @@ async def create_deadline_approach_notification(userid, task_title, days_remaini
         print(f"Error creating deadline approach notification: {e}")
         return None
 
-async def create_overdue_task_notification(userid, task_title, days_overdue, task_id=None, priority="critical"):
-    """Overdue tasks → Automatic overdue notifications"""
-    try:
-        user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
-        user_name = user.get("name", "User") if user else "User"
-        
-        title = "Task Overdue"
-        if days_overdue == 1:
-            message = f"Hi {user_name}, your task '{task_title}' is 1 day overdue. Please complete it immediately."
-        else:
-            message = f"Hi {user_name}, your task '{task_title}' is {days_overdue} days overdue. This requires immediate attention."
-        
-        notification_id = create_notification(
-            userid=userid,
-            title=title,
-            message=message,
-            notification_type="task",
-            priority=priority,
-            action_url=get_role_based_action_url(userid, "task"),
-            related_id=task_id,
-            metadata={
-                "task_title": task_title,
-                "action": "Overdue",
-                "days_overdue": days_overdue
-            }
-        )
-        
-        # Send WebSocket notification
-        from websocket_manager import notification_manager
-        await notification_manager.send_personal_notification(userid, {
-            "_id": notification_id,
-            "title": title,
-            "message": message,
-            "type": "task",
-            "priority": priority
-        })
-        
-        return notification_id
-    except Exception as e:
-        print(f"Error creating overdue task notification: {e}")
-        return None
 
 # Helper function to notify all relevant parties about task events
 async def notify_task_stakeholders(task_data, action, **kwargs):

@@ -29,112 +29,191 @@ def format_date_readable(date_str):
 
 async def check_and_notify_overdue_tasks():
     """Check for overdue tasks and send notifications"""
+    import sys
     try:
         current_time = get_current_timestamp_ist()
         current_date = current_time.strftime("%d-%m-%Y")
+        print(f"[OverdueCheck] Running at {current_time.isoformat()} (IST)", file=sys.stderr)
         
         # Find all pending tasks
         overdue_tasks = list(Tasks.find({
             "status": {"$in": ["Pending", "In Progress", "pending", "in progress"]},
             "due_date": {"$exists": True, "$ne": ""}
         }))
+        print(f"[OverdueCheck] Found {len(overdue_tasks)} tasks to check.", file=sys.stderr)
         
         overdue_count = 0
         notifications_sent = 0
         
         for task in overdue_tasks:
             try:
-                task_id = str(task["_id"])
-                userid = task.get("userid")
-                task_title = task.get("task", "Untitled Task")
-                due_date_str = task.get("due_date")
-                assigned_to = task.get("assigned_to", [])
-                manager_id = task.get("manager_id")
-                
-                if not due_date_str:
-                    continue
-                
-                # Parse due date
-                due_date = datetime.strptime(due_date_str, "%d-%m-%Y")
-                current_date_obj = datetime.strptime(current_date, "%d-%m-%Y")
-                days_overdue = (current_date_obj - due_date).days
-                
-                if days_overdue > 0:
-                    overdue_count += 1
-                    
-                    # Use enhanced overdue task notification
-                    from Mongo import create_overdue_task_notification
-                    
-                    # Notify task owner/assignee
-                    if userid:
-                        await create_overdue_task_notification(
-                            userid=userid,
-                            task_title=task_title,
-                            days_overdue=days_overdue,
-                            task_id=task_id,
-                            priority="critical"
-                        )
-                        notifications_sent += 1
-                    
-                    # Notify assigned users
-                    for assigned_user_id in assigned_to:
-                        if assigned_user_id != userid:
-                            await create_overdue_task_notification(
-                                userid=assigned_user_id,
-                                task_title=task_title,
-                                days_overdue=days_overdue,
-                                task_id=task_id,
-                                priority="critical"
-                            )
-                            notifications_sent += 1
-                    
-                    # Notify manager about employee's overdue task
-                    if manager_id and manager_id != userid:
-                        # Get employee name
-                        employee = Users.find_one({"_id": ObjectId(userid)}) if userid else None
-                        employee_name = employee.get("name", "Employee") if employee else "Employee"
-                        
-                        await create_notification_with_websocket(
-                            userid=manager_id,
-                            title=f"Employee Task Overdue: {employee_name}",
-                            message=f"{employee_name}'s task '{task_title}' is {days_overdue} day(s) overdue. Immediate attention required.",
-                            notification_type="employee_task_overdue",
-                            priority="critical",
-                            action_url=f"/admin/task",
-                            related_id=task_id,
-                            metadata={
-                                "task_id": task_id,
-                                "employee_id": userid,
-                                "employee_name": employee_name,
-                                "days_overdue": days_overdue
-                            }
-                        )
-                        notifications_sent += 1
-                        
-            except Exception as e:
-                continue
+                print("[OverdueCheck] Checking for overdue tasks...")
+                current_time = get_current_timestamp_ist()
+                current_date = current_time.strftime("%d-%m-%Y")
+                # Find all pending tasks
+                overdue_tasks = list(Tasks.find({
+                    "status": {"$in": ["Pending", "In Progress", "pending", "in progress"]},
+                    "due_date": {"$exists": True, "$ne": ""}
+                }))
+                overdue_count = 0
+                notifications_sent = 0
+                for task in overdue_tasks:
+                    try:
+                        task_id = str(task["_id"])
+                        userid = task.get("userid")
+                        task_title = task.get("task", "Untitled Task")
+                        due_date_str = task.get("due_date")
+                        assigned_to = task.get("assigned_to", [])
+                        manager_id = task.get("manager_id")
+                        assigner_id = task.get("assigned_by") or task.get("creator_id")
+                        if not due_date_str:
+                            continue
+                        # Parse due date (support both DD-MM-YYYY and YYYY-MM-DD)
+                        due_date = None
+                        current_date_obj = None
+                        parse_success = False
+                        for fmt in ["%d-%m-%Y", "%Y-%m-%d"]:
+                            try:
+                                due_date = datetime.strptime(due_date_str, fmt)
+                                current_date_obj = datetime.strptime(current_date, "%d-%m-%Y")
+                                parse_success = True
+                                break
+                            except Exception:
+                                continue
+                        if not parse_success:
+                            continue
+                        days_overdue = (current_date_obj - due_date).days
+                        if days_overdue > 0:
+                            overdue_count += 1
+                            from Mongo import create_overdue_task_notification, create_notification_with_websocket, Users
+                            # Notify task owner/assignee
+                            if userid:
+                                try:
+                                    await create_overdue_task_notification(
+                                        userid=userid,
+                                        task_title=task_title,
+                                        due_date_or_days=days_overdue,
+                                        task_id=task_id,
+                                        priority="critical"
+                                    )
+                                    notifications_sent += 1
+                                except Exception:
+                                    pass
+                            # Notify assigned users
+                            for assigned_user_id in assigned_to:
+                                if assigned_user_id != userid:
+                                    try:
+                                        await create_overdue_task_notification(
+                                            userid=assigned_user_id,
+                                            task_title=task_title,
+                                            due_date_or_days=days_overdue,
+                                            task_id=task_id,
+                                            priority="critical"
+                                        )
+                                        notifications_sent += 1
+                                    except Exception:
+                                        pass
+                            # Notify assigner if not the assignee
+                            if assigner_id and assigner_id != userid:
+                                try:
+                                    assigned_user = Users.find_one({"_id": ObjectId(userid)}) if userid else None
+                                    assigned_user_name = assigned_user.get("name", "Employee") if assigned_user else "Employee"
+                                    await create_notification_with_websocket(
+                                        userid=assigner_id,
+                                        title="Task You Assigned Is Overdue",
+                                        message=f"The task '{task_title}' assigned by you to {assigned_user_name} is overdue by {days_overdue} day(s). Kindly check.",
+                                        notification_type="assigned_task_overdue",
+                                        priority="critical",
+                                        action_url="/admin/task",
+                                        related_id=task_id,
+                                        metadata={
+                                            "task_id": task_id,
+                                            "assigned_to": userid,
+                                            "assigned_to_name": assigned_user_name,
+                                            "days_overdue": days_overdue,
+                                            "is_overdue": True
+                                        }
+                                    )
+                                    notifications_sent += 1
+                                except Exception:
+                                    pass
+                            # Notify manager/TL about employee's overdue task (robust lookup)
+                            try:
+                                employee = Users.find_one({"_id": ObjectId(userid)}) if userid else None
+                                employee_name = employee.get("name", "Employee") if employee else "Employee"
+                                tl_name = employee.get("TL") if employee else None
+                                manager = None
+                                if tl_name:
+                                    manager = Users.find_one({"name": tl_name})
+                                if not manager:
+                                    managers = list(Users.find({"position": {"$in": ["Manager", "TL", "Team Lead"]}}))
+                                else:
+                                    managers = [manager]
+                                for mgr in managers:
+                                    manager_id = str(mgr["_id"])
+                                    if manager_id == userid:
+                                        continue
+                                    try:
+                                        await create_notification_with_websocket(
+                                            userid=manager_id,
+                                            title=f"Employee Task Overdue: {employee_name}",
+                                            message=f"{employee_name}'s task '{task_title}' is {days_overdue} day(s) overdue. Immediate attention required.",
+                                            notification_type="employee_task_overdue",
+                                            priority="critical",
+                                            action_url=f"/admin/task",
+                                            related_id=task_id,
+                                            metadata={
+                                                "task_id": task_id,
+                                                "employee_id": userid,
+                                                "employee_name": employee_name,
+                                                "days_overdue": days_overdue
+                                            }
+                                        )
+                                        notifications_sent += 1
+                                    except Exception:
+                                        pass
+                            except Exception:
+                                pass
+                            # Notify HR if the overdue task belongs to a manager or TL
+                            try:
+                                user = Users.find_one({"_id": ObjectId(userid)}) if userid else None
+                                user_position = user.get("position", "") if user else ""
+                                if user_position.upper() in ["MANAGER", "TL", "TEAM LEAD"]:
+                                    from Mongo import get_hr_user_ids
+                                    hr_user_ids = await get_hr_user_ids()
+                                    for hr_id in hr_user_ids:
+                                        try:
+                                            await create_notification_with_websocket(
+                                                userid=hr_id,
+                                                title=f"Manager/TL Overdue Task Alert",
+                                                message=f"{user.get('name', 'Manager/TL')}'s task '{task_title}' is overdue by {days_overdue} day(s). Please review.",
+                                                notification_type="manager_task_overdue",
+                                                priority="critical",
+                                                action_url=f"/admin/task",
+                                                related_id=task_id,
+                                                metadata={
+                                                    "task_id": task_id,
+                                                    "manager_id": userid,
+                                                    "manager_name": user.get('name', 'Manager/TL'),
+                                                    "days_overdue": days_overdue
+                                                }
+                                            )
+                                            notifications_sent += 1
+                                        except Exception:
+                                            pass
+                            except Exception:
+                                pass
+                    except Exception:
+                        continue
+                return {"overdue_count": overdue_count, "notifications_sent": notifications_sent}
+            except Exception:
+                return {"error": "Overdue check failed"}
         
-        return {"overdue_count": overdue_count, "notifications_sent": notifications_sent}
-        
-    except Exception as e:
-        return {"error": str(e)}
-
-async def check_upcoming_deadlines():
-    """Check for tasks due soon and send reminders"""
-    try:
-        current_time = get_current_timestamp_ist()
-        today = current_time.strftime("%d-%m-%Y")
-        tomorrow = (current_time + timedelta(days=1)).strftime("%d-%m-%Y")
-        in_3_days = (current_time + timedelta(days=3)).strftime("%d-%m-%Y")
-        
-        # Find tasks due today, tomorrow, or in 3 days
+        # Find all tasks with upcoming deadlines (e.g., due today or tomorrow)
         upcoming_tasks = list(Tasks.find({
             "status": {"$in": ["Pending", "In Progress", "pending", "in progress"]},
-            "due_date": {"$in": [today, tomorrow, in_3_days]}
+            "due_date": {"$exists": True, "$ne": ""}
         }))
-        
-        notifications_sent = 0
-        
         for task in upcoming_tasks:
             try:
                 task_id = str(task["_id"])
@@ -412,20 +491,20 @@ async def run_all_automated_checks():
         
         # Run all checks concurrently
         overdue_result = await check_and_notify_overdue_tasks()
-        upcoming_result = await check_upcoming_deadlines()
+        # upcoming_result = await check_upcoming_deadlines()  # Removed undefined function
         attendance_result = await check_missed_attendance()
         clockout_result = await check_missed_clock_out()
         approval_result = await check_pending_approvals()
         
         results["overdue_tasks"] = overdue_result
-        results["upcoming_deadlines"] = upcoming_result
+        # results["upcoming_deadlines"] = upcoming_result  # Removed undefined function
         results["missed_attendance"] = attendance_result
         results["missed_clock_out"] = clockout_result
         results["pending_approvals"] = approval_result
         
         total_notifications = (
             overdue_result.get("notifications_sent", 0) +
-            upcoming_result.get("notifications_sent", 0) +
+            # upcoming_result.get("notifications_sent", 0) +  # Removed undefined function
             attendance_result.get("notifications_sent", 0) +
             clockout_result.get("notifications_sent", 0) +
             approval_result.get("notifications_sent", 0)

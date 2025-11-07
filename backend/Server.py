@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 app = FastAPI()
 from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
-from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave,TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage, AttendanceManage
+from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage, AttendanceManage
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
-from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
+from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, task_assign_to_multiple_users_with_notification, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
 from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, HolidayYear, Holiday
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request
 from fastapi.responses import JSONResponse
@@ -328,7 +328,6 @@ scheduler = BackgroundScheduler(timezone=ist_tz)
 from notification_automation import (
     run_all_automated_checks, 
     check_and_notify_overdue_tasks,
-    check_upcoming_deadlines,
     check_missed_attendance,
     check_pending_approvals
 )
@@ -338,14 +337,7 @@ from notification_automation import (
 scheduler.add_job(auto_clockout, 'cron', hour=21, minute=30, timezone=ist_tz, id='auto_clockout')
 
 # Define sync wrapper functions for async tasks
-def sync_check_upcoming_deadlines():
-    try:
-        loop = asyncio.new_event_loop()
-        asyncio.set_event_loop(loop)
-        loop.run_until_complete(check_upcoming_deadlines())
-        loop.close()
-    except Exception as e:
-        print(f"Error in sync_check_upcoming_deadlines: {e}")
+
 
 def sync_check_missed_attendance():
     try:
@@ -384,21 +376,28 @@ def sync_check_pending_approvals():
         print(f"Error in sync_check_pending_approvals: {e}")
 
 # Schedule notification automation tasks
-# Morning checks at 8:00 AM IST (upcoming deadlines, missed attendance)
+# Morning checks at 8:00 AM IST (upcoming deadlines, missed attendance, and overdue tasks)
+
+
+# TEST: Run overdue notification check every minute for immediate testing
+
+# Overdue notification checks at 10:00, 12:00, and 15:00 IST
 scheduler.add_job(
-    sync_check_upcoming_deadlines,
-    'cron', hour=8, minute=0, timezone=ist_tz, id='morning_deadline_check'
+    sync_check_and_notify_overdue_tasks,
+    'cron', hour=10, minute=0, timezone=ist_tz, id='overdue_check_10am'
+)
+scheduler.add_job(
+    sync_check_and_notify_overdue_tasks,
+    'cron', hour=12, minute=0, timezone=ist_tz, id='overdue_check_12noon'
+)
+scheduler.add_job(
+    sync_check_and_notify_overdue_tasks,
+    'cron', hour=15, minute=0, timezone=ist_tz, id='overdue_check_3pm'
 )
 
 scheduler.add_job(
     sync_check_missed_attendance,
     'cron', hour=10, minute=0, timezone=ist_tz, id='missed_attendance_check'
-)
-
-# Midday overdue tasks check at 12:00 PM IST
-scheduler.add_job(
-    sync_check_and_notify_overdue_tasks,
-    'cron', hour=12, minute=0, timezone=ist_tz, id='midday_overdue_check'
 )
 
 # Evening comprehensive check at 6:00 PM IST
@@ -457,19 +456,11 @@ async def startup_event():
             print(f"⚠️ Index creation warning: {idx_err}")
         
         task_scheduler = Mongo.setup_task_scheduler()
-        if task_scheduler:
-            print("✅ Task deadline monitoring system initialized")
-        else:
-            print("⚠️ Failed to initialize task deadline scheduler")
-        
-        # Log scheduled jobs
-        print("\n📅 Scheduled Background Jobs:")
-        print(f"  - Auto Clock-out: Daily at 9:30 PM IST")
-        print(f"  - Deadline Check: Daily at 8:00 AM IST")
-        print(f"  - Attendance Check: Daily at 10:00 AM IST")
-        print(f"  - Overdue Tasks: Daily at 12:00 PM IST")
-        print(f"  - Comprehensive Check: Daily at 6:00 PM IST")
-        print(f"  - Attendance Stats Update: Daily at 11:59 PM IST\n")
+        # if task_scheduler:
+        #     print("✅ Task deadline monitoring system initialized")
+        # else:
+        #     print("⚠️ Failed to initialize task deadline scheduler")
+            
     except Exception as e:
         print(f"❌ Error initializing task scheduler: {e}")
 
@@ -2964,6 +2955,18 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
                 except Exception as e:
                     print(f"Error routing typing event: {e}")
                 continue
+
+            if msg_type == "thread":
+                temp_id = msg.get("tempId")
+                msg["id"] = msg.get("id") or str(ObjectId())
+                threads_collection.insert_one(msg.copy())
+                msg["_tempId"] = temp_id
+                msg.pop("_id", None)
+
+                if msg.get("chatId") and msg.get("chatId").startswith("group_"):
+                    # Send to group channel
+                    await group_ws_manager.send_message(msg["chatId"], msg)
+                    continue
 
             if msg_type == "thread":
                 temp_id = msg.get("tempId")

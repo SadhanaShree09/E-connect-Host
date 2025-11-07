@@ -74,10 +74,20 @@ const NotificationDashboard = () => {
 
   // Check if notification is overdue
   const isOverdueNotification = (notification) => {
-    return notification.type === 'task_overdue' || 
-           notification.type === 'employee_task_overdue' ||
-           notification.title?.toLowerCase().includes('overdue') ||
-           notification.message?.toLowerCase().includes('overdue');
+    // Primary check: notification type
+    if (notification.type === 'task_overdue' || notification.type === 'employee_task_overdue') {
+      return true;
+    }
+    // Secondary check: metadata flag
+    if (notification.metadata?.is_overdue === true) {
+      return true;
+    }
+    // Tertiary check: content pattern
+    if (notification.title?.toLowerCase().includes('overdue') || 
+        notification.message?.toLowerCase().includes('overdue')) {
+      return true;
+    }
+    return false;
   };
 
   // Enhanced type icons with attendance subtypes
@@ -826,6 +836,7 @@ const NotificationDashboard = () => {
               </div>
             </div>
           </div>
+       
         </div>
       </div>
 
@@ -870,6 +881,7 @@ const NotificationDashboard = () => {
                         <div
                           key={notification._id}
                           className={`transition-all duration-200 shadow-md mb-3 min-h-[120px] ${
+                            isOverdue && notification.is_read ? 'bg-white border-l-red-500 border border-red-200' :
                             isOverdue ? 'bg-red-50 border-l-red-500 border border-red-200' :
                             !notification.is_read 
                               ? 'bg-white border-l-blue-600 border border-gray-200 hover:shadow-lg' 
@@ -895,8 +907,9 @@ const NotificationDashboard = () => {
                           <div className="flex items-start justify-between">
                             <div className="flex items-start space-x-4 flex-1">
                               <div className={`mt-1 p-3 rounded-lg flex-shrink-0 w-10 h-10 flex items-center justify-center ${
-                                isOverdue ? 'bg-red-100' :
-                                !notification.is_read ? 'bg-blue-50' : 'bg-gray-100'
+                                  isOverdue && notification.is_read ? 'bg-white' :
+                                  isOverdue ? 'bg-red-100' :
+                                  !notification.is_read ? 'bg-blue-50' : 'bg-gray-100'
                               }`}>
                                 <div className="text-base">
                                   {getTypeIcon(notification)}
@@ -927,6 +940,7 @@ const NotificationDashboard = () => {
                                   )}
                                 </div>
                                 <p className={`text-sm mb-3 leading-relaxed ${
+                                  isOverdue && notification.is_read ? 'text-gray-600' :
                                   isOverdue ? 'text-red-700 font-medium' :
                                   !notification.is_read ? 'text-gray-800' : 'text-gray-600'
                                 }`}>

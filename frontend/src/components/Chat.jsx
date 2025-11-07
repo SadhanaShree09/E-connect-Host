@@ -1512,7 +1512,12 @@ export default function Chat() {
                       )}
                       <button
                         className="w-full px-4 py-2.5 text-left text-sm hover:bg-gray-100 flex items-center gap-2 text-gray-700"
-                        onClick={() => handleDeleteMessage(m, "for_me")}
+                        onClick={() => {
+                          setMessageToDelete(m);
+                          setShowDeleteModal(true);
+                          // Mark that this is a 'for_me' delete request
+                          m._deleteForMeOnly = true;
+                        }}
                       >
                         <FiTrash2 size={14} />
                         Delete for me
@@ -1946,31 +1951,23 @@ export default function Chat() {
           Cancel
         </button>
         
-        {messageToDelete.from_user === userid && (
-          <button
-            className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md font-medium"
-            onClick={() =>
-              messageToDelete.isThread
-                ? handleDeleteThreadMessage(messageToDelete, "for_everyone")
-                : handleDeleteMessage(messageToDelete, "for_everyone")
-            }
-          >
-            Delete for Everyone
-          </button>
-        )}
-        
-        {messageToDelete.from_user !== userid && (
-          <button
-            className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md font-medium"
-            onClick={() =>
+        {/* Only show one delete button, label/action based on intended delete type */}
+        <button
+          className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md font-medium"
+          onClick={() => {
+            if (messageToDelete._deleteForMeOnly) {
               messageToDelete.isThread
                 ? handleDeleteThreadMessage(messageToDelete, "for_me")
-                : handleDeleteMessage(messageToDelete, "for_me")
+                : handleDeleteMessage(messageToDelete, "for_me");
+            } else {
+              messageToDelete.isThread
+                ? handleDeleteThreadMessage(messageToDelete, "for_everyone")
+                : handleDeleteMessage(messageToDelete, "for_everyone");
             }
-          >
-            Delete for Me
-          </button>
-        )}
+          }}
+        >
+          {messageToDelete._deleteForMeOnly ? 'Delete for Me' : 'Delete for Everyone'}
+        </button>
       </div>
     </div>
   </div>

@@ -431,20 +431,22 @@ console.log("filter data:",filteredData);
             </div>
           </div>
           <div className="mt-2 flex justify-between items-center">
-            <button
-              className="py-1 px-3 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter rounded-full shadow-lg mr-2"
-              onClick={() => paginate(currentPage - 1)}
-              disabled={currentPage === 1}
-            >
-              Previous
-            </button>
-            <button
-              className="py-1 px-3 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter rounded-full shadow-lg"
-              onClick={() => paginate(currentPage + 1)}
-              disabled={indexOfLastItem >= leaveData.length}
-            >
-              Next
-            </button>
+            <div className="flex gap-2">
+              <button
+                className="py-1 px-3 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter rounded-full shadow-lg mr-2"
+                onClick={() => paginate(currentPage - 1)}
+                disabled={currentPage === 1}
+              >
+                Previous
+              </button>
+              <button
+                className="py-1 px-3 bg-blue-500 hover:bg-blue-400 hover:text-slate-900 text-white text-sm font-inter rounded-full shadow-lg"
+                onClick={() => paginate(currentPage + 1)}
+                disabled={indexOfLastItem >= leaveData.length}
+              >
+                Next
+              </button>
+            </div>
             <div className="text-sm font-semibold text-gray-800">
               Page {leaveData.length > 0 ? currentPage : 0} of{" "}
               {leaveData.length > 0 ? Math.ceil(leaveData.length / itemsPerPage) : 0}

@@ -333,7 +333,7 @@ function Clockin() {
             {/* Status Display */}
             <div>
               {currentStatus === "not-clocked-in" && (
-                <div className="flex items-center space-x-4 bg-gray-50 rounded-lg p-5 border-2 border-gray-300">
+                <div className="flex items-center space-x-4 bg-white rounded-lg p-5 border-2 border-gray-300">
                   <FaTimesCircle className="text-4xl text-gray-400 flex-shrink-0" />
                   <div>
                     <div className="text-lg font-bold text-gray-700">Not Clocked In</div>

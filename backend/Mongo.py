@@ -4525,9 +4525,9 @@ async def create_overdue_task_notification(userid, task_title, due_date_or_days=
         if isinstance(due_date_or_days, int):
             days_overdue = due_date_or_days
             if days_overdue == 1:
-                message = f"Hi {user_name}, your task '{task_title}' is **1 day overdue**. Please complete it immediately to avoid further delays."
+                message = f"Hi {user_name}, your task '{task_title}' is 1 day overdue. Please complete it immediately to avoid further delays."
             else:
-                message = f"Hi {user_name}, your task '{task_title}' is **{days_overdue} days overdue**. This requires urgent attention. Please prioritize completion."
+                message = f"Hi {user_name}, your task '{task_title}' is {days_overdue} days overdue. This requires urgent attention. Please prioritize completion."
         else:
             # Assume it's a date string
             due_date = due_date_or_days if due_date_or_days else "unknown date"

@@ -33,9 +33,7 @@ from bson import ObjectId
 import asyncio
 from dotenv import load_dotenv
 load_dotenv() 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-# os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 # GridFS setup
 from pymongo import MongoClient
 import gridfs
@@ -185,9 +183,6 @@ notify_manager = NotifyManager()
 group_ws_manager = GroupChatManager()
 
 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 import atexit
 
 # Utility function to serialize MongoDB documents to JSON

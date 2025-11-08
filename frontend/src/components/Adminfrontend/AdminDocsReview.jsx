@@ -147,7 +147,7 @@ export default function AdminDocsReview() {
       userId,
       docName,
       status: "verified",
-      remarks: "Verified by HR",
+      remarks: "Verified by Admin",
     });
 
     // ✅ Update local state instantly (don’t delete)

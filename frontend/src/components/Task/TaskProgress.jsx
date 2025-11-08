@@ -604,7 +604,7 @@ const handleAssignTask = () => {
 )}
 
         {/* Filters and Search (compact) */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-2 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-blue-100 p-2 rounded-xl border border-gray-200 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
@@ -666,7 +666,7 @@ const handleAssignTask = () => {
                   setFilters({ employee: 'all', status: 'all', priority: 'all', dateRange: 'all' });
                   setSearchTerm('');
                 }}
-                className="w-full px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+                className="w-full px-3 py-1.5 bg-blue-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm"
               >
                 Clear Filters
               </button>
@@ -675,7 +675,7 @@ const handleAssignTask = () => {
         </div>
       </div>
       {/* Master-Detail: Left = compact employee list, Right = selected employee detail */}
-      <div className="p-4">
+      <div className="p-4 bg-white">
         <div className="flex gap-6 h-[calc(100vh-var(--tp-header-height)-16px)] overflow-hidden">
           {/* Left column: compact scrollable employee list */}
           <div className="w-80 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -697,7 +697,7 @@ const handleAssignTask = () => {
                     <div
                       key={emp.employeeId}
                       onClick={() => { setSelectedEmployeeId(emp.employeeId); setExpandedEmployees(new Set([emp.employeeId])); }}
-                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${isSelected ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
                     >
                       <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm">
                         <FaUserTie />

@@ -7,11 +7,11 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
+    <div className="bg-blue-100 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-2 hover:bg-blue-100 transition-colors"
+        className="w-full flex items-center justify-between p-2 hover:bg-blue-200 transition-colors"
       >
         <div className="flex items-center gap-3">
           <FaChartLine className="text-blue-600" size={20} />
@@ -644,7 +644,7 @@ const TaskPage = () => {
         <div className="flex justify-between items-center mb-6">
           <h2 className="text-3xl font-bold text-gray-800">Tasks - {date || "Date not available"}</h2>
           <div className="flex items-center gap-3">
-            <div className="flex items-center gap-2 bg-gray-50 border border-gray-200 rounded-md px-2 py-1">
+            <div className="flex items-center gap-2 bg-blue-100 border border-gray-200 rounded-md px-2 py-1">
            <label className="text-sm font-medium text-gray-600">Filter by Due Date:</label>
             <input
               type="date"

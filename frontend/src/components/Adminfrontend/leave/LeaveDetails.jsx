@@ -23,6 +23,14 @@ const LeaveDetails = () => {
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [positionFilter, setPositionFilter] = useState('All');
   const datePickerRef = useRef(null);
+  
+  // State to store all available filter options (unfiltered)
+  const [allFilterOptions, setAllFilterOptions] = useState({
+    departments: [],
+    positions: [],
+    leaveTypes: []
+  });
+  
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -123,6 +131,19 @@ const LeaveDetails = () => {
       }
       const data = await response.json();
       setLeaveData(data);
+      
+      // Store all unique filter options when no filters are applied (initial load)
+      if (statusFilter === 'All' && leaveTypeFilter === 'All' && departmentFilter === 'All' && positionFilter === 'All') {
+        const leaveDetails = data.leave_details || [];
+        const depts = [...new Set(leaveDetails.map(item => item.department).filter(Boolean))].sort();
+        const pos = [...new Set(leaveDetails.map(item => item.position).filter(Boolean))].sort();
+        const types = [...new Set(leaveDetails.map(item => item.leaveType).filter(Boolean))].sort();
+        setAllFilterOptions({
+          departments: depts,
+          positions: pos,
+          leaveTypes: types
+        });
+      }
       
       // Apply date range filter if set
       if (dateRange[0].startDate && dateRange[0].endDate) {
@@ -300,9 +321,9 @@ const LeaveDetails = () => {
   }
 
   const summaryStats = getSummaryStats();
-  const departments = getUniqueValues('department');
-  const positions = getUniqueValues('position');
-  const leaveTypes = getUniqueValues('leaveType');
+  const departments = allFilterOptions.departments.length > 0 ? allFilterOptions.departments : getUniqueValues('department');
+  const positions = allFilterOptions.positions.length > 0 ? allFilterOptions.positions : getUniqueValues('position');
+  const leaveTypes = allFilterOptions.leaveTypes.length > 0 ? allFilterOptions.leaveTypes : getUniqueValues('leaveType');
 
   return (
     <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full shadow-black rounded-xl justify-center items-center relative jsonback ml-10 rounded-md">
@@ -636,7 +657,11 @@ const LeaveDetails = () => {
                     <tr>
                       <td colSpan={(userRole === 'admin' || userRole === 'hr') ? "9" : "7"} className="p-2 whitespace-nowrap">
                         <div className="font-medium text-center">
-                          {searchTerm ? `No records found matching "${searchTerm}"` : 'No data available'}
+                          {searchTerm 
+                            ? `No records found matching "${searchTerm}"` 
+                            : (statusFilter !== 'All' || leaveTypeFilter !== 'All' || departmentFilter !== 'All' || positionFilter !== 'All')
+                              ? 'No records match the selected filters'
+                              : 'No data available'}
                         </div>
                       </td>
                     </tr>

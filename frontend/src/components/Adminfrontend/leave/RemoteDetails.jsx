@@ -22,6 +22,12 @@ const RemoteDetails = () => {
   const [departmentFilter, setDepartmentFilter] = useState('All');
   const [positionFilter, setPositionFilter] = useState('All');
   
+  // State to store all available filter options (unfiltered)
+  const [allFilterOptions, setAllFilterOptions] = useState({
+    departments: [],
+    positions: []
+  });
+  
   // Pagination
   const [currentPage, setCurrentPage] = useState(1);
   const [itemsPerPage] = useState(5);
@@ -136,6 +142,16 @@ const RemoteDetails = () => {
       
       setRemoteData({ ...data, remote_work_details: remoteWorkDetails });
       
+      // Store all unique filter options when no filters are applied (initial load)
+      if (statusFilter === 'All' && departmentFilter === 'All' && positionFilter === 'All') {
+        const depts = [...new Set(remoteWorkDetails.map(item => item.department).filter(Boolean))].sort();
+        const pos = [...new Set(remoteWorkDetails.map(item => item.position).filter(Boolean))].sort();
+        setAllFilterOptions({
+          departments: depts,
+          positions: pos
+        });
+      }
+      
       // Apply date range filter if set
       if (dateRange[0].startDate && dateRange[0].endDate) {
         filterDataByDateRange(remoteWorkDetails, dateRange[0].startDate, dateRange[0].endDate);
@@ -203,7 +219,7 @@ const RemoteDetails = () => {
     }));
   };
 
-  // Get unique values for filters
+  // Get unique values for filters from all data (not filtered)
   const getUniqueValues = (field) => {
     if (!remoteData.remote_work_details) return [];
     const values = [...new Set(remoteData.remote_work_details.map(item => item[field]).filter(Boolean))];
@@ -320,8 +336,8 @@ const RemoteDetails = () => {
   }
 
   const summaryStats = getSummaryStats();
-  const departments = getUniqueValues('department');
-  const positions = getUniqueValues('position');
+  const departments = allFilterOptions.departments.length > 0 ? allFilterOptions.departments : getUniqueValues('department');
+  const positions = allFilterOptions.positions.length > 0 ? allFilterOptions.positions : getUniqueValues('position');
 
   return (
     <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full shadow-black rounded-xl justify-center items-center relative jsonback ml-10 rounded-md">
@@ -646,7 +662,11 @@ const RemoteDetails = () => {
                     <tr>
                       <td colSpan={(userRole === 'admin' || userRole === 'hr') ? "11" : "8"} className="p-2 whitespace-nowrap">
                         <div className="font-medium text-center">
-                          {searchTerm ? `No records found matching "${searchTerm}"` : 'No data available'}
+                          {searchTerm 
+                            ? `No records found matching "${searchTerm}"` 
+                            : (statusFilter !== 'All' || departmentFilter !== 'All' || positionFilter !== 'All')
+                              ? 'No records match the selected filters'
+                              : 'No data available'}
                         </div>
                       </td>
                     </tr>

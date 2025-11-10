@@ -1205,7 +1205,6 @@ async def remote_work_request(request: RemoteWorkRequest):
     Submit a remote work (WFH) request
     - Single or multi-day remote work requests
     - Validates dates and checks conflicts
-    - Notifies employee and approver
     """
     try:
         # Add request time in IST
@@ -1385,10 +1384,10 @@ async def fetch_remote_work_requests(
     show_processed: bool = Query(False, alias="show_processed")
 ):
     """
-    Combined endpoint for remote work requests
-    - HR: sees all remote work requests
-    - Admin: sees admin page remote work requests
-    - TL: sees their team's remote work requests (with history option)
+    Fetch remote work requests with role-based filtering.
+    - role: "hr" (all requests), "admin" (admin view), "manager" (team requests, requires TL)
+    - TL : if role is TL then this field should be TL's name otherwise empty
+    - show_processed: False (pending only) / True (includes history, for managers)
     """
     try:
         print(f"DEBUG: /remote_work_requests endpoint called - role: {role}, TL: {TL}, show_processed: {show_processed}")
@@ -1606,7 +1605,12 @@ async def get_manager_team_leave_details(
     leaveTypeFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get leave details for team members under a specific TL"""
+    """
+    Get leave details for team members under a specific manager with filtering options.
+    - statusFilter: Filter by leave status ("Pending", "Approved", "Rejected", "All")
+    - leaveTypeFilter: Filter by leave type ("Sick Leave", "Casual Leave", "Earned Leave", "All")
+    - departmentFilter: Filter by department name or "All" for no filter
+    """
     try:
         # First, verify the manager exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
@@ -1731,7 +1735,11 @@ async def get_manager_team_remote_work_details(
     statusFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get remote work details for team members under a specific TL"""
+    """
+    Get remote work details for team members under a specific manager with filtering options.
+    - statusFilter: Filter by status ("Pending", "Recommended", "Approved", "Rejected", "All")
+    - departmentFilter: Filter by department name or "All" for no filter
+    """
     try:
         # First, verify the manager exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
@@ -1911,7 +1919,13 @@ async def get_all_users_leave_details(
     positionFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get leave details for ALL users (no specific userid required)"""
+    """
+    Get leave details for all users across the organization with filtering options.
+    - statusFilter: Filter by leave status ("Pending", "Approved", "Rejected", "All")
+    - leaveTypeFilter: Filter by leave type ("Sick Leave", "Casual Leave", "Earned Leave", "All")
+    - positionFilter: Filter by employee position or "All" for no filter
+    - departmentFilter: Filter by department name or "All" for no filter
+    """
     try:
         # Build the aggregation pipeline with flexible userid matching
         pipeline = []
@@ -2035,7 +2049,12 @@ async def get_all_users_remote_work_details(
     positionFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get remote work details for ALL users (no specific userid required)"""
+    """
+    Get remote work details for all users across the organization with filtering options.
+    - statusFilter: Filter by status ("Pending", "Recommended", "Approved", "Rejected", "All")
+    - positionFilter: Filter by employee position or "All" for no filter
+    - departmentFilter: Filter by department name or "All" for no filter
+    """
     try:
         # Build the aggregation pipeline with flexible userid matching
         pipeline = []

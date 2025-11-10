@@ -604,7 +604,7 @@ const handleAssignTask = () => {
 )}
 
         {/* Filters and Search (compact) */}
-        <div className="bg-gradient-to-br from-gray-50 to-gray-100 p-2 rounded-xl border border-gray-200 shadow-sm">
+        <div className="bg-blue-100 p-2 rounded-xl border border-gray-200 shadow-sm">
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-5 gap-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-2">Search</label>
@@ -666,7 +666,7 @@ const handleAssignTask = () => {
                   setFilters({ employee: 'all', status: 'all', priority: 'all', dateRange: 'all' });
                   setSearchTerm('');
                 }}
-                className="w-full px-3 py-1.5 bg-blue-400 text-white rounded-md hover:bg-gray-400 transition-colors text-sm"
+                className="w-full px-3 py-1.5 bg-blue-400 text-white rounded-md hover:bg-gray-500 transition-colors text-sm"
               >
                 Clear Filters
               </button>

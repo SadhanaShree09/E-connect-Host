@@ -59,6 +59,8 @@ const LeaveRequest = () => {
     } else {
       setOtherFromDate(null);
     }
+    // Reset To Date when From Date changes
+    setOtherToDate(null);
     setValidationMessage("");
   };
 
@@ -346,16 +348,25 @@ const LeaveRequest = () => {
     leaverequestapi(newLeave);
   };
 
-  const isValidDate = (current, leaveType) => {
+  const isValidDate = (current, leaveType, fieldType = null) => {
     const date = current instanceof Date ? current : current.toDate();
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
+    // Disable Sundays for all leave types
     if (date.getDay() === 0) {
       return false;
     }
 
+    // Special handling for Other Leave To Date
+    if (leaveType === "Other Leave" && fieldType === "toDate" && otherFromDate) {
+      const fromDate = otherFromDate instanceof Date ? otherFromDate : otherFromDate.toDate();
+      fromDate.setHours(0, 0, 0, 0);
+      return date >= fromDate;
+    }
+
+    // For all leave types, only allow today and future dates
     if (leaveType === "Sick Leave" || leaveType === "Casual Leave" || leaveType === "Permission" || leaveType === "Other Leave" || leaveType === "Bonus Leave") {
       return date >= today;
     }
@@ -537,7 +548,7 @@ const LeaveRequest = () => {
                   value={otherFromDate}
                   onChange={handleOtherFromDateChange}
                   dateFormat="DD-MM-YYYY"
-                  isValidDate={(current) => isValidDate(current, leaveType)}
+                  isValidDate={(current) => isValidDate(current, leaveType, "fromDate")}
                   timeFormat={false}
                   closeOnSelect
                   inputProps={{
@@ -553,13 +564,14 @@ const LeaveRequest = () => {
                   value={otherToDate}
                   onChange={handleOtherToDateChange}
                   dateFormat="DD-MM-YYYY"
-                  isValidDate={(current) => isValidDate(current, leaveType)}
+                  isValidDate={(current) => isValidDate(current, leaveType, "toDate")}
                   timeFormat={false}
                   closeOnSelect
                   inputProps={{
                     className:
                       "p-2 text-sm border border-gray-300 rounded-md block w-full mb-2",
-                    placeholder: "Select to date",
+                    placeholder: otherFromDate ? "Select to date" : "Select from date first",
+                    disabled: !otherFromDate,
                   }}
                 />
               </div>

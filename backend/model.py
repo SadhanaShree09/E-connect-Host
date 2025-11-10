@@ -2,7 +2,7 @@ from datetime import datetime
 import pytz
 import re
 from pydantic import BaseModel, validator, ValidationError,Field
-from typing import Any, Optional, List, Dict, Union
+from typing import Any, Optional, List, Dict, Union, Literal
 from datetime import date,datetime
 
 class AttendanceManage(BaseModel):
@@ -346,6 +346,13 @@ class ChatHistoryResponse(BaseModel):
     chatId: str
     messages: List[Message]
 
+#delete chats
+class DeleteMessageRequest(BaseModel):
+    message_id: str
+    delete_type: Literal["for_me", "for_everyone"]
+    user_id: str
+    chat_id: str
+    is_group: bool = False
 
 #  Online presence payload
 class PresencePayload(BaseModel):

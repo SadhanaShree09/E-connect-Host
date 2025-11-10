@@ -643,6 +643,11 @@ async def get_employee_id(name: str = Path(..., title="The username of the user"
 #Leave-request
 @app.post('/leave-request')
 async def leave_request(item: Item6):
+    """
+    Submit a regular leave request
+    - Sick Leave, Casual Leave, etc.
+    - Validates dates and checks conflicts
+    """
     try:
         
         print(item.selectedDate)
@@ -750,6 +755,11 @@ async def leave_request(item: Item6):
 
 @app.post('/Bonus-leave-request')
 async def bonus_leave_request(item: Item9):
+    """
+    Submit a bonus leave request
+    - Compensation for Sunday work
+    - Requires available bonus leave balance
+    """
     try:
         time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
 
@@ -862,6 +872,11 @@ async def bonus_leave_request(item: Item9):
 
 @app.post('/Other-leave-request')
 async def other_leave_request(item: Item7):
+    """
+    Submit an other leave request (LOP - Loss of Pay)
+    - Multi-day leave requests
+    - Maximum 5 consecutive days
+    """
     try:
         # Add request time in the desired timezone
         time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
@@ -962,6 +977,10 @@ async def other_leave_request(item: Item7):
 
 @app.post('/Permission-request')
 async def permission_request(item: Item8):
+    """
+    Submit a permission request
+    - Short duration absences (Morning/Afternoon)
+    """
     try:
         result = store_Permission_request(
                 item.userid,
@@ -1097,6 +1116,12 @@ async def fetch_leave_requests(
     role: str = Query(..., alias="role"),
     TL: str = Query(None, alias="TL")
 ):
+    """
+    Fetch leave requests based on role
+    - HR: All employee requests
+    - Admin: TL requests
+    - TL: Team member requests (requires TL parameter)
+    """
     try:
         print(f"DEBUG: /leave_requests endpoint called - selectedOption: {selectedOption}, role: {role}, TL: {TL}")
         
@@ -1136,6 +1161,12 @@ async def fetch_leave_requests(
 # HR Page Leave Responses
 @app.put("/updated_user_leave_requests")
 async def updated_user_leave_requests_status(leave_id: str = Form(...), status: str = Form(...)):
+    """
+    Update leave request status (Approve/Reject/Recommend)
+    - Updates status in database
+    - Sends notification to employee
+    - Returns updated leave request details
+    """
     try:
         response = updated_user_leave_requests_status_in_mongo(leave_id, status)
         
@@ -1170,6 +1201,12 @@ async def updated_user_leave_requests_status(leave_id: str = Form(...), status: 
    
 @app.post("/remote-work-request")
 async def remote_work_request(request: RemoteWorkRequest):
+    """
+    Submit a remote work (WFH) request
+    - Single or multi-day remote work requests
+    - Validates dates and checks conflicts
+    - Notifies employee and approver
+    """
     try:
         # Add request time in IST
         time = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%I:%M:%S %p")
@@ -1326,10 +1363,15 @@ async def remote_work_request(request: RemoteWorkRequest):
 
 # Remote Work History    
 @app.get("/Remote-History/{userid}") 
-async def get_Remote_History(userid:str = Path(..., title="The name of the user whose Remote History you want to fetch")):
+async def get_Remote_History(userid: str = Path(..., title="The name of the user whose Remote History you want to fetch")):
+    """
+    Fetch remote work history for a user
+    - Returns all WFH requests (approved, pending, rejected)
+    - Sorted by request date
+    """
     try:
         Remote_History = Remote_History_Details(userid)
-        return{"Remote_History": Remote_History}
+        return {"Remote_History": Remote_History}
     except Exception as e:
         print(e)
         raise HTTPException(status_code=500, detail=str(e))
@@ -1346,7 +1388,7 @@ async def fetch_remote_work_requests(
     Combined endpoint for remote work requests
     - HR: sees all remote work requests
     - Admin: sees admin page remote work requests
-    - Manager: sees their team's remote work requests (with history option)
+    - TL: sees their team's remote work requests (with history option)
     """
     try:
         print(f"DEBUG: /remote_work_requests endpoint called - role: {role}, TL: {TL}, show_processed: {show_processed}")
@@ -1386,6 +1428,12 @@ async def fetch_remote_work_requests(
 # HR Remote Work Responses
 @app.put("/update_remote_work_requests")
 async def update_remote_work_request_status(userid: str = Form(...), status: str = Form(...), id: str = Form(...)):
+    """
+    Update remote work request status (Approve/Reject)
+    - Final approval/rejection by HR or Admin
+    - Sends notification to employee
+    - Returns status update confirmation
+    """
     try:
         updated = update_remote_work_request_status_in_mongo(userid, status, id)
         if updated:
@@ -1443,6 +1491,12 @@ async def update_remote_work_request_status(userid: str = Form(...), status: str
 # HR Remote Work Responses
 @app.put("/recommend_remote_work_requests")
 async def update_remote_work_request_status(userid: str = Form(...), status: str = Form(...), id: str = Form(...)):
+    """
+    Recommend remote work request (TL action)
+    - TL recommends WFH for HR approval
+    - Sends notification to HR
+    - Returns recommendation status
+    """
     try:
         print(f"WFH recommendation update - User: {userid}, Status: {status}, ID: {id}")
         updated = update_remote_work_request_recommend_in_mongo(userid, status, id)
@@ -1552,7 +1606,7 @@ async def get_manager_team_leave_details(
     leaveTypeFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get leave details for team members under a specific manager"""
+    """Get leave details for team members under a specific TL"""
     try:
         # First, verify the manager exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
@@ -1677,7 +1731,7 @@ async def get_manager_team_remote_work_details(
     statusFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get remote work details for team members under a specific manager"""
+    """Get remote work details for team members under a specific TL"""
     try:
         # First, verify the manager exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
@@ -1797,7 +1851,7 @@ async def get_manager_team_remote_work_details(
 
 @app.get("/manager/team_members/{user_id}")
 async def get_manager_team_members(user_id: str):
-    """Get list of team members under a specific manager"""
+    """Get list of team members under a specific TL"""
     try:
         # Get manager info
         manager = Users.find_one({"_id": ObjectId(user_id)})

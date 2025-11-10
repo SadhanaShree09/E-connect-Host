@@ -11,7 +11,7 @@ import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
-const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUploadLabel }) => {
+const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadLabel }) => {
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
     if (/^\d{4}-\d{2}-\d{2}$/.test(dateStr)) return dateStr;
@@ -144,8 +144,8 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
   const fetchTaskDetails = useCallback(async () => {
     setLoading(true);
     try {
-      const managerName = LS.get("name");
-      const response = await fetch(`${ipadr}/tasks?role=manager&manager_name=${managerName}`);
+      const TLName = LS.get("name");
+      const response = await fetch(`${ipadr}/tasks?role=TL&TL_name=${TLName}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to fetch task details");
@@ -198,7 +198,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
       user: `${LS.get("name")}`,
       text: newComment,
       timestamp: new Date().toISOString(),
-      isManager: role === 'manager' || role === 'hr'
+      isTL: role === 'TL' || role === 'hr'
     };
     const updatedTask = {
       ...task,
@@ -664,18 +664,18 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
             <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
               {task.comments.map((comment, index) => (
                 <div key={`comment-${comment.id}-${index}`} className={`p-3 rounded-lg ${
-                  comment.isManager || comment.user.toLowerCase().includes('manager') || comment.user.toLowerCase().includes('hr')
+                  comment.isTL || comment.user.toLowerCase().includes('TL') || comment.user.toLowerCase().includes('hr')
                     ? 'bg-blue-50 border-l-4 border-blue-500'
                     : 'bg-gray-50'
                 } break-words`}>
                   <div className="flex justify-between items-center mb-2">
                     <span className={`font-medium text-sm ${
-                      comment.isManager || comment.user.toLowerCase().includes('manager') || comment.user.toLowerCase().includes('hr')
+                      comment.isTL || comment.user.toLowerCase().includes('TL') || comment.user.toLowerCase().includes('hr')
                         ? 'text-blue-800'
                         : 'text-gray-800'
                     }`}>
                       {comment.user}
-                      {comment.user?.toLowerCase().includes("manager") ? (
+                      {comment.user?.toLowerCase().includes("TL") ? (
                         <span className="ml-2 px-2 py-1 bg-blue-100 text-blue-700 text-xs rounded-full">TeamLead</span>
                       ) : comment.user?.toLowerCase().includes("hr") ? (
                         <span className="ml-2 px-2 py-1 bg-green-100 text-green-700 text-xs rounded-full">HR</span>
@@ -736,7 +736,7 @@ const ProgressDetail = ({ role = "manager", dashboardRoute, commentLabel, fileUp
                     <div>
                       <p className="text-sm font-medium text-gray-800 flex items-center gap-2">
                         {file.name}
-                        {file.uploadedBy === "Manager" && (
+                        {file.uploadedBy === "TL" && (
                           <span className="px-2 py-0.5 text-xs rounded bg-blue-100 text-blue-700">
                             TeamLead
                           </span>

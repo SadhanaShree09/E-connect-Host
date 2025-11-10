@@ -39,7 +39,7 @@ export default function Fileuploader({ userid, docName, onUpload, onClose }) {
       });
     } catch (err) {
       console.error(err);
-      alert("❌ Failed to upload file");
+      alert("Failed to upload file");
     } finally {
       setUploading(false);
     }

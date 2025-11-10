@@ -135,8 +135,8 @@ function Clockin_int() {
       })
       .catch((err) => {
         setIsLoading(false);
-        console.error("❌ Clock-in error:", err);
-        toast.error("❌ Failed to clock in. Please check your connection and try again.");
+        console.error("Clock-in error:", err);
+        toast.error("Failed to clock in. Please check your connection and try again.");
       });
   };
 
@@ -159,12 +159,12 @@ function Clockin_int() {
         const workDuration = formatElapsedTime(elapsedTime);
         resetTimer();
         
-        toast.success(`✅ Successfully clocked out at ${formatTime(currentDate)}! Total work time: ${workDuration}`);
+        toast.success(`Successfully clocked out at ${formatTime(currentDate)}! Total work time: ${workDuration}`);
       })
       .catch((err) => {
         setIsLoading(false);
         console.log(err);
-        toast.error("❌ Failed to clock out. Please check your connection and try again.");
+        toast.error("Failed to clock out. Please check your connection and try again.");
       });
   };
 

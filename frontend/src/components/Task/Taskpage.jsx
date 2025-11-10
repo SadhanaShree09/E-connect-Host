@@ -7,11 +7,11 @@ import 'react-toastify/dist/ReactToastify.css';
 
 const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
   return (
-    <div className="bg-gradient-to-br from-blue-50 to-blue-100 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
+    <div className="bg-blue-100 rounded-xl border border-blue-200 shadow-sm overflow-hidden">
       {/* Toggle Button */}
       <button
         onClick={onToggle}
-        className="w-full flex items-center justify-between p-2 hover:bg-blue-100 transition-colors"
+        className="w-full flex items-center justify-between p-2 hover:bg-blue-200 transition-colors"
       >
         <div className="flex items-center gap-3">
           <FaChartLine className="text-blue-600" size={20} />
@@ -270,11 +270,11 @@ const TaskPage = () => {
     try {
       let endpoint;
 
-      // Employees → only manager-assigned tasks
+      // Employees → only TL-assigned tasks
       if (LS.get("position") === "Employee") {
         endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${selectedDate}`;
-      } else if (LS.get("position") === "Manager") {
-        // Managers → only HR-assigned tasks, no self-assigned
+      } else if (LS.get("position") === "TL") {
+        // TL → only HR-assigned tasks, no self-assigned
         endpoint = selectedDate
           ? `${ipadr}/tasks?role=HR&userid=${userId}&date=${selectedDate}`
           : `${ipadr}/tasks?role=HR&userid=${userId}`;

@@ -54,7 +54,7 @@ class DesktopNotificationManager {
       await this.requestPermission();
     }
 
-    console.log('✅ Desktop Notification Manager initialized - All features enabled');
+    console.log('✅ Desktop Notification TL initialized - All features enabled');
   }
 
   /**

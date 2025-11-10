@@ -35,15 +35,15 @@ const Leaveapproval = () => {
     },
   ]);
 
-  const isManager = LS.get("position") === "Manager";
+  const isTL = LS.get("position") === "TL";
   const isAdmin = LS.get('isadmin');
 
   useEffect(() => {
     if (LS.get("department") === "HR") {
-      fetch(`${ipadr}/auto_approve_manager_leaves`)
+      fetch(`${ipadr}/auto_approve_TL_leaves`)
         .then(response => response.json())
         .then(data => console.log("Auto-approval triggered:", data))
-        .catch(error => console.error("Error auto-approving manager leaves:", error));
+        .catch(error => console.error("Error auto-approving TL leaves:", error));
     }
   }, []);
 
@@ -100,8 +100,8 @@ const Leaveapproval = () => {
       let role = "";
       if (LS.get("isadmin") === true) {
         role = "admin";
-      } else if (LS.get("position") === "Manager") {
-        role = "manager";
+      } else if (LS.get("position") === "TL") {
+        role = "tl";
       } else if (LS.get("department") === "HR") {
         role = "hr";
       }
@@ -113,7 +113,7 @@ const Leaveapproval = () => {
       };
 
       // Add TL parameter only for managers
-      if (role === "manager") {
+      if (role === "tl") {
         requestParams.TL = LS.get("name");
       }
 
@@ -396,7 +396,7 @@ const Leaveapproval = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    (Position === "user" || Position === "TL") ? 
+    (Position === "user" ) ? 
       (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
@@ -609,15 +609,15 @@ const Leaveapproval = () => {
                                   </div>
                                 </div>
                               )
-                            ) : LS.get("position") === "Manager" || isAdmin ? (
+                            ) : LS.get("position") === "TL" || isAdmin ? (
                               (() => {
-                                // Check if the request is from a Manager or HR employee
-                                const isManagerOrHREmployee = row.position === "Manager" || 
+                                // Check if the request is from a TL or HR employee
+                                const isTLOrHREmployee = row.position === "TL" || 
                                                               row.position === "HR" ||
                                                               row.employeeDepartment === "HR" || 
                                                               (leaveData.find(item => item.Employee_ID === row.Employee_ID)?.department === "HR");
                                 
-                                if (isAdmin && isManagerOrHREmployee) {
+                                if (isAdmin && isTLOrHREmployee) {
                                   // Admin handling Manager/HR requests - Direct Approve/Reject
                                   return row.status === "Approved" ? (
                                     <p className="text-green-500 font-inter text-start">Approved</p>

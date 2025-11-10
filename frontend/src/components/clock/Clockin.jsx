@@ -68,7 +68,7 @@ function Clockin() {
       }
     } catch (error) {
       console.error("Error fetching today's status:", error);
-      toast.error("❌ Failed to load today's status");
+      toast.error("Failed to load today's status");
     } finally {
       setFetchingStatus(false);
     }
@@ -171,10 +171,10 @@ function Clockin() {
         } else if (data.message && data.message.includes("Already clocked in")) {
           setCurrentStatus("clocked-in");
           setLogin(true);
-          toast.info("⚠️ " + data.message);
+          toast.info(data.message);
           fetchTodayStatus();
         } else {
-          toast.info("ℹ️ " + data.message);
+          toast.info(data.message);
           if (data.message.includes("successful")) {
             setLogin(true);
             setCurrentStatus("clocked-in");
@@ -185,7 +185,7 @@ function Clockin() {
       .catch(error => {
         setIsLoading(false);
         setLastAction(null);
-        toast.error("❌ Clock-in failed. Please check your connection and try again.");
+        toast.error("Clock-in failed. Please check your connection and try again.");
         console.error(error);
       });
   };
@@ -229,38 +229,38 @@ function Clockin() {
             fetchTodayStatus();
           } else if (data.message.includes("Previous Day") || data.message.includes("previous day") || data.message.includes("incomplete")) {
             // User needs to use previous day clock-out
-            toast.warning(`⚠️ ${data.message}`, {
+            toast.warning(`${data.message}`, {
               autoClose: 5000
             });
           } else if (data.message.includes("already clocked out") || data.message.includes("Already clocked out")) {
-            toast.info(`ℹ️ ${data.message}`);
+            toast.info(`${data.message}`);
             setLogin(false);
             setCurrentStatus("clocked-out");
             fetchTodayStatus();
           } else if (data.message.includes("Clock-in required") || data.message.includes("Please clock in")) {
-            toast.warning("⚠️ Please clock in first before clocking out.");
+            toast.warning("Please clock in first before clocking out.");
             setCurrentStatus("not-clocked-in");
             setLogin(false);
             fetchTodayStatus();
           } else {
             // Generic success message
-            toast.success("✅ " + data.message);
+            toast.success(data.message);
             setLogin(false);
             setCurrentStatus("clocked-out");
             fetchTodayStatus();
           }
         } else if (data.error) {
           // Handle error response
-          toast.error("❌ " + data.error);
+          toast.error(data.error);
         } else {
-          toast.info("ℹ️ Clock-out processed");
+          toast.info("Clock-out processed");
           fetchTodayStatus();
         }
       })
       .catch(error => {
         setIsLoading(false);
         setLastAction(null);
-        toast.error("❌ Clock-out failed. Please check your connection and try again.");
+        toast.error("Clock-out failed. Please check your connection and try again.");
         console.error(error);
       });
   };

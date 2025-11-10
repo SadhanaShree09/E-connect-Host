@@ -30,7 +30,7 @@ const AddUser = () => {
 
   // Fetch TL list
   useEffect(() => {
-    fetch(`${ipadr}/get_managers_list`)
+    fetch(`${ipadr}/get_TL_list`)
       .then((response) => {
         if (!response.ok) throw new Error("Network response was not ok");
         return response.json();

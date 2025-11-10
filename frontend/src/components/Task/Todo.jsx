@@ -32,7 +32,7 @@ const ToDoList = () => {
         
         if (position === "Employee") {
           url = `${ipadr}/tasks?role=Employee&userid=${userid}`;
-        } else if (position === "Manager") {
+        } else if (position === "TL") {
           url = `${ipadr}/tasks?role=HR&userid=${userid}`;
         } else if (position === "HR" || LS.get("isadmin")) {
           url = `${ipadr}/tasks?role=hr`;
@@ -59,7 +59,7 @@ const ToDoList = () => {
         }
         
       } catch (error) {
-        console.error('❌ Error fetching tasks:', error);
+        console.error('Error fetching tasks:', error);
         setError(error.message);
       } finally {
         setLoading(false);

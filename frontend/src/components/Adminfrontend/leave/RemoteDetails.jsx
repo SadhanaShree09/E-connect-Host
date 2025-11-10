@@ -56,7 +56,7 @@ const RemoteDetails = () => {
   const getUserRole = () => {
     if (isAdmin) return 'admin';
     if (userDepartment === 'HR') return 'hr';
-    if (userPosition === 'Manager') return 'manager';
+    if (userPosition === 'TL') return 'tl';
     return 'user';
   };
 
@@ -110,8 +110,8 @@ const RemoteDetails = () => {
         case 'hr':
           url = `${ipadr}/remote_work_details/user/?${params.toString()}`;
           break;
-        case 'manager':
-          url = `${ipadr}/manager/remote_work_details/${userId}?${params.toString()}`;
+        case 'tl':
+          url = `${ipadr}/tl/remote_work_details/${userId}?${params.toString()}`;
           break;
         case 'user':
           setError('Access denied. Users cannot view remote work management dashboard.');
@@ -308,7 +308,7 @@ const RemoteDetails = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Access control for users
-  if (userPosition === "user" || userPosition === "TL") {
+  if (userPosition === "user") {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
@@ -524,7 +524,7 @@ const RemoteDetails = () => {
             {searchTerm && (
               <span className="ml-2 text-blue-600">matching "{searchTerm}"</span>
             )}
-            {userRole === 'manager' && remoteData.manager_info && (
+            {userRole === 'tl' && remoteData.manager_info && (
               <span className="ml-4 text-gray-800">
                 TL: <strong>{remoteData.manager_info.manager_name}</strong>
               </span>

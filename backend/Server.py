@@ -1,10 +1,10 @@
 from fastapi import FastAPI
 app = FastAPI()
-from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
+from Mongo import Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_user_by_position, get_manager_hr_assigned_tasks, get_hr_self_assigned_tasks, get_manager_only_tasks, create_notification, get_notifications, mark_notification_read, mark_all_notifications_read, get_unread_notification_count, delete_notification, get_notifications_by_type, create_task_notification, create_leave_notification, create_wfh_notification, create_system_notification, create_attendance_notification, notify_leave_submitted, notify_leave_approved, notify_leave_rejected, notify_leave_recommended, notify_wfh_submitted, notify_wfh_approved, notify_wfh_rejected, store_leave_request, store_remote_work_request, get_admin_user_ids, get_hr_user_ids, get_user_position, notify_admin_manager_leave_request, notify_hr_recommended_leave, notify_hr_pending_leaves, notify_admin_pending_leaves, get_current_timestamp_iso, Notifications, notify_manager_leave_request, get_user_manager_id
 from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave,TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, NotificationModel, NotificationUpdate, NotificationFilter, NotificationManage, AttendanceManage
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request, WebSocket, WebSocketDisconnect
 from websocket_manager import notification_manager
-from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_approved_leave_history,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, leave_update_notification, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests, users_leave_recommend_notification, managers_leave_recommend_notification,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats, get_user_leave_requests_with_history, get_manager_leave_requests_with_history, get_only_user_leave_requests_with_history, get_remote_work_requests_with_history, get_admin_page_remote_work_requests_with_history, get_TL_page_remote_work_requests_with_history
+from Mongo import Leave, RemoteWork, Otherleave_History_Details,Permission_History_Details, Users,admin,normal_leave_details,store_Other_leave_request,get_remote_work_requests,attendance_details,leave_History_Details,Remote_History_Details,get_attendance_by_date,update_remote_work_request_status_in_mongo,updated_user_leave_requests_status_in_mongo,get_user_leave_requests, get_employee_id_from_db,store_Permission_request, get_all_users, get_admin_info, add_task_list, edit_the_task, delete_a_task, get_the_tasks, delete_leave, get_user_info, store_sunday_request, get_admin_info, add_an_employee, PreviousDayClockout, auto_clockout, recommend_manager_leave_requests_status_in_mongo, get_manager_leave_requests, get_only_user_leave_requests, get_admin_page_remote_work_requests, update_remote_work_request_recommend_in_mongo, get_TL_page_remote_work_requests,auto_approve_manager_leaves,edit_an_employee,get_managers,task_assign_to_multiple_users, get_team_members, get_local_ip, get_public_ip, assigned_task, get_single_task, get_manager_only_tasks, insert_holidays, get_holidays, calculate_working_days, calculate_user_attendance_stats, get_user_attendance_dashboard, get_team_attendance_stats, get_department_attendance_stats, get_manager_team_attendance, update_daily_attendance_stats
 from model import Item4,Item,Item2,Item3,Csvadd,Csvedit,Csvdel,CT,Item5,Item6,Item9,RemoteWorkRequest,Item7,Item8, Tasklist, Taskedit, Deletetask, Gettasks, DeleteLeave, TaskEditRequest, Item9, AddEmployee,EditEmployee,Taskassign, SingleTaskAssign, HolidayYear, Holiday
 from fastapi import FastAPI, HTTPException,Path,Query, HTTPException,Form, Request
 from fastapi.responses import JSONResponse
@@ -33,9 +33,7 @@ from bson import ObjectId
 import asyncio
 from dotenv import load_dotenv
 load_dotenv() 
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-# UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-# os.makedirs(UPLOAD_DIR, exist_ok=True)
+
 # GridFS setup
 from pymongo import MongoClient
 import gridfs
@@ -94,7 +92,6 @@ from Mongo import (
     Permission_History_Details,
     normal_leave_details,
     store_Other_leave_request,
-    get_approved_leave_history,
     get_remote_work_requests,
     attendance_details,
     leave_History_Details,
@@ -118,15 +115,12 @@ from Mongo import (
     add_an_employee,
     PreviousDayClockout,
     auto_clockout,
-    leave_update_notification,
     recommend_manager_leave_requests_status_in_mongo,
     get_manager_leave_requests,
     get_only_user_leave_requests,
     get_admin_page_remote_work_requests,
     update_remote_work_request_recommend_in_mongo,
     get_TL_page_remote_work_requests,
-    users_leave_recommend_notification,
-    managers_leave_recommend_notification,
     auto_approve_manager_leaves,
     edit_an_employee,
     get_managers,
@@ -184,10 +178,6 @@ chat_manager = GeneralChatManager()
 notify_manager = NotifyManager()
 group_ws_manager = GroupChatManager()
 
-
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-UPLOAD_DIR = os.path.join(BASE_DIR, "uploads")
-os.makedirs(UPLOAD_DIR, exist_ok=True)
 import atexit
 
 # Utility function to serialize MongoDB documents to JSON
@@ -701,7 +691,7 @@ async def leave_request(item: Item6):
                     # 2. Check if the user is a manager and send appropriate notifications
                     user_position = await Mongo.get_user_position(item.userid)
                     
-                    if user_position == "Manager":
+                    if user_position == "TL":
                         # Manager leave request - notify admin
                         admin_ids = await Mongo.get_admin_user_ids()
                         if admin_ids:
@@ -712,11 +702,11 @@ async def leave_request(item: Item6):
                                 leave_date=item.selectedDate,
                                 leave_id=None
                             )
-                            print(f"✅ Admin notification sent for manager leave request")
+                            print(f"✅ Admin notification sent for TL leave request")
                         else:
                             print(f"⚠️ No admin found, skipping admin notification")
                     else:
-                        # Regular employee leave request - notify manager
+                        # Regular employee leave request - notify TL
                         manager_id = await Mongo.get_user_manager_id(item.userid)
                         if manager_id:
                             await Mongo.notify_manager_leave_request(
@@ -727,9 +717,9 @@ async def leave_request(item: Item6):
                                 manager_id=manager_id,
                                 leave_id=None
                             )
-                            print(f"✅ Manager notification sent for employee leave approval request")
+                            print(f"✅ TL notification sent for employee leave approval request")
                         else:
-                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                            print(f"⚠️ No TL found for user {item.userid}, skipping TL notification")
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")
@@ -790,11 +780,11 @@ async def bonus_leave_request(item: Item9):
                 )
                 print(f"✅ Employee notification sent for bonus leave submission")
                 
-                # 2. Check if the user is a manager and send appropriate notifications
+                # 2. Check if the user is a TL and send appropriate notifications
                 user_position = await Mongo.get_user_position(item.userid)
                 
-                if user_position == "Manager":
-                    # Manager bonus leave request - notify admin
+                if user_position == "TL":
+                    # TL bonus leave request - notify admin
                     admin_ids = await Mongo.get_admin_user_ids()
                     if admin_ids:
                         await Mongo.notify_admin_manager_leave_request(
@@ -804,11 +794,11 @@ async def bonus_leave_request(item: Item9):
                             leave_date=item.selectedDate,
                             leave_id=None
                         )
-                        print(f"✅ Admin notification sent for manager bonus leave request")
+                        print(f"✅ Admin notification sent for TL bonus leave request")
                     else:
                         print(f"⚠️ No admin found, skipping admin notification")
                 else:
-                    # Regular employee bonus leave request - notify manager
+                    # Regular employee bonus leave request - notify TL
                     manager_id = await Mongo.get_user_manager_id(item.userid)
                     if manager_id:
                         await Mongo.notify_manager_leave_request(
@@ -819,9 +809,9 @@ async def bonus_leave_request(item: Item9):
                             manager_id=manager_id,
                             leave_id=None
                         )
-                        print(f"✅ Manager notification sent for employee bonus leave approval request")
+                        print(f"✅ TL notification sent for employee bonus leave approval request")
                     else:
-                        print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                        print(f"⚠️ No TL found for user {item.userid}, skipping TL notification")
                 
             except Exception as notification_error:
                 print(f"⚠️ Notification error: {notification_error}")
@@ -904,7 +894,7 @@ async def other_leave_request(item: Item7):
                     "suggestion": "Please select different dates or check your existing requests."
                 }
             elif result == "Leave request stored successfully":
-                # Success case - notify employee and manager
+                # Success case - notify employee and TL/manager
                 try:
                     # 1. Notify employee about successful submission
                     await Mongo.notify_leave_submitted(
@@ -914,11 +904,11 @@ async def other_leave_request(item: Item7):
                     )
                     print(f"✅ Employee notification sent for other leave submission")
                     
-                    # 2. Check if the user is a manager and send appropriate notifications
+                    # 2. Check if the user is a TL and send appropriate notifications
                     user_position = await Mongo.get_user_position(item.userid)
                     
-                    if user_position == "Manager":
-                        # Manager other leave request - notify admin
+                    if user_position == "TL":
+                        # TL other leave request - notify admin
                         admin_ids = await Mongo.get_admin_user_ids()
                         if admin_ids:
                             date_range = f"{item.selectedDate} to {item.ToDate}" if item.selectedDate != item.ToDate else item.selectedDate
@@ -929,11 +919,11 @@ async def other_leave_request(item: Item7):
                                 leave_date=date_range,
                                 leave_id=None
                             )
-                            print(f"✅ Admin notification sent for manager other leave request")
+                            print(f"✅ Admin notification sent for TL other leave request")
                         else:
                             print(f"⚠️ No admin found, skipping admin notification")
                     else:
-                        # Regular employee other leave request - notify manager
+                        # Regular employee other leave request - notify TL
                         manager_id = await Mongo.get_user_manager_id(item.userid)
                         if manager_id:
                             date_range = f"{item.selectedDate} to {item.ToDate}" if item.selectedDate != item.ToDate else item.selectedDate
@@ -945,9 +935,9 @@ async def other_leave_request(item: Item7):
                                 manager_id=manager_id,
                                 leave_id=None
                             )
-                            print(f"✅ Manager notification sent for employee other leave approval request")
+                            print(f"✅ TL notification sent for employee other leave approval request")
                         else:
-                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                            print(f"⚠️ No TL found for user {item.userid}, skipping TL notification")
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")
@@ -1000,7 +990,7 @@ async def permission_request(item: Item8):
                     "suggestion": "Please select different dates or check your existing requests."
                 }
             elif result == "Leave request stored successfully":
-                # Success case - notify employee and manager
+                # Success case - notify employee and TL
                 try:
                     # 1. Notify employee about successful submission
                     await Mongo.notify_leave_submitted(
@@ -1010,11 +1000,11 @@ async def permission_request(item: Item8):
                     )
                     print(f"✅ Employee notification sent for permission submission")
                     
-                    # 2. Check if the user is a manager and send appropriate notifications
+                    # 2. Check if the user is a tl and send appropriate notifications
                     user_position = await Mongo.get_user_position(item.userid)
                     
-                    if user_position == "Manager":
-                        # Manager permission request - notify admin
+                    if user_position == "TL":
+                        # tl permission request - notify admin
                         admin_ids = await Mongo.get_admin_user_ids()
                         if admin_ids:
                             permission_details = f"{item.selectedDate} ({item.timeSlot})"
@@ -1025,11 +1015,11 @@ async def permission_request(item: Item8):
                                 leave_date=permission_details,
                                 leave_id=None
                             )
-                            print(f"✅ Admin notification sent for manager permission request")
+                            print(f"✅ Admin notification sent for TL permission request")
                         else:
                             print(f"⚠️ No admin found, skipping admin notification")
                     else:
-                        # Regular employee permission request - notify manager
+                        # Regular employee permission request - notify tl
                         manager_id = await Mongo.get_user_manager_id(item.userid)
                         if manager_id:
                             permission_details = f"{item.selectedDate} ({item.timeSlot})"
@@ -1041,9 +1031,9 @@ async def permission_request(item: Item8):
                                 manager_id=manager_id,
                                 leave_id=None
                             )
-                            print(f"✅ Manager notification sent for employee permission approval request")
+                            print(f"✅ TL notification sent for employee permission approval request")
                         else:
-                            print(f"⚠️ No manager found for user {item.userid}, skipping manager notification")
+                            print(f"⚠️ No TL found for user {item.userid}, skipping TL notification")
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")
@@ -1122,16 +1112,16 @@ async def fetch_leave_requests(
             user_leave_requests = get_user_leave_requests(selectedOption)
         elif role == "admin":
             user_leave_requests = get_manager_leave_requests(selectedOption)
-        elif role == "manager":
+        elif role == "tl":
             if not TL:
                 return {
-                    "error": "TL parameter is required for manager role",
+                    "error": "TL parameter is required for tl role",
                     "user_leave_requests": []
                 }
             user_leave_requests = get_only_user_leave_requests(selectedOption, TL)
         else:
             return {
-                "error": f"Invalid role parameter: '{role}'. Expected 'hr', 'admin', or 'manager'",
+                "error": f"Invalid role parameter: '{role}'. Expected 'hr', 'admin', or 'tl'",
                 "user_leave_requests": []
             }
         
@@ -1218,7 +1208,7 @@ async def remote_work_request(request: RemoteWorkRequest):
                 
                 # 2. Check if user is a manager and handle notifications accordingly
                 user = Mongo.Users.find_one({"_id": Mongo.ObjectId(request.userid)})
-                if user and user.get("position") == "Manager":
+                if user and user.get("position") == "TL":
                     # If manager is submitting WFH, notify admin
                     try:
                         await Mongo.notify_admin_manager_wfh_request(
@@ -1228,7 +1218,7 @@ async def remote_work_request(request: RemoteWorkRequest):
                             request_date_to=to_date,
                             wfh_id=wfh_id
                         )
-                        print(f"✅ Admin notification sent for manager WFH request")
+                        print(f"✅ Admin notification sent for TL WFH request")
                     except Exception as admin_notification_error:
                         print(f"⚠️ Admin notification error: {admin_notification_error}")
                 else:
@@ -1245,9 +1235,9 @@ async def remote_work_request(request: RemoteWorkRequest):
                             manager_id=manager_id,
                             wfh_id=wfh_id
                         )
-                        print(f"✅ Manager notification sent for WFH approval request")
+                        print(f"✅ TL notification sent for WFH approval request")
                     else:
-                        print(f"⚠️ No manager found for user {request.userid}, skipping manager notification")
+                        print(f"⚠️ No TL found for user {request.userid}, skipping TL notification")
                     
             except Exception as notification_error:
                 print(f"⚠️ Notification error: {notification_error}")
@@ -1284,7 +1274,7 @@ async def remote_work_request(request: RemoteWorkRequest):
                     
                     # 2. Check if user is a manager and handle notifications accordingly
                     user = Mongo.Users.find_one({"_id": Mongo.ObjectId(request.userid)})
-                    if user and user.get("position") == "Manager":
+                    if user and user.get("position") == "TL":
                         # If manager is submitting WFH, notify admin
                         try:
                             await Mongo.notify_admin_manager_wfh_request(
@@ -1294,7 +1284,7 @@ async def remote_work_request(request: RemoteWorkRequest):
                                 request_date_to=request.toDate,
                                 wfh_id=None
                             )
-                            print(f"✅ Admin notification sent for manager WFH request (fallback)")
+                            print(f"✅ Admin notification sent for TL WFH request (fallback)")
                         except Exception as admin_notification_error:
                             print(f"⚠️ Admin notification error: {admin_notification_error}")
                     else:
@@ -1309,9 +1299,9 @@ async def remote_work_request(request: RemoteWorkRequest):
                                 manager_id=manager_id,
                                 wfh_id=None
                             )
-                            print(f"✅ Manager notification sent for WFH approval request")
+                            print(f"✅ TL notification sent for WFH approval request")
                         else:
-                            print(f"⚠️ No manager found for user {request.userid}, skipping manager notification")
+                            print(f"⚠️ No TL found for user {request.userid}, skipping TL notification")
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")
@@ -1352,7 +1342,7 @@ async def get_Remote_History(userid:str = Path(..., title="The name of the user 
 
 @app.get("/remote_work_requests")
 async def fetch_remote_work_requests(
-    role: str = Query(..., alias="role"),  # "hr", "admin", "manager"
+    role: str = Query(..., alias="role"),  # "hr", "admin", "tl"
     TL: str = Query(None, alias="TL"),
     show_processed: bool = Query(False, alias="show_processed")
 ):
@@ -1360,7 +1350,7 @@ async def fetch_remote_work_requests(
     Combined endpoint for remote work requests
     - HR: sees all remote work requests
     - Admin: sees admin page remote work requests
-    - Manager: sees their team's remote work requests (with history option)
+    - TL: sees their team's remote work requests (with history option)
     """
     try:
         print(f"DEBUG: /remote_work_requests endpoint called - role: {role}, TL: {TL}, show_processed: {show_processed}")
@@ -1373,17 +1363,17 @@ async def fetch_remote_work_requests(
             remote_work_requests = get_remote_work_requests()
         elif role == "admin":
             remote_work_requests = get_admin_page_remote_work_requests()
-        elif role == "manager":
+        elif role == "tl":
             if not TL:
                 return {
-                    "error": "TL parameter is required for manager role",
+                    "error": "TL parameter is required for tl role",
                     "remote_work_requests": []
                 }
             from Mongo import get_TL_page_remote_work_requests_with_history
             remote_work_requests = get_TL_page_remote_work_requests_with_history(TL, show_processed)
         else:
             return {
-                "error": f"Invalid role parameter: '{role}'. Expected 'hr', 'admin', or 'manager'",
+                "error": f"Invalid role parameter: '{role}'. Expected 'hr', 'admin', or 'tl'",
                 "remote_work_requests": []
             }
         
@@ -1559,23 +1549,23 @@ def fetch_ip_info():
 }
 
 # =========all
-@app.get("/manager/leave_details/{user_id}")
-async def get_manager_team_leave_details(
+@app.get("/tl/leave_details/{user_id}")
+async def get_TL_team_leave_details(
     user_id: str,
     statusFilter: Optional[str] = Query(None),
     leaveTypeFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get leave details for team members under a specific manager"""
+    """Get leave details for team members under a specific tl"""
     try:
         # First, verify the manager exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
         if not manager:
-            raise HTTPException(status_code=404, detail="Manager not found")
+            raise HTTPException(status_code=404, detail="TL not found")
         
         manager_name = manager.get("name")
         if not manager_name:
-            raise HTTPException(status_code=400, detail="Manager name not found")
+            raise HTTPException(status_code=400, detail="TL name not found")
         
         # Build the aggregation pipeline
         pipeline = []
@@ -1606,10 +1596,10 @@ async def get_manager_team_leave_details(
         # Unwind the user_info array
         pipeline.append({"$unwind": "$user_info"})
         
-        # Filter to only show team members under this manager
+        # Filter to only show team members under this tl
         base_match = {
             "user_info.TL": manager_name,  # Team members have this manager as TL
-            "user_info.position": {"$ne": "Manager"}  # Exclude other managers
+            "user_info.position": {"$ne": "TL"}  # Exclude other managers
         }
         
         # Add additional filters
@@ -1685,22 +1675,22 @@ async def get_manager_team_leave_details(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/manager/remote_work_details/{user_id}")
-async def get_manager_team_remote_work_details(
+@app.get("/tl/remote_work_details/{user_id}")
+async def get_TL_team_remote_work_details(
     user_id: str,
     statusFilter: Optional[str] = Query(None),
     departmentFilter: Optional[str] = Query(None)
 ):
-    """Get remote work details for team members under a specific manager"""
+    """Get remote work details for team members under a specific tl"""
     try:
         # First, verify the manager exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
         if not manager:
-            raise HTTPException(status_code=404, detail="Manager not found")
+            raise HTTPException(status_code=404, detail="TL not found")
         
         manager_name = manager.get("name")
         if not manager_name:
-            raise HTTPException(status_code=400, detail="Manager name not found")
+            raise HTTPException(status_code=400, detail="TL name not found")
         
         # Build the aggregation pipeline
         pipeline = []
@@ -1734,7 +1724,7 @@ async def get_manager_team_remote_work_details(
         # Filter to only show team members under this manager
         base_match = {
             "user_info.TL": manager_name,  # Team members have this manager as TL
-            "user_info.position": {"$ne": "Manager"}  # Exclude other managers
+            "user_info.position": {"$ne": "TL"}  # Exclude other managers
         }
         
         # Add additional filters
@@ -1809,14 +1799,14 @@ async def get_manager_team_remote_work_details(
         raise HTTPException(status_code=500, detail=str(e))
 
 
-@app.get("/manager/team_members/{user_id}")
-async def get_manager_team_members(user_id: str):
-    """Get list of team members under a specific manager"""
+@app.get("/tl/team_members/{user_id}")
+async def get_TL_team_members(user_id: str):
+    """Get list of team members under a specific tl"""
     try:
         # Get manager info
         manager = Users.find_one({"_id": ObjectId(user_id)})
         if not manager:
-            raise HTTPException(status_code=404, detail="Manager not found")
+            raise HTTPException(status_code=404, detail="TL not found")
         
         manager_name = manager.get("name")
         
@@ -1824,7 +1814,7 @@ async def get_manager_team_members(user_id: str):
         team_members = list(Users.find(
             {
                 "TL": manager_name,
-                "position": {"$ne": "Manager"}
+                "position": {"$ne": "TL"}
             },
             {
                 "_id": 1,
@@ -2198,15 +2188,15 @@ def handle_task(request: TaskEditRequest):
 
 @app.get("/tasks")
 async def get_tasks(
-    role: Optional[str] = Query(None, description="Role: HR, Manager, or Employee"),  # made optional
-    manager_name: Optional[str] = None,
+    role: Optional[str] = Query(None, description="Role: HR, TL, or Employee"),  # made optional
+    TL_name: Optional[str] = None,
     userid: Optional[str] = None,
     taskid: Optional[str] = None,
     date: Optional[str] = None,
 ):
     """
     Unified Task Fetch Endpoint:
-    Handles all task retrieval scenarios for HR, Manager/TL, and Employee.
+    Handles all task retrieval scenarios for HR, TL, and Employee.
     """
 
     try:
@@ -2221,16 +2211,16 @@ async def get_tasks(
         if not role:
             raise HTTPException(status_code=400, detail="role query param is required when taskid is not provided")
 
-        # 3️⃣ HR → Get tasks assigned to a specific manager or all managers
+        # 3️⃣ HR → Get tasks assigned to a specific tl or all tl
         if role.lower() == "hr":
             all_tasks = []
 
-            if userid:  # specific manager
+            if userid:  # specific tl
                 tasks = get_manager_hr_assigned_tasks(userid)
                 if tasks:
                     all_tasks.extend(tasks)
             else:  # all managers
-                managers = get_managers()  # all users with role="Manager"
+                managers = get_managers()  # all users with role="TL"
                 for manager in managers:
                     if manager.get("userid"):
                         tasks = get_manager_hr_assigned_tasks(manager["userid"])
@@ -2245,15 +2235,15 @@ async def get_tasks(
 
         # 4️⃣ Manager (also TL)
         elif role.lower() in ["manager", "tl"]:
-            if not manager_name:
-                raise HTTPException(status_code=400, detail="Manager view requires manager_name")
+            if not TL_name:
+                raise HTTPException(status_code=400, detail="TL view requires TL_name")
 
-            tasks = Mongo.assigned_task(manager_name, userid)
+            tasks = Mongo.assigned_task(TL_name, userid)
 
             if userid:
                 user_info = Mongo.get_user_info(userid)
-                if user_info and user_info.get("tl_name") != manager_name:
-                    raise HTTPException(status_code=403, detail="Employee not under this manager")
+                if user_info and user_info.get("tl_name") != TL_name:
+                    raise HTTPException(status_code=403, detail="Employee not under this TL")
 
             if date:
                 tasks = [t for t in tasks if t.get("date") == date]
@@ -2291,22 +2281,22 @@ async def get_tasks(
         raise HTTPException(status_code=500, detail=str(e))
     
 @app.get("/list_users")
-def get_users(role: Optional[str] = Query(None, description="Role: 'Manager' or 'TeamMembers'"),
+def get_users(role: Optional[str] = Query(None, description="Role: 'TL' or 'TeamMembers'"),
               TL: Optional[str] = Query(None, description="Team Lead name, required if role is TeamMembers")):
     try:
-        if role == "Manager":
-            result = get_user_by_position("Manager")
+        if role == "TL":
+            result = get_user_by_position("TL")
             if result:
                 return result
             else:
-                raise HTTPException(status_code=404, detail="Manager not found")
+                raise HTTPException(status_code=404, detail="TL not found")
         elif role == "TeamMembers":
             if not TL:
                 raise HTTPException(status_code=400, detail="TL parameter is required for TeamMembers")
             result = get_team_members(TL)
             return result
         else:
-            raise HTTPException(status_code=400, detail="Invalid role. Use 'Manager' or 'TeamMembers'")
+            raise HTTPException(status_code=400, detail="Invalid role. Use 'TL' or 'TeamMembers'")
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -2466,9 +2456,6 @@ def get_user(userid: str):
             status_code=500
         )
 
-
-
-
 @app.put("/edit_employee")
 def edit_employee(item: EditEmployee):
     try:
@@ -2484,8 +2471,8 @@ def edit_employee(item: EditEmployee):
         print(f"Error in edit_employee endpoint: {str(e)}")
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
-@app.get("/get_managers_list")
-async def fetch_managers():
+@app.get("/get_TL_list")
+async def fetch_TLs():
  result = get_managers()
  return result
 
@@ -2501,10 +2488,7 @@ def add_employee(item:AddEmployee):
     result = add_an_employee(item.dict())
     return result
 
-
-
-
-@app.get("/auto_approve_manager_leaves")
+@app.get("/auto_approve_TL_leaves")
 async def trigger_auto_approval():
     result = auto_approve_manager_leaves()
     return result

@@ -142,8 +142,8 @@ const TaskProgress = () => {
   const fetchEmployeeTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const managerName = LS.get("name");
-      const response = await fetch(`${ipadr}/tasks?role=manager&manager_name=${managerName}`);
+      const TLName = LS.get("name");
+      const response = await fetch(`${ipadr}/tasks?role=TL&TL_name=${TLName}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to fetch tasks");
@@ -319,7 +319,7 @@ const TaskProgress = () => {
   const openTaskDetail = (task) => {
     if (task.verified) {
     }
-    if (LS.get("position") === "Manager") {
+    if (LS.get("position") === "TL") {
       navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
     } else {
        navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
@@ -327,7 +327,7 @@ const TaskProgress = () => {
   };
 
 const handleAssignTask = () => {
-    if (LS.get("position") === "Manager") {
+    if (LS.get("position") === "TL") {
        navigate(`/User/Task/TaskProgress/TaskAssign/tl-employee`);
     } else {
      navigate(`/User/Task/TaskProgress/TaskAssign/hr-tl`);
@@ -666,7 +666,7 @@ const handleAssignTask = () => {
                   setFilters({ employee: 'all', status: 'all', priority: 'all', dateRange: 'all' });
                   setSearchTerm('');
                 }}
-                className="w-full px-3 py-1.5 bg-gray-600 text-white rounded-md hover:bg-gray-700 transition-colors text-sm"
+                className="w-full px-3 py-1.5 bg-blue-400 text-white rounded-md hover:bg-gray-400 transition-colors text-sm"
               >
                 Clear Filters
               </button>
@@ -675,7 +675,7 @@ const handleAssignTask = () => {
         </div>
       </div>
       {/* Master-Detail: Left = compact employee list, Right = selected employee detail */}
-      <div className="p-4">
+      <div className="p-4 bg-white">
         <div className="flex gap-6 h-[calc(100vh-var(--tp-header-height)-16px)] overflow-hidden">
           {/* Left column: compact scrollable employee list */}
           <div className="w-80 bg-white rounded-xl shadow-sm border border-gray-200 overflow-hidden">
@@ -697,7 +697,7 @@ const handleAssignTask = () => {
                     <div
                       key={emp.employeeId}
                       onClick={() => { setSelectedEmployeeId(emp.employeeId); setExpandedEmployees(new Set([emp.employeeId])); }}
-                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${isSelected ? 'bg-blue-50' : 'hover:bg-gray-50'}`}
+                      className={`flex items-center gap-3 px-3 py-2 cursor-pointer ${isSelected ? 'bg-blue-100' : 'hover:bg-gray-100'}`}
                     >
                       <div className="w-10 h-10 rounded-full bg-blue-600 flex items-center justify-center text-white text-sm">
                         <FaUserTie />
@@ -798,7 +798,7 @@ const handleAssignTask = () => {
                       {selected.tasks.length === 0 ? (
                         <div className="text-center py-6 text-gray-500">
                           <FaClipboardList className="text-3xl mx-auto mb-2 opacity-50" />
-                          <p>No tasks for this {(LS.get("position") === "Manager")  ? "TeamLead" : "employee"} matching current filters</p>
+                          <p>No tasks for this {(LS.get("position") === "TL")  ? "TeamLead" : "employee"} matching current filters</p>
                         </div>
                       ) : (
                         <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - var(--tp-header-height) - 80px)' }}>

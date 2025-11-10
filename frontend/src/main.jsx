@@ -197,7 +197,7 @@ const router = createBrowserRouter([
       element: <TaskProgress/>,
     },
     {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
-      element:<ProgressDetail role="manager" dashboardRoute="/User/Task/TaskProgress" commentLabel="TeamLead" fileUploadLabel="TeamLead" />, 
+      element:<ProgressDetail role="tl" dashboardRoute="/User/Task/TaskProgress" commentLabel="TeamLead" fileUploadLabel="TeamLead" />, 
     },
     {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
       element:<ProgressDetail role="hr" dashboardRoute="/User/Task/TaskProgress" commentLabel="HR" fileUploadLabel="HR" />, 

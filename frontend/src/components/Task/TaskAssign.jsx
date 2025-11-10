@@ -213,7 +213,7 @@ const TaskAssign = ({ assignType }) => {
   const [itemsToShow, setItemsToShow] = useState(8); 
   const [searchTerm, setSearchTerm] = useState('');
 
-  const isManager = assignType === 'TL-to-employee';
+  const isTL = assignType === 'TL-to-employee';
   const isHR = assignType === 'hr-to-TL';
 
   useEffect(() => {
@@ -266,7 +266,7 @@ useEffect(() => {
   const fetchOptions = async () => {
     try {
       let res;
-      if (isManager) {
+      if (isTL) {
     
         res = await axios.get(`${ipadr}/list_users`, {
           params: { role: "TeamMembers", TL: LS.get("name") }
@@ -274,7 +274,7 @@ useEffect(() => {
       } else if (isHR) {
        
         res = await axios.get(`${ipadr}/list_users`, {
-          params: { role: "Manager" }
+          params: { role: "TL" }
         });
       }
 
@@ -286,7 +286,7 @@ useEffect(() => {
   };
 
   fetchOptions();
-}, [isManager, isHR]);
+}, [isTL, isHR]);
 
 
   useEffect(() => {
@@ -298,8 +298,8 @@ useEffect(() => {
     setError('');
     try {
       let url = '';
-      if (isManager) {
-        url = `${ipadr}/tasks?role=tl&manager_name=${LS.get('name')}`;
+      if (isTL) {
+        url = `${ipadr}/tasks?role=TL&TL_name=${LS.get('name')}`;
       } else if (isHR) {
         url = `${ipadr}/tasks?role=hr`;
       }
@@ -376,7 +376,7 @@ const handleDelete = async (taskId) => {
   const handleonSubmit = async () => {
     if (!modeldata.task.some(task => task.trim() !== "")) return toast.error("Task title is required");
     if (!modeldata.due_date) return toast.error("Due date is required");
-    if ((isManager || isHR) && selectedUsers.length === 0) return toast.error(isManager ? "Please select an employee" : "Please select a TeamLead");
+    if ((isTL || isHR) && selectedUsers.length === 0) return toast.error(isTL ? "Please select an employee" : "Please select a TeamLead");
     let taskArr = [];
     const formatDate = (dateStr) => {
       if (!dateStr) return "";
@@ -406,7 +406,7 @@ const handleDelete = async (taskId) => {
       }
       const response = await axios({ method: "post", url: `${ipadr}/assign_tasks`, data: { Task_details: taskArr }, headers: { "Content-Type": "application/json" } });
       if (response.status === 200) {
-        toast.success(isManager ? "Task assigned to employee(s)" : "Task assigned to TeamLead(s)");
+        toast.success(isTL ? "Task assigned to employee(s)" : "Task assigned to TeamLead(s)");
         setModelData({ task: [""], userid: "", date: "", due_date: "", priority: "Medium", subtasks: [] });
         setSelectedUsers([]);
         setModalOpen(false);
@@ -492,7 +492,7 @@ const handleoneditSubmit = async () => {
           </div>
           <div className="flex-1 flex items-center justify-center space-x-3">
             <select className="w-40 p-1 text-sm border border-gray-300 rounded-md" value={ValueSelected} onChange={e => SetValueSelected(e.target.value)}>
-              <option value="" disabled hidden>select {isManager ? 'Employee' : 'TeamLead'}</option>
+              <option value="" disabled hidden>select {isTL ? 'Employee' : 'TeamLead'}</option>
               {options.map(item => (
                 <option key={item.id || item.userid} value={item.userid}>{item.name}</option>
               ))}
@@ -571,7 +571,7 @@ const handleoneditSubmit = async () => {
               <button onClick={() => setModelData({ ...modeldata, subtasks: [...(modeldata.subtasks || []), { title: "", done: false }] })}  className="flex items-center gap-2 text-blue-500 mt-2"><FaPlus /><span>Add Subtask</span></button>
             </div>
             <div className="mt-4">
-              <label className="block text-lg font-semibold text-gray-700 mb-2">Select {isManager ? 'Employee(s)' : 'TeamLead(s)'}</label>
+              <label className="block text-lg font-semibold text-gray-700 mb-2">Select {isTL ? 'Employee(s)' : 'TeamLead(s)'}</label>
               <div className="w-full max-w-sm bg-white border border-gray-300 rounded-lg px-4 py-2 shadow-sm">
                 <Multiselect options={options} selectedValues={selectedUsers} onSelect={setSelectedUsers} onRemove={setSelectedUsers} displayValue="name" className="text-gray-700" avoidHighlightFirstOption={true} />
               </div>

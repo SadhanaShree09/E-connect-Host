@@ -376,21 +376,21 @@ const NotificationDashboard = () => {
         case 'task_overdue':
         case 'task_due_soon':
         case 'task_updated':
-        case 'task_completed':
-          // Navigate to task page with specific task ID if available
-          if (notification.related_id) {
-            // For task completion notifications, navigate to task progress/view
-            if (notification.type === 'task_completed') {
-              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/TaskProgress';
+        case 'task_completed': {
+          // Always go to the main progress or task page, never with an ID for HR or user
+          if (isAdmin) {
+            if (notification.related_id) {
+              targetUrl = `/admin/task/${notification.related_id}`;
             } else {
-              // For other task notifications, navigate to main task page
-              targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/Todo';
+              targetUrl = '/admin/task';
             }
+          } else if (isHR) {
+            targetUrl = '/User/Task/TaskProgress';
           } else {
-            // Fallback to main task page
-            targetUrl = isAdminLevel ? '/admin/task' : '/User/Task/Todo';
+            targetUrl = notification.type === 'task_completed' || notification.type === 'task_overdue' ? '/User/Task/TaskProgress' : '/User/Task/Todo';
           }
           break;
+        }
 
         // Employee task overdue notifications (for managers/admins)
         case 'employee_task_overdue':

@@ -164,7 +164,7 @@ const LeaveRequest = () => {
           } else if (responseData.status === "validation_error") {
             // Validation error - single combined toast
             toast.error(
-              `❌ ${responseData.details || responseData.message}`,
+              `${responseData.details || responseData.message}`,
               {
                 autoClose: 5000,
                 position: "top-right",
@@ -213,7 +213,7 @@ const LeaveRequest = () => {
             // Single combined toast for conflict errors
             if (errorMessage.includes('Conflict') || errorMessage.includes('already has')) {
               toast.error(
-                `⚠️ ${errorMessage}`,
+                `${errorMessage}`,
                 {
                   autoClose: 6000,
                   position: "top-right",
@@ -221,21 +221,21 @@ const LeaveRequest = () => {
                 }
               );
             } else if (errorMessage.includes('Sunday')) {
-              toast.error("❌ Leave requests cannot be made for Sundays", {
+              toast.error("Leave requests cannot be made for Sundays", {
                 autoClose: 3000
               });
             } else {
-              toast.error(`❌ ${errorMessage}`, {
+              toast.error(`${errorMessage}`, {
                 autoClose: 4000
               });
             }
           } else {
-            toast.error("❌ Leave request failed. Please check your inputs and try again.", {
+            toast.error("Leave request failed. Please check your inputs and try again.", {
               autoClose: 3000
             });
           }
         } else {
-          toast.error("❌ Network error. Please check your connection and try again.", {
+          toast.error("Network error. Please check your connection and try again.", {
             autoClose: 3000
           });
         }

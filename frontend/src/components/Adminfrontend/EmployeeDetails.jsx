@@ -77,7 +77,7 @@ const EmployeeDetails = () => {
     }, [id, ip]);
 
     useEffect(() => {
-        fetch(`${ip}/get_managers_list`)
+        fetch(`${ip}/get_TL_list`)
             .then(response => {
                 if (!response.ok) {
                     throw new Error('Network response was not ok');

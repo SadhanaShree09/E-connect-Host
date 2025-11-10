@@ -167,7 +167,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   };
   const loggedIn = LS.get("isloggedin");
   const isAdmin = LS.get("isadmin");
-  const isManager=LS.get("position");
+  const isTL=LS.get("position");
   const isDepart=LS.get("department");
   const userid=LS.get('userid');
 
@@ -399,7 +399,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   </Link>
 )}
 
-{loggedIn &&( isAdmin || isManager || isDepart === "HR") && (
+{loggedIn &&( isAdmin || isTL || isDepart === "HR") && (
   <Link to="chat" className="sidebar-item">
     <div
       className={`flex items-center p-4 ${isActive('chat') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}
@@ -425,7 +425,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
 
 
         {
-          loggedIn && isManager=="Manager" ?(
+          loggedIn && isTL=="TL" ?(
           <>
 
                 <Link to="Task/TaskProgress" className="sidebar-item">

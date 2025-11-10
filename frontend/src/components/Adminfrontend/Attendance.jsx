@@ -32,7 +32,7 @@ const Attendance = () => {
   const getUserRole = () => {
     if (isAdmin) return 'admin';
     if (userPosition === 'HR') return 'hr';
-    if (userPosition === 'Manager') return 'manager';
+    if (userPosition === 'TL') return 'tl';
     return null; // No access for regular users
   };
 
@@ -50,7 +50,7 @@ const Attendance = () => {
         case 'hr':
           url = `${API_BASE_URL}/attendance/admin/overview?year=${year}`;
           break;
-        case 'manager':
+        case 'tl':
           url = `${API_BASE_URL}/attendance/team/${userName}?year=${year}`;
           break;
         default:
@@ -133,7 +133,7 @@ const Attendance = () => {
         Leave_Days: emp.leave_days_taken,
         Attendance_Percentage: emp.attendance_percentage?.toFixed(1) + '%',
       }));
-    } else if (userRole === 'manager' && attendanceData?.team_stats) {
+    } else if (userRole === 'tl' && attendanceData?.team_stats) {
       const filteredTeamMembers = attendanceData.team_stats.filter((member) => {
         if (!searchTerm.trim()) return true;
 
@@ -186,7 +186,7 @@ const Attendance = () => {
         <div className="bg-white rounded-lg p-4 shadow border">
           <h2 className="text-xl font-bold text-gray-800 mb-4 flex items-center">
             <FontAwesomeIcon icon={faUserTie} className="mr-2 text-blue-600" />
-            Manager Dashboard - {team_leader || userName}
+            TeamLead Dashboard - {team_leader || userName}
           </h2>
 
           <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
@@ -555,8 +555,9 @@ const Attendance = () => {
   const renderContent = () => {
     if (!userRole) {
       return (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded text-center">
-          <strong>Access Denied:</strong> You do not have permission to view this page.
+        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg shadow-md">
+          <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+          <p>Only Admin, TeamLead and HR can access this page.</p>
         </div>
       );
     }
@@ -582,12 +583,12 @@ const Attendance = () => {
       case 'admin':
       case 'hr':
         return renderAdminView();
-      case 'manager':
+      case 'tl':
         return renderManagerView();
       default:
         return (
           <div className="text-center text-red-600 py-8">
-            Access denied. This page is only accessible to Admin, HR, and Manager roles.
+            Access denied. This page is only accessible to Admin, HR, and TL roles.
           </div>
         );
     }

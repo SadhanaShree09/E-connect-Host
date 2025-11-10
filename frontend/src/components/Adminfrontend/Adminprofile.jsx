@@ -43,7 +43,7 @@ const AdminProfile = () => {
                         name: data.name || "Admin Name",
                         email: data.email || "admin@example.com",
                         phone: data.phone || "(123) 456-7890",
-                        position: data.position || "HR Manager",
+                        position: data.position || "HR TL",
                         dateOfJoining: data.date_of_joining || "01 Jan 2023",
                         department: data.department || "Administration",
                         address: data.address || "123 Main St, City, Country",

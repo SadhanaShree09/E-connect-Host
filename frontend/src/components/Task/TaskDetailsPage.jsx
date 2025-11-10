@@ -133,7 +133,7 @@ const mapStatusToColumn = (status) => {
     let endpoint;
     if (LS.get("position") === "Employee") {
       endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${date}`;
-    } else if (LS.get("position") === "Manager") {
+    } else if (LS.get("position") === "TL") {
       endpoint = `${ipadr}/tasks?role=HR&userid=${userId}&date=${date}`;
     }
 

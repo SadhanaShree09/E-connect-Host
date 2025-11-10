@@ -270,11 +270,11 @@ const TaskPage = () => {
     try {
       let endpoint;
 
-      // Employees → only manager-assigned tasks
+      // Employees → only TL-assigned tasks
       if (LS.get("position") === "Employee") {
         endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${selectedDate}`;
-      } else if (LS.get("position") === "Manager") {
-        // Managers → only HR-assigned tasks, no self-assigned
+      } else if (LS.get("position") === "TL") {
+        // TL → only HR-assigned tasks, no self-assigned
         endpoint = selectedDate
           ? `${ipadr}/tasks?role=HR&userid=${userId}&date=${selectedDate}`
           : `${ipadr}/tasks?role=HR&userid=${userId}`;

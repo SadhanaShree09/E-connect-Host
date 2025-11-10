@@ -973,177 +973,9 @@ def get_user_leave_requests(selected_option):
     return leave_request
 
 # Admin Page Leave Requests
-# def get_manager_leave_requests(selected_option):
-#     managers = list(Users.find({"position": "Manager"}))
-#     print(f"Found {len(managers)} managers")
-
-
-def get_user_leave_requests_with_history(selected_option, show_processed=False):
-    """
-    Get leave requests with option to include processed ones
-    show_processed: False = only pending, True = only processed, None = all
-    """
-    if selected_option == "Leave":
-        base_filter = {"leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]}}
-    elif selected_option == "LOP":
-        base_filter = {"leaveType": "Other Leave"}
-    elif selected_option == "Permission":
-        base_filter = {"leaveType": "Permission"}
-    else:
-        return []
-    
-    # Add status filter based on show_processed parameter
-    if show_processed is False:  # Only pending
-        base_filter["status"] = {"$exists": False}
-    elif show_processed is True:  # Only processed
-        base_filter["status"] = {"$exists": True}
-    # If show_processed is None, don't add status filter (show all)
-    
-    leave_request = list(Leave.find(base_filter))
-    
-    # Clean the IDs and format dates
-    for index, leave in enumerate(leave_request):
-        leave_request[index] = cleanid(leave)
-
-    for leave in leave_request:
-        if selected_option == "Leave" or selected_option == "Permission":
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-        else:
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            if "ToDate" in leave:
-                leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-
-    return leave_request
-
-def get_manager_leave_requests_with_history(selected_option, show_processed=False):
-    """Get manager/HR leave requests with history option"""
-    managers_and_hr = list(Users.find({"position": {"$in": ["Manager", "HR"]}}))
-    user_ids = [str(user["_id"]) for user in managers_and_hr]
-
-    if selected_option == "Leave":
-        base_filter = {
-            "leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]},
-            "userid": {"$in": user_ids}
-        }
-    elif selected_option == "LOP":
-        base_filter = {
-            "leaveType": "Other Leave",
-            "userid": {"$in": user_ids}
-        }
-    elif selected_option == "Permission":
-        base_filter = {
-            "leaveType": "Permission",
-            "userid": {"$in": user_ids}
-        }
-    else:
-        return []
-    
-    # Add status filter
-    if show_processed is False:  # Only pending
-        base_filter["status"] = {"$exists": False}
-    elif show_processed is True:  # Only processed
-        base_filter["status"] = {"$exists": True}
-    
-    leave_request = list(Leave.find(base_filter))
-    
-    # Process the results
-    for index, leave in enumerate(leave_request):
-        leave_request[index] = cleanid(leave)
-
-    for leave in leave_request:
-        if selected_option == "Leave" or selected_option == "Permission":
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-        else:
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            if "ToDate" in leave:
-                leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-
-    return leave_request
-
-def get_only_user_leave_requests_with_history(selected_option, TL_name, show_processed=False):
-    """Get user leave requests under TL with history option"""
-    users = list(Users.find({"position": {"$ne":"Manager"}, "name":{"$ne":TL_name}, "TL":TL_name}))
-    user_ids = [str(user["_id"]) for user in users]
-
-    if selected_option == "Leave":
-        base_filter = {
-            "leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]},
-            "userid": {"$in": user_ids}
-        }
-    elif selected_option == "LOP":
-        base_filter = {
-            "leaveType": "Other Leave",
-            "userid": {"$in": user_ids}
-        }
-    elif selected_option == "Permission":
-        base_filter = {
-            "leaveType": "Permission",
-            "userid": {"$in": user_ids}
-        }
-    else:
-        return []
-    
-    # Add status filter
-    if show_processed is False:  # Only pending
-        base_filter["status"] = {"$exists": False}
-    elif show_processed is True:  # Only processed
-        base_filter["status"] = {"$exists": True}
-    
-    leave_request = list(Leave.find(base_filter))
-    
-    # Clean the IDs for each leave request
-    for index, leave in enumerate(leave_request):
-        leave_request[index] = cleanid(leave)
-
-    for leave in leave_request:
-        if selected_option == "Leave" or selected_option == "Permission":
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-        else:
-            leave["selectedDate"] = leave["selectedDate"].strftime("%d-%m-%Y")
-            if "ToDate" in leave:
-                leave["ToDate"] = leave["ToDate"].strftime("%d-%m-%Y")
-            leave["requestDate"] = leave["requestDate"].strftime("%d-%m-%Y")
-    
-#     # Prepare a list of manager IDs
-#     manager_ids = [str(manager["_id"]) for manager in managers]
-#     print(f"Manager IDs: {manager_ids}")
-
-#     # Debug: Check what leave requests exist for managers
-#     all_manager_leaves = list(Leave.find({"userid": {"$in": manager_ids}}))
-#     print(f"Total manager leaves in DB: {len(all_manager_leaves)}")
-    
-#     # Check status values
-#     status_values = [leave.get("status") for leave in all_manager_leaves]
-#     print(f"Status values found: {set(status_values)}")
-
-#     if selected_option == "Leave":
-#         leave_request = list(Leave.find({
-#             "leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]},
-#             "status": {"$exists": False},
-#             "userid": {"$in": manager_ids}
-#         }))
-#         print(f"Found {len(leave_request)} leave requests with no status")
-        
-#         # Also check what would be found with different status conditions
-#         with_status = list(Leave.find({
-#             "leaveType": {"$in": ["Sick Leave", "Casual Leave", "Bonus Leave"]},
-#             "userid": {"$in": manager_ids}
-#         }))
-#         print(f"Total leave requests (any status): {len(with_status)}")
-        
-#     # ... rest of your conditions
-    
-#     return leave_request
-
-# Admin Page Leave Requests
 def get_manager_leave_requests(selected_option):
     # Get Manager + HR IDs
-    managers_and_hr = list(Users.find({"position": {"$in": ["Manager", "HR"]}}))
+    managers_and_hr = list(Users.find({"position": {"$in": ["TL", "HR"]}}))
     user_ids = [str(user["_id"]) for user in managers_and_hr]
     
     print(f"DEBUG: get_manager_leave_requests - selected_option: {selected_option}")
@@ -1208,50 +1040,6 @@ def get_manager_leave_requests(selected_option):
 
     return leave_request
 
-# Similar functions for Remote Work requests
-def get_remote_work_requests_with_history(show_processed=False):
-    """Get remote work requests with history option"""
-    base_filter = {}
-    
-    if show_processed is False:  # Only pending
-        base_filter = {"Recommendation":"Recommend", "status": {"$exists": False}}
-    elif show_processed is True:  # Only processed
-        base_filter = {"status": {"$exists": True}}
-    
-    list1 = list()
-    res = RemoteWork.find(base_filter)
-    
-    for user in res:
-        cleanid(user)
-        user["fromDate"] = user["fromDate"].strftime("%d-%m-%Y")
-        user["toDate"] = user["toDate"].strftime("%d-%m-%Y")
-        user["requestDate"] = user["requestDate"].strftime("%d-%m-%Y")
-        list1.append(user)
-    return list1
-
-def get_admin_page_remote_work_requests_with_history(show_processed=False):
-    """Get admin page remote work requests with history"""
-    managers = list(Users.find({"$or":[{"position": "Manager"}, {"department": "HR"}]}))
-    manager_ids = [str(manager["_id"]) for manager in managers]
-    
-    base_filter = {"userid": {"$in":manager_ids}}
-    
-    if show_processed is False:  # Only pending
-        base_filter.update({"Recommendation": {"$exists":False}, "status": {"$exists":False}})
-    elif show_processed is True:  # Only processed
-        base_filter.update({"status": {"$exists":True}})
-    
-    list1 = list()
-    res = RemoteWork.find(base_filter)
-    
-    for user in res:
-        cleanid(user)
-        user["fromDate"] = user["fromDate"].strftime("%d-%m-%Y")
-        user["toDate"] = user["toDate"].strftime("%d-%m-%Y")
-        user["requestDate"] = user["requestDate"].strftime("%d-%m-%Y")
-        list1.append(user)
-    return list1
-
 def get_TL_page_remote_work_requests_with_history(TL, show_processed=False):
     """Get TL page remote work requests with history"""
     users = list(Users.find({"TL":TL}))
@@ -1279,7 +1067,7 @@ def get_TL_page_remote_work_requests_with_history(TL, show_processed=False):
 # Admin Page Leave Requests
 def get_manager_leave_requests(selected_option):
     # Get Manager + HR IDs
-    managers_and_hr = list(Users.find({"position": {"$in": ["Manager", "HR"]}}))
+    managers_and_hr = list(Users.find({"position": {"$in": ["TL", "HR"]}}))
     user_ids = [str(user["_id"]) for user in managers_and_hr]
 
 
@@ -1321,7 +1109,7 @@ def get_manager_leave_requests(selected_option):
 
 # TL Page Leave Requests
 def get_only_user_leave_requests(selected_option,TL_name):
-    users = list(Users.find({"position": {"$ne":"Manager"}, "name":{"$ne":TL_name}, "TL":TL_name}))
+    users = list(Users.find({"position": {"$ne":"TL"}, "name":{"$ne":TL_name}, "TL":TL_name}))
      
     # Prepare a list of user IDs
     user_ids = [str(user["_id"]) for user in users]
@@ -1524,123 +1312,6 @@ def recommend_manager_leave_requests_status_in_mongo(leave_id, status):
     except Exception as e:
         print(f"Error updating status: {e}")
         raise Exception("Error updating status in MongoDB")
-    
-# Admin Page Leave History Dashboard
-def get_approved_leave_history(TL_name):
-    users = list(Users.find({"position": {"$ne":"Manager"},"TL":TL_name}))
-    # Prepare a list of user IDs
-    user_ids = [str(user["_id"]) for user in users]
-    
-    if users:
-        leave_requests = list(Leave.find({"userid": {"$in": user_ids}, "status": "Approved"},{"_id":0}))
-        wfh_requests = list(RemoteWork.find({"userid":{"$in": user_ids}, "status": "Approved"},{"_id":0}))
-    else:
-        leave_requests = list(Leave.find({"status": "Approved"}, {"_id": 0}))
-        wfh_requests = list(RemoteWork.find({"status": "Approved"}, {"_id": 0}))
-
-    for wfh_request in wfh_requests:
-        wfh_request["leaveType"]= "Remote Work"
-        wfh_request["selectedDate"] = wfh_request["fromDate"]
-        wfh_request["Employee_ID"] = wfh_request["employeeID"]
-        del wfh_request["employeeID"]
-        del wfh_request["fromDate"]
-        leave_requests.append(wfh_request)
-
-    for leave_request in leave_requests:
-        if leave_request.get("leaveType") == "Sick Leave" or leave_request.get("leaveType")  == "Permission" or leave_request.get("leaveType") == "Casual Leave" or leave_request.get("leaveType") == "Bonus Leave":
-            leave_request["selectedDate"] = leave_request["selectedDate"].strftime("%d-%m-%Y")
-            leave_request["requestDate"] = leave_request["requestDate"].strftime("%d-%m-%Y")
-        elif leave_request.get("leaveType") == "Remote Work":
-            leave_request["selectedDate"] = leave_request["selectedDate"].strftime("%d-%m-%Y")
-            leave_request["toDate"] = leave_request["toDate"].strftime("%d-%m-%Y")
-            leave_request["requestDate"] = leave_request["requestDate"].strftime("%d-%m-%Y")
-        else:
-            leave_request["selectedDate"] = leave_request["selectedDate"].strftime("%d-%m-%Y")
-            leave_request["ToDate"] = leave_request["ToDate"].strftime("%d-%m-%Y")
-            leave_request["requestDate"] = leave_request["requestDate"].strftime("%d-%m-%Y")
-        
-    return leave_requests
-
-def leave_update_notification():
-    sick_leave = Leave.count_documents({"leaveType": "Sick Leave", "Recommedation": "Recommend", "status": {"$exists": False}})
-    casual_leave = Leave.count_documents({"leaveType": "Casual Leave", "Recommedation": "Recommend", "status": {"$exists": False}})
-    lop = Leave.count_documents({"leaveType": "Other Leave" ,"Recommedation": "Recommend", "status": {"$exists": False}})
-    bonus_leave = Leave.count_documents({"leaveType": "Bonus Leave", "Recommedation": "Recommend", "status": {"$exists": False}})
-    permission_leave = Leave.count_documents({"leaveType": "Permission", "Recommedation": "Recommend", "status": {"$exists": False}})
-    wfh = RemoteWork.count_documents({"Recommedation": "Recommend", "status": {"$exists": False}})
-    leave_counts = {
-        "Sick Leave": sick_leave,
-        "Casual Leave": casual_leave,
-        "Other Leave (LOP)": lop,
-        "Bonus Leave": bonus_leave,
-        "Permission Leave": permission_leave,
-        "Remote Work": wfh
-    }
-    message = []
-    for leave_type, count in leave_counts.items():
-        if count > 0:
-             message.append(f"{count} {leave_type} are pending approval.")
-    print(message)
-    return message
-
-#Admin page
-def managers_leave_recommend_notification():
-    managers = list(Users.find({"position": "Manager"}))
-    
-    # Prepare a list of manager IDs
-    manager_ids = [str(manager["_id"]) for manager in managers]
-
-    sick_leave = Leave.count_documents({"userid": {"$in":manager_ids}, "leaveType": "Sick Leave", "Recommendation": {"$exists": False}, "status": {"$exists": False}})
-    casual_leave = Leave.count_documents({"userid": {"$in":manager_ids}, "leaveType": "Casual Leave", "Recommedation":  {"$exists": False} , "status": {"$exists": False}})
-    lop = Leave.count_documents({"userid": {"$in":manager_ids}, "leaveType": "Other Leave" ,"Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    bonus_leave = Leave.count_documents({"userid": {"$in":manager_ids}, "leaveType": "Bonus Leave", "Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    permission_leave = Leave.count_documents({"userid": {"$in":manager_ids}, "leaveType": "Permission", "Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    wfh = RemoteWork.count_documents({"userid": {"$in":manager_ids}, "Recommedation":  {"$exists": False}, "status": {"$exists": False}})
-    leave_counts = {
-        "Sick Leave": sick_leave,
-        "Casual Leave": casual_leave,
-        "Other Leave (LOP)": lop,
-        "Bonus Leave": bonus_leave,
-        "Permission Leave": permission_leave,
-        "Remote Work": wfh
-    }
-    message = []
-    for leave_type, count in leave_counts.items():
-        if count > 0:
-             message.append(f"{count} {leave_type} are pending approval.")
-    print(message)
-    return message
-
-
-
-#TL page
-def users_leave_recommend_notification(TL):
-    users = list(Users.find({"position": {"$ne":"Manager"}, "TL":TL}))
-    
-    # Prepare a list of manager IDs
-    users_ids = [str(user["userid"]) for user in users]
-
-    sick_leave = Leave.count_documents({"userid": {"$in":users_ids}, "leaveType": "Sick Leave", "Recommedation":  {"$exists": False}, "status": {"$exists": False}})
-    casual_leave = Leave.count_documents({"userid": {"$in":users_ids}, "leaveType": "Casual Leave", "Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    lop = Leave.count_documents({"userid": {"$in":users_ids}, "leaveType": "Other Leave" ,"Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    bonus_leave = Leave.count_documents({"userid": {"$in":users_ids}, "leaveType": "Bonus Leave", "Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    permission_leave = Leave.count_documents({"userid": {"$in":users_ids}, "leaveType": "Permission", "Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    wfh = RemoteWork.count_documents({"userid": {"$in":users_ids}, "Recommedation": {"$exists": False}, "status": {"$exists": False}})
-    leave_counts = {
-        "Sick Leave": sick_leave,
-        "Casual Leave": casual_leave,
-        "Other Leave (LOP)": lop,
-        "Bonus Leave": bonus_leave,
-        "Permission Leave": permission_leave,
-        "Remote Work": wfh
-    }
-    message = []
-    for leave_type, count in leave_counts.items():
-        if count > 0:
-             message.append(f"{count} {leave_type} are pending approval.")
-    print(message)
-    return message
-
 
 import traceback
 from bson import ObjectId
@@ -1737,7 +1408,7 @@ def get_remote_work_requests():
 
 # Admin Page Remote Requests
 def get_admin_page_remote_work_requests():
-    managers = list(Users.find({"$or":[{"position": "Manager"}, {"department": "HR"}]}))
+    managers = list(Users.find({"$or":[{"position": "TL"}, {"department": "HR"}]}))
     
     # Prepare a list of manager IDs
     manager_ids = [str(manager["_id"]) for manager in managers]
@@ -1784,10 +1455,10 @@ def update_remote_work_request_status_in_mongo(userid, status, wfh_id):
             return False
             
         user = Users.find_one({"_id": ObjectId(userid)})
-        is_manager = user and user.get("position") == "Manager"
+        is_manager = user and user.get("position") == "TL"
         
         if is_manager:
-            # For manager requests, admin can directly approve/reject from "Pending" status
+            # For TL requests, admin can directly approve/reject from "Pending" status
             result = RemoteWork.update_one(
                 {"_id": ObjectId(wfh_id), "userid": userid, "status": "Pending"}, 
                 {"$set": {"status": status}}
@@ -2013,18 +1684,6 @@ def get_admin_info(email):
     admin_info = admin.find_one({'email':email}, {"password":0})
     return admin_info
 
-# def add_task_list(tasks, userid: str, today, due_date):
-#     for task in tasks:
-#         t = {
-#             "task": task,
-#             "status": "Not completed",
-#             "date": today,
-#             "due_date": due_date,
-#             "userid": userid,
-#         }
-#         result = Tasks.insert_one(t)
-#     return "Task added Successfully"
-
 def iso_today():
     return datetime.now().strftime("%Y-%m-%d")
 
@@ -2245,8 +1904,8 @@ def edit_the_task(
                         commenter_role = get_user_role(commenter_id)
                         user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
                         
-                        if commenter_role == "manager":
-                            # Manager added comment → Notify HR
+                        if commenter_role == "TL":
+                            # TL added comment → Notify HR
                             hr_users = get_hr_users()
                             
                             for hr_user in hr_users:
@@ -2255,8 +1914,8 @@ def edit_the_task(
                                 
                                 notification_id = create_notification(
                                     userid=hr_id,
-                                    title="Manager Comment Added",
-                                    message=f"Manager {commenter_name} added a comment to the task '{task_title}': '{comment_text[:100]}{'...' if len(comment_text) > 100 else ''}'",
+                                    title="TL Comment Added",
+                                    message=f"TL {commenter_name} added a comment to the task '{task_title}': '{comment_text[:100]}{'...' if len(comment_text) > 100 else ''}'",
                                     notification_type="task",
                                     priority="medium",
                                     action_url=get_role_based_action_url(hr_id, "hr_task"),
@@ -2282,27 +1941,27 @@ def edit_the_task(
                                     if loop.is_running():
                                         asyncio.create_task(notification_manager.send_personal_notification(hr_id, {
                                             "_id": notification_id,
-                                            "title": "Manager Comment Added",
-                                            "message": f"Manager {commenter_name} added a comment to the task '{task_title}': '{comment_text[:50]}{'...' if len(comment_text) > 50 else ''}'",
+                                            "title": "TL Comment Added",
+                                            "message": f"TL {commenter_name} added a comment to the task '{task_title}': '{comment_text[:50]}{'...' if len(comment_text) > 50 else ''}'",
                                             "type": "task",
                                             "priority": "medium"
                                         }))
                                     else:
                                         loop.run_until_complete(notification_manager.send_personal_notification(hr_id, {
                                             "_id": notification_id,
-                                            "title": "Manager Comment Added",
-                                            "message": f"Manager {commenter_name} added a comment to the task '{task_title}': '{comment_text[:50]}{'...' if len(comment_text) > 50 else ''}'",
+                                            "title": "TL Comment Added",
+                                            "message": f"TL {commenter_name} added a comment to the task '{task_title}': '{comment_text[:50]}{'...' if len(comment_text) > 50 else ''}'",
                                             "type": "task",
                                             "priority": "medium"
                                         }))
                                     
-                                    print(f"HR {hr_name} notified about Manager {commenter_name}'s comment: {comment_text[:30]}...")
+                                    print(f"HR {hr_name} notified about TL {commenter_name}'s comment: {comment_text[:30]}...")
                                 except Exception as ws_error:
                                     print(f"Error sending WebSocket notification to HR: {ws_error}")
                         
                         else:
-                            # Employee added comment → Notify Manager
-                            # Find the manager who should be notified
+                            # Employee added comment → Notify TL
+                            # Find the TL who should be notified
                             manager_to_notify = None
                             assigned_by = updated_task.get("assigned_by")
                             tl = updated_task.get("TL")
@@ -2378,13 +2037,13 @@ def edit_the_task(
                                                 "priority": "medium"
                                             }))
                                         
-                                        print(f"Manager {manager_name} notified about {commenter_name}'s comment: {comment_text[:30]}...")
+                                        print(f"TL {manager_name} notified about {commenter_name}'s comment: {comment_text[:30]}...")
                                     except Exception as ws_error:
-                                        print(f"Error sending WebSocket notification to manager: {ws_error}")
+                                        print(f"Error sending WebSocket notification to TL: {ws_error}")
                                 else:
-                                    print(f"Manager not found: {manager_to_notify}")
+                                    print(f"TL not found: {manager_to_notify}")
                             else:
-                                print(f"No manager found to notify for {commenter_name}'s comment")
+                                print(f"No TL found to notify for {commenter_name}'s comment")
                 
                 if "files" in update_fields and len(update_fields["files"]) > len(current_task.get("files", [])):
                     # New file uploaded
@@ -2424,8 +2083,8 @@ def edit_the_task(
                         uploader_role = get_user_role(uploader_id)
                         user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
                         
-                        if uploader_role == "manager":
-                            # Manager uploaded file → Notify HR
+                        if uploader_role == "TL":
+                            # TL uploaded file → Notify HR
                             hr_users = get_hr_users()
                             
                             for hr_user in hr_users:
@@ -2434,8 +2093,8 @@ def edit_the_task(
                                 
                                 notification_id = create_notification(
                                     userid=hr_id,
-                                    title="Manager File Uploaded",
-                                    message=f"Manager {uploader_name} uploaded a file '{filename}' to the task '{task_title}'. Please review if needed.",
+                                    title="TL File Uploaded",
+                                    message=f"TL {uploader_name} uploaded a file '{filename}' to the task '{task_title}'. Please review if needed.",
                                     notification_type="task",
                                     priority="medium",
                                     action_url=get_role_based_action_url(hr_id, "hr_task"),
@@ -2461,32 +2120,32 @@ def edit_the_task(
                                     if loop.is_running():
                                         asyncio.create_task(notification_manager.send_personal_notification(hr_id, {
                                             "_id": notification_id,
-                                            "title": "Manager File Uploaded",
-                                            "message": f"Manager {uploader_name} uploaded a file '{filename}' to the task '{task_title}'.",
+                                            "title": "TL File Uploaded",
+                                            "message": f"TL {uploader_name} uploaded a file '{filename}' to the task '{task_title}'.",
                                             "type": "task",
                                             "priority": "medium"
                                         }))
                                     else:
                                         loop.run_until_complete(notification_manager.send_personal_notification(hr_id, {
                                             "_id": notification_id,
-                                            "title": "Manager File Uploaded",
-                                            "message": f"Manager {uploader_name} uploaded a file '{filename}' to the task '{task_title}'.",
+                                            "title": "TL File Uploaded",
+                                            "message": f"TL {uploader_name} uploaded a file '{filename}' to the task '{task_title}'.",
                                             "type": "task",
                                             "priority": "medium"
                                         }))
                                     
-                                    print(f"HR {hr_name} notified about Manager {uploader_name}'s file upload: {filename}")
+                                    print(f"HR {hr_name} notified about TL {uploader_name}'s file upload: {filename}")
                                 except Exception as ws_error:
                                     print(f"Error sending WebSocket notification to HR: {ws_error}")
                         
                         else:
-                            # Employee uploaded file → Notify Manager
-                            # Find the manager who should be notified
+                            # Employee uploaded file → Notify TL
+                            # Find the TL who should be notified
                             manager_to_notify = None
                             assigned_by = updated_task.get("assigned_by")
                             tl = updated_task.get("TL")
                             
-                            # Determine the manager to notify using same logic as task completion
+                            # Determine the TL to notify using same logic as task completion
                             if assigned_by and assigned_by != "self" and assigned_by != userid:
                                 manager_to_notify = assigned_by
                             elif tl and tl != userid:
@@ -2499,7 +2158,7 @@ def edit_the_task(
                                 elif user_manager and user_manager != userid:
                                     manager_to_notify = user_manager
                             
-                            # Send notification to manager
+                            # Send notification to TL
                             if manager_to_notify:
                                 manager = None
                                 if ObjectId.is_valid(manager_to_notify):
@@ -2533,7 +2192,7 @@ def edit_the_task(
                                         }
                                     )
                                     
-                                    # Send real-time WebSocket notification to manager
+                                    # Send real-time WebSocket notification to TL
                                     try:
                                         from websocket_manager import notification_manager
                                         import asyncio
@@ -2557,13 +2216,13 @@ def edit_the_task(
                                                 "priority": "medium"
                                             }))
                                         
-                                        print(f"Manager {manager_name} notified about {uploader_name}'s file upload: {filename}")
+                                        print(f"TL {manager_name} notified about {uploader_name}'s file upload: {filename}")
                                     except Exception as ws_error:
-                                        print(f"Error sending WebSocket notification to manager: {ws_error}")
+                                        print(f"Error sending WebSocket notification to TL: {ws_error}")
                                 else:
-                                    print(f"Manager not found: {manager_to_notify}")
+                                    print(f"TL not found: {manager_to_notify}")
                             else:
-                                print(f"No manager found to notify for {uploader_name}'s file upload")
+                                print(f"No TL found to notify for {uploader_name}'s file upload")
                 
                 if "subtasks" in update_fields and len(update_fields["subtasks"]) > len(current_task.get("subtasks", [])):
                     # New subtask added
@@ -2579,8 +2238,8 @@ def edit_the_task(
                     # Get user role to determine notification hierarchy
                     user_role = get_user_role(userid)
                     
-                    if user_role == "manager":
-                        # Manager added subtask → Notify HR
+                    if user_role == "TL":
+                        # TL added subtask → Notify HR
                         hr_users = get_hr_users()
                         
                         for hr_user in hr_users:
@@ -2589,8 +2248,8 @@ def edit_the_task(
                             
                             notification_id = create_notification(
                                 userid=hr_id,
-                                title="Manager Subtask Added",
-                                message=f"Manager {user_name} added a new subtask '{subtask_text}' to the task '{task_title}'.",
+                                title="TL Subtask Added",
+                                message=f"TL {user_name} added a new subtask '{subtask_text}' to the task '{task_title}'.",
                                 notification_type="task",
                                 priority="medium",
                                 action_url=get_role_based_action_url(hr_id, "hr_task"),
@@ -2615,32 +2274,32 @@ def edit_the_task(
                                 if loop.is_running():
                                     asyncio.create_task(notification_manager.send_personal_notification(hr_id, {
                                         "_id": notification_id,
-                                        "title": "Manager Subtask Added",
-                                        "message": f"Manager {user_name} added a new subtask '{subtask_text}' to the task '{task_title}'.",
+                                        "title": "TL Subtask Added",
+                                        "message": f"TL {user_name} added a new subtask '{subtask_text}' to the task '{task_title}'.",
                                         "type": "task",
                                         "priority": "medium"
                                     }))
                                 else:
                                     loop.run_until_complete(notification_manager.send_personal_notification(hr_id, {
                                         "_id": notification_id,
-                                        "title": "Manager Subtask Added",
-                                        "message": f"Manager {user_name} added a new subtask '{subtask_text}' to the task '{task_title}'.",
+                                        "title": "TL Subtask Added",
+                                        "message": f"TL {user_name} added a new subtask '{subtask_text}' to the task '{task_title}'.",
                                         "type": "task",
                                         "priority": "medium"
                                     }))
                                 
-                                print(f"HR {hr_name} notified about Manager {user_name}'s subtask: {subtask_text}")
+                                print(f"HR {hr_name} notified about TL {user_name}'s subtask: {subtask_text}")
                             except Exception as ws_error:
                                 print(f"Error sending WebSocket notification to HR: {ws_error}")
                     
                     else:
-                        # Employee added subtask → Notify Manager
-                        # Find the manager who should be notified
+                        # Employee added subtask → Notify TL
+                        # Find the TL who should be notified
                         manager_to_notify = None
                         assigned_by = updated_task.get("assigned_by")
                         tl = updated_task.get("TL")
                         
-                        # Determine the manager to notify using same logic as task completion
+                        # Determine the TL to notify using same logic as task completion
                         if assigned_by and assigned_by != "self" and assigned_by != userid:
                             manager_to_notify = assigned_by
                         elif tl and tl != userid:
@@ -2686,7 +2345,7 @@ def edit_the_task(
                                     }
                                 )
                                 
-                                # Send real-time WebSocket notification to manager
+                                # Send real-time WebSocket notification to TL
                                 try:
                                     from websocket_manager import notification_manager
                                     import asyncio
@@ -2710,13 +2369,13 @@ def edit_the_task(
                                             "priority": "medium"
                                         }))
                                     
-                                    print(f"Manager {manager_name} notified about {user_name}'s subtask: {subtask_text}")
+                                    print(f"TL {manager_name} notified about {user_name}'s subtask: {subtask_text}")
                                 except Exception as ws_error:
-                                    print(f"Error sending WebSocket notification to manager: {ws_error}")
+                                    print(f"Error sending WebSocket notification to TL: {ws_error}")
                             else:
-                                print(f"Manager not found: {manager_to_notify}")
+                                print(f"TL not found: {manager_to_notify}")
                         else:
-                            print(f"No manager found to notify for {user_name}'s subtask")
+                            print(f"No TL found to notify for {user_name}'s subtask")
                 
                 # Handle task verification notification
                 if "verified" in update_fields:
@@ -2731,7 +2390,7 @@ def edit_the_task(
                         if task_owner_id:
                             # Get verifier details (the person who verified - current user making the edit)
                             verifier = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
-                            verifier_name = verifier.get("name", "Manager/HR") if verifier else "Manager/HR"
+                            verifier_name = verifier.get("name", "TL/HR") if verifier else "TL/HR"
                             verifier_role = get_user_role(userid) if verifier else "manager"
                             
                             # Determine the verifier title based on role
@@ -2796,7 +2455,7 @@ def edit_the_task(
                         new_status = changes["status"]
                         
                         # Don't send status change notification to employee when they complete their own task
-                        # The hierarchy-based completion notification will handle manager/HR notifications
+                        # The hierarchy-based completion notification will handle TL/HR notifications
                         if not (new_status.lower() in ["completed", "done"]):
                             create_notification(
                                 userid=userid,
@@ -2823,20 +2482,20 @@ def edit_the_task(
                             
                             print(f"Task completion debug - assigned_by: {assigned_by}, TL: {tl}, userid: {userid}")
                             
-                            # Determine the manager to notify
+                            # Determine the TL to notify
                             manager_to_notify = None
                             
-                            # Case 1: Task assigned by a specific manager (assigned_by is not "self")
+                            # Case 1: Task assigned by a specific TL (assigned_by is not "self")
                             if assigned_by and assigned_by != "self" and assigned_by != userid:
                                 manager_to_notify = assigned_by
-                                print(f"Task assigned by manager: {assigned_by}")
+                                print(f"Task assigned by TL: {assigned_by}")
                             
                             # Case 2: Check if task has TL field (Team Leader)
                             elif tl and tl != userid:
                                 manager_to_notify = tl
                                 print(f"Task assigned by TL: {tl}")
                             
-                            # Case 3: Find user's manager from their profile
+                            # Case 3: Find user's TL from their profile
                             elif user:
                                 user_tl = user.get("TL")
                                 user_manager = user.get("manager") 
@@ -2845,11 +2504,11 @@ def edit_the_task(
                                     print(f"User's TL from profile: {user_tl}")
                                 elif user_manager and user_manager != userid:
                                     manager_to_notify = user_manager
-                                    print(f"User's manager from profile: {user_manager}")
+                                    print(f"User's TL from profile: {user_manager}")
                             
-                            # Send notification to the identified manager
+                            # Send notification to the identified TL
                             if manager_to_notify:
-                                # Verify manager exists and get their details
+                                # Verify TL exists and get their details
                                 manager = None
                                 if ObjectId.is_valid(manager_to_notify):
                                     manager = Users.find_one({"_id": ObjectId(manager_to_notify)})
@@ -2865,7 +2524,7 @@ def edit_the_task(
                                     manager_id = str(manager["_id"])
                                     manager_name = manager.get("name", "Manager")
                                     
-                                    print(f"Notifying manager {manager_name} ({manager_id}) about {assignee_name}'s task completion")
+                                    print(f"Notifying TL {manager_name} ({manager_id}) about {assignee_name}'s task completion")
                                     
                                     # Use enhanced hierarchy-based notification system
                                     import asyncio
@@ -2897,26 +2556,26 @@ def edit_the_task(
                                             }
                                         )
                                 else:
-                                    print(f"Manager not found: {manager_to_notify}")
+                                    print(f"TL not found: {manager_to_notify}")
                             else:
-                                # Handle case where no manager is found - check if user is a manager themselves
+                                # Handle case where no TL is found - check if user is a TL themselves
                                 user_role = get_user_role(userid)
-                                if user_role == "manager":
-                                    print(f"Manager {assignee_name} completed own task - notifying HR")
+                                if user_role == "TL":
+                                    print(f"TL {assignee_name} completed own task - notifying HR")
                                     import asyncio
                                     try:
                                         completion_notifications = asyncio.run(create_task_completion_notification(
                                             assignee_id=userid,
-                                            manager_id=None,  # No manager to notify, this is for HR
+                                            manager_id=None,  # No TL to notify, this is for HR
                                             task_title=task_title,
                                             assignee_name=assignee_name,
                                             task_id=taskid
                                         ))
-                                        print(f"Manager self-task completion notifications sent to HR: {len(completion_notifications) if completion_notifications else 0}")
+                                        print(f"TL self-task completion notifications sent to HR: {len(completion_notifications) if completion_notifications else 0}")
                                     except Exception as e:
-                                        print(f"Error sending manager self-task completion notifications: {e}")
+                                        print(f"Error sending TL self-task completion notifications: {e}")
                                 else:
-                                    print(f"No manager found to notify for employee {assignee_name}'s task completion")
+                                    print(f"No TL found to notify for employee {assignee_name}'s task completion")
                     else:
                         # Other field changes
                         change_details = []
@@ -3033,31 +2692,6 @@ def get_the_tasks(userid: str, date: str = None):
 
     return task_list
 
-def get_assigned_tasks(manager_name: str, userid: str = None):
-    query = {"assigned_by": manager_name}
-    if userid:
-        query["userid"] = userid
-
-    tasks = list(Tasks.find(query))
-    task_list = []
-    for task in tasks:
-        task_data = {
-            "task": task.get("task"),
-            "status": task.get("status"),
-            "date": task.get("date"),
-            "due_date": task.get("due_date"),
-            "userid": task.get("userid"),
-            "assigned_by": task.get("assigned_by", "self"),
-            "priority": task.get("priority", "Medium"),
-            "subtasks": task.get("subtasks", []),  
-            "comments": task.get("comments", []),  
-            "files": task.get("files", []),     
-            "taskid": str(task.get("_id"))
-        }
-        task_list.append(task_data)
-
-    return task_list
-
 def get_manager_only_tasks(userid: str, date: str = None):
     query = {"userid": userid, "assigned_by": {"$ne": "self"}}
     if date:
@@ -3093,40 +2727,6 @@ def get_manager_only_tasks(userid: str, date: str = None):
         }
         task_list.append(task_data)
 
-    return task_list
-
-def get_assigned_tasks(manager_name: str, userid: str = None):
-    query = {"assigned_by": manager_name}
-    if userid:
-        query["userid"] = userid
-    tasks = list(Tasks.find(query))
-    task_list = []
-    for task in tasks:
-        # Handle files consistently - convert _id to id
-        files = []
-        for file in task.get("files", []):
-            if isinstance(file, dict) and '_id' in file:
-                file_copy = file.copy()
-                file_copy['id'] = str(file_copy['_id'])
-                del file_copy['_id']
-                files.append(file_copy)
-            else:
-                files.append(file)
-                
-        task_data = {
-            "task": task.get("task"),
-            "status": task.get("status"),
-            "date": task.get("date"),
-            "due_date": task.get("due_date"),
-            "userid": task.get("userid"),
-            "assigned_by": task.get("assigned_by", "self"),
-            "priority": task.get("priority", "Medium"),
-            "subtasks": task.get("subtasks", []),
-            "comments": task.get("comments", []),
-            "files": files,  # Use processed files
-            "taskid": str(task.get("_id"))
-        }
-        task_list.append(task_data)
     return task_list
 
 # def get_user_info(userid):
@@ -3176,16 +2776,6 @@ def get_user_info(userid, check_admin=True):
             return result
     
     # Not found in any checked collection
-    print("User not found in any collection")
-    return {"error": "User not found", "userid": userid}
-    
-    if result:
-        print("Admin found in admin collection")
-        result["_id"] = str(result["_id"])
-        result["isadmin"] = True  # Always true for admin collection
-        return result
-    
-    # Not found in either collection
     print("User not found in any collection")
     return {"error": "User not found", "userid": userid}
 
@@ -3254,23 +2844,15 @@ def add_an_employee(employee_data):
     
 def auto_approve_manager_leaves():
     Leave.update_many(
-        {"position":"Manager", "status": "Recommend"},
+        {"position":"TL", "status": "Recommend"},
         {"$set": {"status": "Approved"}}
     )
 
-    return {"message": "Manager leave requests have been auto-approved where applicable."}
+    return {"message": "TL leave requests have been auto-approved where applicable."}
 
 def get_user_info(userid):
  result = Users.find_one({"$or":[{"userid":userid}]},{"_id":0,"password":0})
  return result
-
-# def edit_an_employee(employee_data):
-#  try:
-#  # Insert the employee data into the Users collection
-#   result = Users.find_one_and_update({"userid":employee_data["userid"]},{"$set":employee_data})
-#   return {"message": "Employee details edited successfully"}
-#  except Exception as e:
-#   raise HTTPException(status_code=500, detail=str(e))
 
 def edit_an_employee(employee_data):
     """Edit employee data with proper validation"""
@@ -3345,7 +2927,7 @@ def edit_an_employee(employee_data):
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 def get_managers() :
-    users = list(Users.find({"position": "Manager"}, {"_id":0}))
+    users = list(Users.find({"position": "TL"}, {"_id":0}))
     return users
 
 from datetime import datetime
@@ -4302,7 +3884,7 @@ async def notify_leave_rejected(userid, leave_type, leave_id=None, reason=None):
     )
 
 async def notify_leave_recommended(userid, leave_type, approver_name, leave_id=None):
-    """Send real-time notification when leave is recommended by manager or admin"""
+    """Send real-time notification when leave is recommended by TL or admin"""
     return await create_notification_with_websocket(
         userid=userid,
         title="Leave Request Recommended ",
@@ -4402,7 +3984,7 @@ async def get_user_manager_id(userid):
         return None
 
 async def notify_manager_leave_request(employee_name, employee_id, leave_type, leave_date, manager_id, leave_id=None):
-    """Send notification to manager when employee submits leave request"""
+    """Send notification to TL when employee submits leave request"""
     return await create_notification_with_websocket(
         userid=manager_id,
         title="New Leave Request Pending Approval",
@@ -4422,7 +4004,7 @@ async def notify_manager_leave_request(employee_name, employee_id, leave_type, l
 
 # Task Management and Deadline Notification System
 async def check_and_notify_overdue_tasks():
-    """Check for overdue tasks and notify users and managers"""
+    """Check for overdue tasks and notify users and TL's"""
     try:
         current_time = datetime.now(pytz.timezone("Asia/Kolkata"))
         current_date = current_time.strftime("%d-%m-%Y")
@@ -4458,7 +4040,7 @@ async def check_and_notify_overdue_tasks():
         return 0
 
 async def handle_overdue_task(task):
-    """Handle a single overdue task - notify user and manager"""
+    """Handle a single overdue task - notify user and TL"""
     try:
         task_id = str(task.get("_id"))
         userid = task.get("userid")
@@ -4589,7 +4171,7 @@ async def notify_manager_about_overdue_task(userid, user_name, task_title, due_d
         
         # If no specific TL found, notify all managers
         if not manager:
-            managers = list(Users.find({"position": "Manager"}))
+            managers = list(Users.find({"position": "TL"}))
         else:
             managers = [manager]
         
@@ -4653,10 +4235,10 @@ async def notify_manager_about_overdue_task(userid, user_name, task_title, due_d
                 
                 await notification_manager.send_personal_notification(manager_id, notification_data)
                 
-                print(f"📢 Manager {manager_name} notified about {user_name}'s overdue task: {task_title}")
+                print(f"📢 TL {manager_name} notified about {user_name}'s overdue task: {task_title}")
         
     except Exception as e:
-        print(f"Error notifying manager about overdue task: {e}")
+        print(f"Error notifying TL about overdue task: {e}")
 
 async def check_upcoming_deadlines_enhanced():
     """Enhanced deadline checking with multiple reminder periods"""
@@ -4910,15 +4492,15 @@ async def create_task_manager_assigned_notification(userid, task_title, manager_
             assigner = Users.find_one({"name": manager_name})
         
         assigner_name = assigner.get("name", manager_name) if assigner else manager_name
-        assigner_role = assigner.get("position", "Manager") if assigner else "Manager"
+        assigner_role = assigner.get("position", "TL") if assigner else "Manager"
         
         # Create appropriate title based on assigner's role
         if assigner_role.upper() == "HR":
             title = "Task Assigned by HR"
             message = f"Hi {user_name}, HR {assigner_name} has assigned you a new task: '{task_title}'"
-        elif assigner_role.upper() == "MANAGER":
-            title = "Task Assigned by Manager"
-            message = f"Hi {user_name}, your manager {assigner_name} has assigned you a new task: '{task_title}'"
+        elif assigner_role.upper() == "TL":
+            title = "Task Assigned by TL"
+            message = f"Hi {user_name}, your TL {assigner_name} has assigned you a new task: '{task_title}'"
         else:
             title = f"Task Assigned by {assigner_role}"
             message = f"Hi {user_name}, {assigner_name} ({assigner_role}) has assigned you a new task: '{task_title}'"
@@ -4960,11 +4542,11 @@ async def create_task_manager_assigned_notification(userid, task_title, manager_
             }
             
             await notification_manager.send_personal_notification(userid, notification_data)
-            print(f"🎯 Manager assignment notification sent to {user_name} from {manager_name}: {task_title}")
+            print(f"🎯 TL assignment notification sent to {user_name} from {manager_name}: {task_title}")
         
         return notification_id
     except Exception as e:
-        print(f"Error creating manager assignment notification: {e}")
+        print(f"Error creating TL assignment notification: {e}")
         return None
 
 async def create_task_due_soon_notification(userid, task_title, task_id, days_remaining, priority="medium"):
@@ -5050,7 +4632,7 @@ async def notify_task_completion(userid, task_title, task_id, tl_name):
         
         # If no specific TL found, notify all managers
         if not manager:
-            managers = list(Users.find({"position": "Manager"}))
+            managers = list(Users.find({"position": "TL"}))
         else:
             managers = [manager]
         
@@ -5096,7 +4678,7 @@ async def notify_task_completion(userid, task_title, task_id, tl_name):
                 
                 await notification_manager.send_personal_notification(manager_id, notification_data)
                 
-                print(f"✅ Manager {manager_name} notified about {user_name}'s task completion: {task_title}")
+                print(f"✅ TL {manager_name} notified about {user_name}'s task completion: {task_title}")
         
     except Exception as e:
         print(f"Error notifying task completion: {e}")
@@ -5202,15 +4784,15 @@ async def get_user_position(userid):
         return ""
 
 async def notify_admin_manager_leave_request(manager_name, manager_id, leave_type, leave_date, leave_id=None):
-    """Send notification to admin when manager submits leave request"""
+    """Send notification to admin when TL submits leave request"""
     try:
         admin_ids = await get_admin_user_ids()
         
         for admin_id in admin_ids:
             await create_notification_with_websocket(
                 userid=admin_id,
-                title="Manager Leave Request Pending Admin Review",
-                message=f"Manager {manager_name} has submitted a {leave_type} request for {leave_date} requiring admin approval",
+                title="TL Leave Request Pending Admin Review",
+                message=f"TL {manager_name} has submitted a {leave_type} request for {leave_date} requiring admin approval",
                 notification_type="leave_admin_pending",
                 priority="high",
                 action_url=None,  # Will be determined by role-based system
@@ -5223,14 +4805,14 @@ async def notify_admin_manager_leave_request(manager_name, manager_id, leave_typ
                     "leave_date": leave_date
                 }
             )
-        print(f"✅ Admin notifications sent for manager leave request: {manager_name}")
+        print(f"✅ Admin notifications sent for TL leave request: {manager_name}")
         return True
     except Exception as e:
-        print(f"❌ Error sending admin notification for manager leave: {e}")
+        print(f"❌ Error sending admin notification for TL leave: {e}")
         return False
 
 async def notify_admin_manager_wfh_request(manager_name, manager_id, request_date_from, request_date_to, wfh_id=None):
-    """Send notification to admin when manager submits WFH request"""
+    """Send notification to admin when TL submits WFH request"""
     try:
         admin_ids = await get_admin_user_ids()
         
@@ -5239,8 +4821,8 @@ async def notify_admin_manager_wfh_request(manager_name, manager_id, request_dat
         for admin_id in admin_ids:
             await create_notification_with_websocket(
                 userid=admin_id,
-                title="Manager WFH Request Pending Admin Review",
-                message=f"Manager {manager_name} has submitted a work from home request {date_range} requiring admin approval",
+                title="TL WFH Request Pending Admin Review",
+                message=f"TL {manager_name} has submitted a work from home request {date_range} requiring admin approval",
                 notification_type="wfh_admin_pending",
                 priority="high",
                 action_url=None,  # Will be determined by role-based system
@@ -5253,10 +4835,10 @@ async def notify_admin_manager_wfh_request(manager_name, manager_id, request_dat
                     "request_date_to": request_date_to
                 }
             )
-        print(f"✅ Admin notifications sent for manager WFH request: {manager_name}")
+        print(f"✅ Admin notifications sent for TL WFH request: {manager_name}")
         return True
     except Exception as e:
-        print(f"❌ Error sending admin notification for manager WFH: {e}")
+        print(f"❌ Error sending admin notification for TL WFH: {e}")
         return False
 
 async def notify_hr_recommended_leave(employee_name, employee_id, leave_type, leave_date, recommended_by, leave_id=None):
@@ -5448,17 +5030,17 @@ async def auto_notify_hr_on_wfh_recommendation():
         return {"error": str(e)}
 
 async def notify_admin_pending_leaves():
-    """Notify admin about all pending manager leave requests that need admin approval"""
+    """Notify admin about all pending TL leave requests that need admin approval"""
     try:
         # Get all manager user IDs first
-        manager_users = list(Users.find({"position": "Manager"}, {"_id": 1}))
+        manager_users = list(Users.find({"position": "TL"}, {"_id": 1}))
         manager_ids = [str(manager["_id"]) for manager in manager_users]
         
         if not manager_ids:
-            print("No managers found")
-            return {"message": "No managers found"}
+            print("No TL found")
+            return {"message": "No TL found"}
         
-        # Get all leaves from managers that don't have Recommendation or status fields (i.e., pending admin approval)
+        # Get all leaves from TL that don't have Recommendation or status fields (i.e., pending admin approval)
         pending_leaves = list(Leave.find({
             "userid": {"$in": manager_ids},
             "Recommendation": {"$exists": False},
@@ -5466,8 +5048,8 @@ async def notify_admin_pending_leaves():
         }))
         
         if not pending_leaves:
-            print("No pending manager leaves for admin notification")
-            return {"message": "No pending manager leaves found"}
+            print("No pending TL leaves for admin notification")
+            return {"message": "No pending TL leaves found"}
         
         admin_ids = await get_admin_user_ids()
         if not admin_ids:
@@ -5476,7 +5058,7 @@ async def notify_admin_pending_leaves():
         
         notification_count = 0
         for leave in pending_leaves:
-            manager_name = leave.get("employeeName", "Unknown Manager")
+            manager_name = leave.get("employeeName", "Unknown TL")
             leave_type = leave.get("leaveType", "Leave")
             leave_date = leave.get("selectedDate")
             leave_date_str = leave_date.strftime("%d-%m-%Y") if leave_date else "Unknown Date"
@@ -5487,8 +5069,8 @@ async def notify_admin_pending_leaves():
                 try:
                     await create_notification_with_websocket(
                         userid=admin_id,
-                        title="Manager Leave Request Pending Approval",
-                        message=f"Manager {manager_name}'s {leave_type} request for {leave_date_str} is waiting for your approval",
+                        title="TL Leave Request Pending Approval",
+                        message=f"TL {manager_name}'s {leave_type} request for {leave_date_str} is waiting for your approval",
                         notification_type="leave_admin_pending",
                         priority="high",
                         action_url="/Admin/manager_leave_approval",
@@ -5506,7 +5088,7 @@ async def notify_admin_pending_leaves():
                 except Exception as e:
                     print(f"Error sending notification to admin {admin_id}: {e}")
         
-        print(f"✅ Sent {notification_count} admin notifications for pending manager leaves")
+        print(f"✅ Sent {notification_count} admin notifications for pending TL leaves")
         return {"message": f"Sent {notification_count} notifications to admin", "pending_leaves": len(pending_leaves)}
         
     except Exception as e:
@@ -5514,7 +5096,7 @@ async def notify_admin_pending_leaves():
         return {"error": str(e)}
 
 async def auto_notify_admin_on_manager_request():
-    """Automatically notify admin when a manager submits leave (used as callback)"""
+    """Automatically notify admin when a TL submits leave (used as callback)"""
     try:
         result = await notify_admin_pending_leaves()
         print(f"✅ Auto admin notification result: {result}")
@@ -5524,17 +5106,17 @@ async def auto_notify_admin_on_manager_request():
         return {"error": str(e)}
 
 async def notify_admin_pending_wfh():
-    """Notify admin about all pending manager WFH requests that need admin approval"""
+    """Notify admin about all pending TL WFH requests that need admin approval"""
     try:
-        # Get all manager WFH requests with status "Pending" that are waiting for admin approval
-        managers = list(Users.find({"position": "Manager"}))
+        # Get all TL WFH requests with status "Pending" that are waiting for admin approval
+        managers = list(Users.find({"position": "TL"}))
         manager_ids = [str(manager["_id"]) for manager in managers]
         
         pending_wfh = list(RemoteWork.find({"userid": {"$in": manager_ids}, "status": "Pending"}))
         
         if not pending_wfh:
-            print("No pending manager WFH requests for admin notification")
-            return {"message": "No pending manager WFH requests found"}
+            print("No pending TL WFH requests for admin notification")
+            return {"message": "No pending TL WFH requests found"}
         
         admin_ids = await get_admin_user_ids()
         if not admin_ids:
@@ -5543,7 +5125,7 @@ async def notify_admin_pending_wfh():
         
         notification_count = 0
         for wfh in pending_wfh:
-            manager_name = wfh.get("employeeName", "Unknown Manager")
+            manager_name = wfh.get("employeeName", "Unknown TL")
             from_date = wfh.get("fromDate")
             to_date = wfh.get("toDate")
             from_date_str = from_date.strftime("%d-%m-%Y") if from_date else "Unknown Date"
@@ -5556,8 +5138,8 @@ async def notify_admin_pending_wfh():
                 try:
                     await create_notification_with_websocket(
                         userid=admin_id,
-                        title="Manager WFH Request Pending Approval",
-                        message=f"Manager {manager_name}'s work from home request {date_range} is waiting for your approval",
+                        title="TL WFH Request Pending Approval",
+                        message=f"TL {manager_name}'s work from home request {date_range} is waiting for your approval",
                         notification_type="wfh_admin_pending",
                         priority="high",
                         action_url="/Admin/wfh_approval",
@@ -5574,7 +5156,7 @@ async def notify_admin_pending_wfh():
                 except Exception as e:
                     print(f"❌ Error sending notification to admin {admin_id}: {e}")
         
-        print(f"✅ Sent {notification_count} admin notifications for pending manager WFH requests")
+        print(f"✅ Sent {notification_count} admin notifications for pending TL WFH requests")
         return {"message": f"Sent {notification_count} notifications", "pending_count": len(pending_wfh)}
         
     except Exception as e:
@@ -5582,7 +5164,7 @@ async def notify_admin_pending_wfh():
         return {"error": str(e)}
 
 async def auto_notify_admin_on_manager_wfh_request():
-    """Automatically notify admin when a manager submits WFH request (used as callback)"""
+    """Automatically notify admin when a TL submits WFH request (used as callback)"""
     try:
         result = await notify_admin_pending_wfh()
         print(f"✅ Auto admin WFH notification result: {result}")
@@ -5799,7 +5381,7 @@ def get_team_attendance_stats(team_leader: str, year: int = None):
     
     # Get team members
     team_members = list(Users.find(
-        {"TL": team_leader, "position": {"$ne": "Manager"}},
+        {"TL": team_leader, "position": {"$ne": "TL"}},
         {"_id": 1, "name": 1, "email": 1, "department": 1, "position": 1}
     ))
     
@@ -5882,7 +5464,7 @@ def get_department_attendance_stats(department: str = None, year: int = None):
     }
 
 def get_manager_team_attendance(manager_userid: str, year: int = None):
-    """Get attendance stats for all teams under a manager"""
+    """Get attendance stats for all teams under a TL"""
     if year is None:
         year = date.today().year
     
@@ -5966,7 +5548,7 @@ def get_allowed_contacts(user_id: str):
     if not user:
         return []
 
-    if user.get("role") == "manager":
+    if user.get("role") == "TL":
         # Leader can chat with all their team members
         return get_team_members(user["id"])
     else:
@@ -6130,7 +5712,7 @@ async def create_task_creation_notification(userid, task_title, task_id=None, pr
         return None
 
 async def create_manager_assignment_notification(manager_id, task_title, assignee_name, task_id=None, priority="medium"):
-    """Manager assignment → Assignment notification with details"""
+    """TL assignment → Assignment notification with details"""
     try:
         manager = Users.find_one({"_id": ObjectId(manager_id)}) if ObjectId.is_valid(manager_id) else None
         manager_name = manager.get("name", "Manager") if manager else "Manager"
@@ -6165,7 +5747,7 @@ async def create_manager_assignment_notification(manager_id, task_title, assigne
         
         return notification_id
     except Exception as e:
-        print(f"Error creating manager assignment notification: {e}")
+        print(f"Error creating TL assignment notification: {e}")
         return None
 
 async def create_task_update_notification(userid, task_title, changes, task_id=None, priority="medium", updated_by=None):
@@ -6439,8 +6021,8 @@ def get_user_role(user_id):
 
 async def create_task_completion_notification(assignee_id, manager_id, task_title, assignee_name, task_id=None, priority="high"):
     """Enhanced Task completion → Hierarchy-based completion alerts
-    - Employee task completion → Notify Manager
-    - Manager task completion → Notify HR
+    - Employee task completion → Notify TL
+    - TL task completion → Notify HR
     """
     try:
         notifications_sent = []
@@ -6448,16 +6030,16 @@ async def create_task_completion_notification(assignee_id, manager_id, task_titl
         # Get assignee role to determine notification hierarchy
         assignee_role = get_user_role(assignee_id)
         
-        if assignee_role == "manager":
-            # Manager completed task → Notify HR
+        if assignee_role == "TL":
+            # TL completed task → Notify HR
             hr_users = get_hr_users()
             
             for hr_user in hr_users:
                 hr_id = str(hr_user["_id"])
                 hr_name = hr_user.get("name", "HR")
                 
-                title = "Manager Task Completed"
-                message = f"Hi {hr_name}, Manager {assignee_name} has completed the task '{task_title}'. Please review the work."
+                title = "TL Task Completed"
+                message = f"Hi {hr_name}, TL {assignee_name} has completed the task '{task_title}'. Please review the work."
                 
                 notification_id = create_notification(
                     userid=hr_id,
@@ -6471,7 +6053,7 @@ async def create_task_completion_notification(assignee_id, manager_id, task_titl
                         "task_title": task_title,
                         "action": "Completed",
                         "assignee_name": assignee_name,
-                        "assignee_role": "Manager",
+                        "assignee_role": "TL",
                         "notification_hierarchy": "manager_to_hr"
                     }
                 )
@@ -6487,7 +6069,7 @@ async def create_task_completion_notification(assignee_id, manager_id, task_titl
                 })
                 
                 notifications_sent.append(notification_id)
-                print(f"✅ HR {hr_name} notified about Manager {assignee_name}'s task completion: {task_title}")
+                print(f"✅ HR {hr_name} notified about TL {assignee_name}'s task completion: {task_title}")
         
         else:
             # Employee completed task → Notify Manager (existing logic)
@@ -6526,7 +6108,7 @@ async def create_task_completion_notification(assignee_id, manager_id, task_titl
                 })
                 
                 notifications_sent.append(notification_id)
-                print(f"✅ Manager {manager_name} notified about {assignee_name}'s task completion: {task_title}")
+                print(f"✅ TL {manager_name} notified about {assignee_name}'s task completion: {task_title}")
         
         return notifications_sent
     except Exception as e:

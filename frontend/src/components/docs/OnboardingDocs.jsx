@@ -111,7 +111,7 @@ export default function EmployeeDashboard() {
     } catch (err) {
       console.error(err);
       const errorMessage = err.response?.data?.detail || err.message || "Failed to fetch documents";
-      toast.error(`❌ ${errorMessage}`);
+      toast.error(`${errorMessage}`);
       setAssignedDocs([]);
     } finally {
       setLoading(false);

@@ -79,7 +79,7 @@ export default function Chat() {
     };
   }, []);
 
-  const isManager = LS.get("position");
+  const isTL = LS.get("position");
   const isDepart = LS.get("department");
   const userid = LS.get("userid");
   const [unread, setUnread] = useState(() => {
@@ -250,7 +250,7 @@ export default function Chat() {
         const data = await res.json();
         const filtered = data.filter((user) => {
           if (user.id === userid) return true;
-          if (isManager?.toLowerCase() === "Manager") return true;
+          if (isTL?.toLowerCase() === "TL") return true;
           if (isDepart?.toLowerCase() === "HR") return true;
           if (isAdmin) return true;
           return user.department?.toLowerCase() !== "HR";
@@ -261,7 +261,7 @@ export default function Chat() {
       }
     };
     fetchUsers();
-  }, [userid, isManager, isDepart, isAdmin]);
+  }, [userid, isTL, isDepart, isAdmin]);
 
   // Fetch groups
   useEffect(() => {
@@ -984,7 +984,7 @@ export default function Chat() {
   });
 
   const validGroupUsers = [
-    { id: userid, name: username, position: isManager || "User" },
+    { id: userid, name: username, position: isTL || "User" },
     ...contacts,
   ];
 
@@ -1014,7 +1014,7 @@ export default function Chat() {
         </div>
       </div>
       {(
-        isManager?.toLowerCase() === "manager" ||
+        isTL?.toLowerCase() === "tl" ||
         isDepart?.toLowerCase() === "hr" ||
         isAdmin
       ) && (
@@ -1115,7 +1115,7 @@ export default function Chat() {
 
             <div className="flex gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
               {(
-                isManager?.toLowerCase() === "manager" ||
+                isTL?.toLowerCase() === "tl" ||
                 isDepart?.toLowerCase() === "hr" ||
                 isAdmin
               ) && (
@@ -1933,12 +1933,6 @@ export default function Chat() {
           {messageToDelete.text}
         </p>
       </div>
-
-      <p className="text-sm text-gray-600 mb-6">
-        {messageToDelete.from_user === userid
-          ? "Do you want to delete this message for everyone or just for yourself?"
-          : "This message will only be deleted for you."}
-      </p>
 
       <div className="flex gap-3">
         <button

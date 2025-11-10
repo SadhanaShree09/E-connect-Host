@@ -37,8 +37,8 @@ const Wfh = () => {
       let role = "";
       if (LS.get("isadmin") === true) {
         role = "admin";
-      } else if (LS.get("position") === "Manager") {
-        role = "manager";
+      } else if (LS.get("position") === "TL") {
+        role = "tl";
       } else if (LS.get("department") === "HR") {
         role = "hr";
       }
@@ -49,7 +49,7 @@ const Wfh = () => {
       };
 
       // Add TL parameter for managers
-      if (role === "manager") {
+      if (role === "tl") {
         requestParams.TL = LS.get("name");
         requestParams.show_processed = false; // Set to true if you want to show history
       }
@@ -161,7 +161,7 @@ const Wfh = () => {
       formData.append("status", status);
       formData.append("userid", userid);
       formData.append("id",id);
-      if(LS.get('position')==="Manager" || isadmin)
+      if(LS.get('position')==="TL" || isadmin)
       {
         await axios.put(
           `${ipadr}/recommend_remote_work_requests`,
@@ -210,7 +210,7 @@ console.log("filter data:",filteredData);
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    (Position === "user" || Position === "TL") ? (
+    (Position === "user") ? (
       <div className="min-h-screen flex items-center justify-center">
         <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
           <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
@@ -360,15 +360,15 @@ console.log("filter data:",filteredData);
                               </button>
                             </div>
                           )
-                        ) : LS.get('position') === 'Manager' || isadmin ? (
-                          // Check if the request is from a Manager or HR employee
+                        ) : LS.get('position') === 'TL' || isadmin ? (
+                          // Check if the request is from a TL or HR employee
                           (() => {
-                            const isManagerOrHREmployee = row.position === "Manager" || 
+                            const isTLOrHREmployee = row.position === "TL" || 
                                                           row.position === "HR" ||
                                                           row.employeeDepartment === "HR";
                             
-                            if (isadmin && isManagerOrHREmployee) {
-                              // Admin handling Manager/HR remote work requests - Direct Approve/Reject
+                            if (isadmin && isTLOrHREmployee) {
+                              // Admin handling TL/HR remote work requests - Direct Approve/Reject
                               return row.status === "Approved" ? (
                                 <p className="text-green-500 font-inter text-center">Approved</p>
                               ) : row.status === "Rejected" ? (

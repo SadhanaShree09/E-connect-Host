@@ -386,7 +386,7 @@ const NotificationDashboard = () => {
         case 'task_overdue':
         case 'task_due_soon':
         case 'task_updated':
-        case 'task_completed':
+       case 'task_completed':
           // Navigate to task page with specific task ID if available
           if (notification.related_id) {
             // For task completion notifications, navigate to task progress/view

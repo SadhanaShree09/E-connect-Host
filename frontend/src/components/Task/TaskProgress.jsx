@@ -142,8 +142,8 @@ const TaskProgress = () => {
   const fetchEmployeeTasks = useCallback(async () => {
     setLoading(true);
     try {
-      const managerName = LS.get("name");
-      const response = await fetch(`${ipadr}/tasks?role=manager&manager_name=${managerName}`);
+      const TLName = LS.get("name");
+      const response = await fetch(`${ipadr}/tasks?role=TL&TL_name=${TLName}`);
       if (!response.ok) {
         const errorData = await response.json();
         throw new Error(errorData.detail || "Failed to fetch tasks");
@@ -319,7 +319,7 @@ const TaskProgress = () => {
   const openTaskDetail = (task) => {
     if (task.verified) {
     }
-    if (LS.get("position") === "Manager") {
+    if (LS.get("position") === "TL") {
       navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
     } else {
        navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
@@ -327,7 +327,7 @@ const TaskProgress = () => {
   };
 
 const handleAssignTask = () => {
-    if (LS.get("position") === "Manager") {
+    if (LS.get("position") === "TL") {
        navigate(`/User/Task/TaskProgress/TaskAssign/tl-employee`);
     } else {
      navigate(`/User/Task/TaskProgress/TaskAssign/hr-tl`);
@@ -798,7 +798,7 @@ const handleAssignTask = () => {
                       {selected.tasks.length === 0 ? (
                         <div className="text-center py-6 text-gray-500">
                           <FaClipboardList className="text-3xl mx-auto mb-2 opacity-50" />
-                          <p>No tasks for this {(LS.get("position") === "Manager")  ? "TeamLead" : "employee"} matching current filters</p>
+                          <p>No tasks for this {(LS.get("position") === "TL")  ? "TeamLead" : "employee"} matching current filters</p>
                         </div>
                       ) : (
                         <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - var(--tp-header-height) - 80px)' }}>

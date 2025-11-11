@@ -684,11 +684,11 @@ async def leave_request(item: Item6):
                     )
                     print(f"✅ Employee notification sent for leave submission")
                     
-                    # 2. Check if the user is a manager and send appropriate notifications
+                    # 2. Check if the user is a tl and send appropriate notifications
                     user_position = await Mongo.get_user_position(item.userid)
                     
                     if user_position == "TL":
-                        # Manager leave request - notify admin
+                        # tl leave request - notify admin
                         admin_ids = await Mongo.get_admin_user_ids()
                         if admin_ids:
                             await Mongo.notify_admin_manager_leave_request(
@@ -900,7 +900,7 @@ async def other_leave_request(item: Item7):
                     "suggestion": "Please select different dates or check your existing requests."
                 }
             elif result == "Leave request stored successfully":
-                # Success case - notify employee and TL/manager
+                # Success case - notify employee and TL
                 try:
                     # 1. Notify employee about successful submission
                     await Mongo.notify_leave_submitted(
@@ -1219,7 +1219,7 @@ async def remote_work_request(request: RemoteWorkRequest):
         
         # Check if result is a dictionary (success) or string (error/conflict)
         if isinstance(result, dict) and result.get("success"):
-            # Success case - notify employee and manager
+            # Success case - notify employee and tl
             try:
                 wfh_id = result.get("wfh_id")
                 from_date = result.get("from_date")
@@ -1233,10 +1233,10 @@ async def remote_work_request(request: RemoteWorkRequest):
                 )
                 print(f"✅ Employee notification sent for WFH submission with ID: {wfh_id}")
                 
-                # 2. Check if user is a manager and handle notifications accordingly
+                # 2. Check if user is a tl and handle notifications accordingly
                 user = Mongo.Users.find_one({"_id": Mongo.ObjectId(request.userid)})
                 if user and user.get("position") == "TL":
-                    # If manager is submitting WFH, notify admin
+                    # If tl is submitting WFH, notify admin
                     try:
                         await Mongo.notify_admin_manager_wfh_request(
                             manager_name=request.employeeName,
@@ -1249,7 +1249,7 @@ async def remote_work_request(request: RemoteWorkRequest):
                     except Exception as admin_notification_error:
                         print(f"⚠️ Admin notification error: {admin_notification_error}")
                 else:
-                    # Regular employee - notify their manager using improved notification system
+                    # Regular employee - notify their tl using improved notification system
                     manager_id = await Mongo.get_user_manager_id(request.userid)
                     if manager_id:
                         # Import the improved notification function
@@ -1299,10 +1299,10 @@ async def remote_work_request(request: RemoteWorkRequest):
                     )
                     print(f"✅ Employee notification sent for WFH submission (fallback)")
                     
-                    # 2. Check if user is a manager and handle notifications accordingly
+                    # 2. Check if user is a tl and handle notifications accordingly
                     user = Mongo.Users.find_one({"_id": Mongo.ObjectId(request.userid)})
                     if user and user.get("position") == "TL":
-                        # If manager is submitting WFH, notify admin
+                        # If tl is submitting WFH, notify admin
                         try:
                             await Mongo.notify_admin_manager_wfh_request(
                                 manager_name=request.employeeName,
@@ -1315,7 +1315,7 @@ async def remote_work_request(request: RemoteWorkRequest):
                         except Exception as admin_notification_error:
                             print(f"⚠️ Admin notification error: {admin_notification_error}")
                     else:
-                        # Regular employee - notify their manager
+                        # Regular employee - notify their tl
                         manager_id = await Mongo.get_user_manager_id(request.userid)
                         if manager_id:
                             await Mongo.notify_manager_wfh_request(
@@ -1380,7 +1380,7 @@ async def fetch_remote_work_requests(
 ):
     """
     Fetch remote work requests with role-based filtering.
-    - role: "hr" (all requests), "admin" (admin view), "manager" (team requests, requires TL)
+    - role: "hr" (all requests), "admin" (admin view), "tl" (team requests, requires TL)
     - TL : if role is TL then this field should be TL's name otherwise empty
     - show_processed: False (pending only) / True (includes history, for managers)
     """
@@ -1736,7 +1736,7 @@ async def get_TL_team_remote_work_details(
     - departmentFilter: Filter by department name or "All" for no filter
     """
     try:
-        # First, verify the manager exists and get their info
+        # First, verify the tl exists and get their info
         manager = Users.find_one({"_id": ObjectId(user_id)})
         if not manager:
             raise HTTPException(status_code=404, detail="TL not found")
@@ -1774,7 +1774,7 @@ async def get_TL_team_remote_work_details(
         # Unwind the user_info array
         pipeline.append({"$unwind": "$user_info"})
         
-        # Filter to only show team members under this manager
+        # Filter to only show team members under this tl
         base_match = {
             "user_info.TL": manager_name,  # Team members have this manager as TL
             "user_info.position": {"$ne": "TL"}  # Exclude other managers
@@ -2426,7 +2426,7 @@ async def upload_task_file(
                         }
                     )
                 
-                # Notify manager if they exist and didn't upload the file
+                # Notify tl if they exist and didn't upload the file
                 assigned_by = task.get("assigned_by")
                 if assigned_by and assigned_by != "self" and assigned_by != uploaded_by and assigned_by != task_userid:
                     Mongo.create_notification(
@@ -2996,7 +2996,7 @@ async def websocket_endpoint(websocket: WebSocket, userid: str):
             if msg_type == "typing":
                 try:
                     chat_id = msg.get("chatId")
-                    # For group typing events, forward to group manager
+                    # For group typing events, forward to group tl
                     if chat_id and str(chat_id).startswith("group_"):
                         await group_ws_manager.send_message(chat_id, msg)
                     else:
@@ -3904,13 +3904,13 @@ async def upload_document(
             user = Users.find_one({"userid": userid})
             user_name = user.get("name", "User") if user else "User"
             
-            # Send notification to HR and manager
+            # Send notification to HR and tl
             await Mongo.create_document_upload_notification(
                 userid=userid,
                 doc_name=docName,
                 uploaded_by_name=user_name,
                 uploaded_by_id=userid,
-                reviewer_ids=None  # Will auto-detect HR and manager
+                reviewer_ids=None  # Will auto-detect HR and tl
             )
         except Exception as e:
             print(f"Error sending document upload notification: {e}")

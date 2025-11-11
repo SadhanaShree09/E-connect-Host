@@ -137,7 +137,7 @@ async def check_and_notify_overdue_tasks():
                                     notifications_sent += 1
                                 except Exception:
                                     pass
-                            # Notify manager/TL about employee's overdue task (robust lookup)
+                            # Notify TL about employee's overdue task (robust lookup)
                             try:
                                 employee = Users.find_one({"_id": ObjectId(userid)}) if userid else None
                                 employee_name = employee.get("name", "Employee") if employee else "Employee"
@@ -185,8 +185,8 @@ async def check_and_notify_overdue_tasks():
                                         try:
                                             await create_notification_with_websocket(
                                                 userid=hr_id,
-                                                title=f"Manager/TL Overdue Task Alert",
-                                                message=f"{user.get('name', 'Manager/TL')}'s task '{task_title}' is overdue by {days_overdue} day(s). Please review.",
+                                                title=f"TL Overdue Task Alert",
+                                                message=f"{user.get('name', 'TL')}'s task '{task_title}' is overdue by {days_overdue} day(s). Please review.",
                                                 notification_type="manager_task_overdue",
                                                 priority="critical",
                                                 action_url=f"/admin/task",
@@ -194,7 +194,7 @@ async def check_and_notify_overdue_tasks():
                                                 metadata={
                                                     "task_id": task_id,
                                                     "manager_id": userid,
-                                                    "manager_name": user.get('name', 'Manager/TL'),
+                                                    "manager_name": user.get('name', 'TL'),
                                                     "days_overdue": days_overdue
                                                 }
                                             )

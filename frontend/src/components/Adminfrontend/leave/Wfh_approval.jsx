@@ -401,7 +401,7 @@ console.log("filter data:",filteredData);
                                 <div className="flex justify-center">
                                   <button
                                     style={{ backgroundColor: "#34D399" }}
-                                    className="h-8 w-8 rounded-full text-white mr-4"
+                                    className="h-8 w-8 rounded-full text-white mr-4 flex items-center justify-center p-0"
                                     onClick={() => updateStatus(row.userid, "Recommend", row.id)}
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-check-fill" viewBox="0 0 16 16">
@@ -411,7 +411,7 @@ console.log("filter data:",filteredData);
                                   </button>
                                   <button
                                     style={{ backgroundColor: "#EF4444" }}
-                                    className="h-8 w-8 rounded-full text-white"
+                                    className="h-8 w-8 rounded-full text-white flex items-center justify-center p-0"
                                     onClick={() => updateStatus(row.userid, "Not_Recommend", row.id)}
                                   >
                                     <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" className="bi bi-person-fill-slash" viewBox="0 0 16 16">

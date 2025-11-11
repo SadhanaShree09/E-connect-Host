@@ -3975,12 +3975,12 @@ async def get_user_manager_id(userid):
         # Find the manager by name
         manager = Users.find_one({"name": tl_name, "position": {"$in": ["Manager", "TL", "Team Lead"]}})
         if not manager:
-            print(f"⚠️ Manager/TL not found: {tl_name}")
+            print(f"⚠️ TL not found: {tl_name}")
             return None
             
         return str(manager["_id"])
     except Exception as e:
-        print(f"❌ Error finding user manager: {e}")
+        print(f"❌ Error finding user TL: {e}")
         return None
 
 async def notify_manager_leave_request(employee_name, employee_id, leave_type, leave_date, manager_id, leave_id=None):
@@ -4081,7 +4081,7 @@ async def handle_overdue_task(task):
             # Notify user about overdue task with days calculation
             await create_overdue_task_notification(userid, task_title, days_overdue, task_id, priority="urgent")
         
-        # Notify manager/TL about overdue task
+        # Notify TL about overdue task
         await notify_manager_about_overdue_task(userid, user_name, task_title, due_date_str, tl_name, task_id, days_overdue)
         
     except Exception as e:
@@ -4162,9 +4162,9 @@ async def create_overdue_task_notification(userid, task_title, due_date_or_days=
         return None
 
 async def notify_manager_about_overdue_task(userid, user_name, task_title, due_date_str, tl_name, task_id, days_overdue=0):
-    """Notify manager/TL about employee's overdue task"""
+    """Notify TL about employee's overdue task"""
     try:
-        # Find manager/TL by name first, then by position
+        # Find TL by name first, then by position
         manager = None
         if tl_name:
             manager = Users.find_one({"name": tl_name})
@@ -4179,7 +4179,7 @@ async def notify_manager_about_overdue_task(userid, user_name, task_title, due_d
             manager_id = str(manager["_id"])
             manager_name = manager.get("name", "Manager")
             
-            # Check if already notified this manager today
+            # Check if already notified this TL today
             today = datetime.now(pytz.timezone("Asia/Kolkata")).strftime("%d-%m-%Y")
             existing_notification = Notifications.find_one({
                 "userid": manager_id,
@@ -4619,13 +4619,13 @@ async def create_task_due_soon_notification(userid, task_title, task_id, days_re
         return None
 
 async def notify_task_completion(userid, task_title, task_id, tl_name):
-    """Notify manager/TL when employee completes a task"""
+    """Notify TL when employee completes a task"""
     try:
         # Get user information
         user = Users.find_one({"_id": ObjectId(userid)}) if ObjectId.is_valid(userid) else None
         user_name = user.get("name", "User") if user else "User"
         
-        # Find manager/TL
+        # Find TL
         manager = None
         if tl_name:
             manager = Users.find_one({"name": tl_name})

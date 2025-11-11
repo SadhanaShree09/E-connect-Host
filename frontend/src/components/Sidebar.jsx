@@ -170,6 +170,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   const isTL=LS.get("position");
   const isDepart=LS.get("department");
   const userid=LS.get('userid');
+  // Specific route check to avoid marking Leave Management active on leave_details page
+  const isLeaveDetails = isActive('leave_details');
 
   return (
     <div className="flex flex-col min-h-screen w-64 bg-blue-600 text-white shadow-lg border-r">
@@ -312,7 +314,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
             </NavLink>
 
             <Link to="Leave" className="sidebar-item">
-              <div className={`flex items-center p-4 ${isActive('Leave') ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
+              <div className={`flex items-center p-4 ${(isActive('Leave') && !isLeaveDetails) ? 'bg-blue-800' : 'hover:bg-blue-700'} transition-colors`}>
                 <svg
                   xmlns="http://www.w3.org/2000/svg"
                   fill="none"

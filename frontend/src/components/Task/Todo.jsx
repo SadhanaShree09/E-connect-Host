@@ -234,7 +234,7 @@ return (
         </div>
 
         {/* Right Panel */}
-        <div className="flex-1 bg-gray-50 p-4 rounded-lg shadow-inner border border-gray-200 flex flex-col justify-center h-full">
+        <div className="flex-1 bg-white p-4 rounded-lg shadow-inner border border-gray-200 flex flex-col justify-center h-full">
           <h2 className="text-lg font-semibold text-gray-700 mb-4">
             Selected Date: {formatDate(date)}
           </h2>
@@ -253,7 +253,7 @@ return (
 
           <button
             onClick={handleDateClick}
-            className="block w-full bg-blue-600 text-white text-lg py-3 rounded-lg shadow hover:bg-blue-700 transition-colors mt-2"
+            className="block w-full bg-blue-600 text-white text-lg py-1 rounded-lg shadow hover:bg-blue-700 transition-colors mt-2"
           >
             View Tasks
           </button>

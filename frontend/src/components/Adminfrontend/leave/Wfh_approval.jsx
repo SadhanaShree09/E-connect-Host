@@ -48,7 +48,7 @@ const Wfh = () => {
         role: role,
       };
 
-      // Add TL parameter for managers
+      // Add TL parameter for tl role
       if (role === "tl") {
         requestParams.TL = LS.get("name");
         requestParams.show_processed = false; // Set to true if you want to show history
@@ -392,7 +392,7 @@ console.log("filter data:",filteredData);
                                 </div>
                               );
                             } else {
-                              // Manager or Admin handling regular employee remote work requests - Recommend/Not Recommend
+                              // TL or Admin handling regular employee remote work requests - Recommend/Not Recommend
                               return row.status === "Recommend" ? (
                                 <p className="text-green-500 font-inter text-center">Recommend</p>
                               ) : row.status === "Not_Recommend" ? (

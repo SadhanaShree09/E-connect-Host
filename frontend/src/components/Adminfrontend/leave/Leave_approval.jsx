@@ -112,7 +112,7 @@ const Leaveapproval = () => {
         role: role,
       };
 
-      // Add TL parameter only for managers
+      // Add TL parameter only for TL role
       if (role === "tl") {
         requestParams.TL = LS.get("name");
       }
@@ -618,7 +618,7 @@ const Leaveapproval = () => {
                                                               (leaveData.find(item => item.Employee_ID === row.Employee_ID)?.department === "HR");
                                 
                                 if (isAdmin && isTLOrHREmployee) {
-                                  // Admin handling Manager/HR requests - Direct Approve/Reject
+                                  // Admin handling TL/HR requests - Direct Approve/Reject
                                   return row.status === "Approved" ? (
                                     <p className="text-green-500 font-inter text-start">Approved</p>
                                   ) : row.status === "Rejected" ? (
@@ -642,7 +642,7 @@ const Leaveapproval = () => {
                                     </div>
                                   );
                                 } else {
-                                  // Manager or Admin handling regular employee requests - Recommend/Not Recommend
+                                  // TL or Admin handling regular employee requests - Recommend/Not Recommend
                                   return row.status === "Recommend" ? (
                                     <p className="text-green-500 font-inter text-start">Recommend</p>
                                   ) : row.status === "Not_Recommend" ? (

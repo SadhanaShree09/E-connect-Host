@@ -1601,7 +1601,7 @@ async def get_TL_team_leave_details(
     departmentFilter: Optional[str] = Query(None)
 ):
     """
-    Get leave details for team members under a specific manager with filtering options.
+    Get leave details for team members under a specific TL with filtering options.
     - statusFilter: Filter by leave status ("Pending", "Approved", "Rejected", "All")
     - leaveTypeFilter: Filter by leave type ("Sick Leave", "Casual Leave", "Earned Leave", "All")
     - departmentFilter: Filter by department name or "All" for no filter
@@ -1731,7 +1731,7 @@ async def get_TL_team_remote_work_details(
     departmentFilter: Optional[str] = Query(None)
 ):
     """
-    Get remote work details for team members under a specific manager with filtering options.
+    Get remote work details for team members under a specific TL with filtering options.
     - statusFilter: Filter by status ("Pending", "Recommended", "Approved", "Rejected", "All")
     - departmentFilter: Filter by department name or "All" for no filter
     """

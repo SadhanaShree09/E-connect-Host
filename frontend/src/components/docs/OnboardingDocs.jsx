@@ -120,7 +120,7 @@ export default function EmployeeDashboard() {
 
   useEffect(() => {
     fetchAssignedDocs();
-    const interval = setInterval(fetchAssignedDocs, 30000);
+    const interval = setInterval(fetchAssignedDocs, 180000);
     return () => clearInterval(interval);
   }, [fetchAssignedDocs]);
 

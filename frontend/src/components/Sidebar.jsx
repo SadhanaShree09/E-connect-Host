@@ -167,8 +167,8 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
   };
   const loggedIn = LS.get("isloggedin");
   const isAdmin = LS.get("isadmin");
-  const isTL=LS.get("position");
-  const isDepart=LS.get("department");
+  const isTL = (LS.get("position") || "").toUpperCase(); 
+  const isDepart = (LS.get("department") || "").toUpperCase(); 
   const userid=LS.get('userid');
   // Specific route check to avoid marking Leave Management active on leave_details page
   const isLeaveDetails = isActive('leave_details');
@@ -427,7 +427,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
 
 
         {
-          loggedIn && isTL=="TL" ?(
+          loggedIn && isTL==="TL" ?(
           <>
 
                 <Link to="Task/TaskProgress" className="sidebar-item">
@@ -463,7 +463,7 @@ const Sidebar = ({ userPicture, userName, isLoggedIn, onLogout = () => {} }) => 
 
            
           </>
-          ): loggedIn && isDepart=="HR" && (
+          ): loggedIn && isDepart==="HR" && (
            <>
 
         <Link to="Task/TaskProgress" className="sidebar-item">

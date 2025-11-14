@@ -39,7 +39,7 @@ const Leaveapproval = () => {
   const isAdmin = LS.get('isadmin');
 
   useEffect(() => {
-    if (LS.get("department") === "HR") {
+    if (LS.get("department")?.toLowerCase() === "hr"){
       fetch(`${ipadr}/auto_approve_TL_leaves`)
         .then(response => response.json())
         .then(data => console.log("Auto-approval triggered:", data))
@@ -98,13 +98,17 @@ const Leaveapproval = () => {
       
       // Determine role based on user info
       let role = "";
+     const position = LS.get("position")?.toLowerCase();
+     const department = LS.get("department")?.toLowerCase();
+
       if (LS.get("isadmin") === true) {
         role = "admin";
-      } else if (LS.get("position") === "TL") {
+      } else if (position === "tl") {
         role = "tl";
-      } else if (LS.get("department") === "HR") {
+      } else if (department === "hr") {
         role = "hr";
       }
+
 
       // Build request parameters
       const requestParams = {
@@ -396,15 +400,14 @@ const Leaveapproval = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   return (
-    (Position === "user" ) ? 
-      (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
-          <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
-          <p>Only Admin, TeamLead and HR can access this page.</p>
-        </div>
-      </div>
-      ) : (
+   (Position?.toLowerCase() === "employee") ? (
+  <div className="min-h-screen flex items-center justify-center">
+    <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+      <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+      <p>Only Admin, TeamLead and HR can access this page.</p>
+    </div>
+  </div>
+) : (
       <div className="mr-8 p-10 bg-white min-h-96 lg:min-h-[90vh] w-full shadow-black rounded-xl justify-center items-center relative jsonback ml-10 rounded-md">
         <div className="">
           <div className="flex justify-between border-b-2">
@@ -582,10 +585,8 @@ const Leaveapproval = () => {
                             </div>
                           </td>
 
-                          {/* // In your React component, modify the status checking logic for Admin
-                            // Find this section in your JSX where buttons are rendered: */}
                           <td className="p-2 whitespace-normal w-fit">
-                            {LS.get("department") === "HR" ? (
+                            {LS.get("department")?.toLowerCase() === "hr" ?  (
                               // HR sees recommended requests and can Approve/Reject
                               row.status === "Approved" ? (
                                 <p className="text-green-500 font-inter text-start">Approved</p>
@@ -609,7 +610,7 @@ const Leaveapproval = () => {
                                   </div>
                                 </div>
                               )
-                            ) : LS.get("position") === "TL" || isAdmin ? (
+                            ) : LS.get("position")?.toLowerCase() === "tl" || isAdmin ? (
                               (() => {
                                 // Check if the request is from a TL or HR employee
                                 const isTLOrHREmployee = row.position === "TL" || 

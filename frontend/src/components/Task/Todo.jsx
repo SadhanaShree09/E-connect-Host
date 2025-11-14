@@ -6,6 +6,18 @@ import './Calendar.css';
 import { LS, ipadr } from "../../Utils/Resuse"; 
 
 const ToDoList = () => {
+
+if (LS.get('position')?.toLowerCase() === 'hr') {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only Employee and TL can access this page.</p>
+      </div>
+    </div>
+  );
+}
+
   const [date, setDate] = useState(new Date());
   const [tasksData, setTasksData] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -30,11 +42,13 @@ const ToDoList = () => {
 
         let url = '';
         
-        if (position === "Employee") {
+       const pos = (position || '').toString().toLowerCase();
+
+        if (pos === 'employee') {
           url = `${ipadr}/tasks?role=Employee&userid=${userid}`;
-        } else if (position === "TL") {
+        } else if (pos === 'tl') {
           url = `${ipadr}/tasks?role=HR&userid=${userid}`;
-        } else if (position === "HR" || LS.get("isadmin")) {
+        } else if (pos === 'hr' || LS.get('isadmin')) {
           url = `${ipadr}/tasks?role=hr`;
         } else {
           setError(`Unknown position: ${position}`);

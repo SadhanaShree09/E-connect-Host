@@ -102,6 +102,19 @@ const DailyProgress = memo(({ stats, isVisible, onToggle }) => {
 DailyProgress.displayName = 'DailyProgress';
 
 const TaskPage = () => {
+
+  if (LS.get('position')?.toLowerCase() === 'hr') {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only Employee and TL can access this page.</p>
+      </div>
+    </div>
+  );
+}
+
+
   const location = useLocation();
   const navigate = useNavigate();
   const [tasks, setTasks] = useState([]);
@@ -270,15 +283,18 @@ const TaskPage = () => {
     try {
       let endpoint;
 
+     const position = (LS.get("position") || "").toString().toLowerCase();
+
+    if (position === "employee") {
       // Employees → only TL-assigned tasks
-      if (LS.get("position") === "Employee") {
-        endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${selectedDate}`;
-      } else if (LS.get("position") === "TL") {
-        // TL → only HR-assigned tasks, no self-assigned
-        endpoint = selectedDate
-          ? `${ipadr}/tasks?role=HR&userid=${userId}&date=${selectedDate}`
-          : `${ipadr}/tasks?role=HR&userid=${userId}`;
-      }
+      endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${selectedDate}`;
+    } else if (position === "tl") {
+      // TL → only HR-assigned tasks, no self-assigned
+      endpoint = selectedDate
+        ? `${ipadr}/tasks?role=HR&userid=${userId}&date=${selectedDate}`
+        : `${ipadr}/tasks?role=HR&userid=${userId}`;
+    }
+
 
       const response = await fetch(endpoint);
 

@@ -9,42 +9,6 @@ import {
 import { LS, ipadr } from "../../Utils/Resuse";
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import moment from "moment";
-
-const normalizeFiles = (files = []) =>
-  (files || []).map(f => ({
-    id: String(f.id),
-    name: String(f.name || f.filename || ""),
-    stored_name: String(f.stored_name || f.storedName || ""), 
-    path: String(f.path || ""),                              
-    size: Number(f.size || 0),
-    type: String(f.type || f.mimeType || ""),
-    uploadedAt: new Date(f.uploadedAt || f.uploaded_at || Date.now()).toISOString(),
-    uploadedBy: String(f.uploadedBy || f.uploaded_by || "Unknown")
-  }));
-
-const normalizeSubtasks = (subtasks) =>
-  subtasks.map(s => ({
-    title: String(s.text || s.title || ""),
-    done: Boolean(s.completed)
-  }));
-
-const normalizeComments = (comments) =>
-  comments.map(c => ({
-    id: Number(c.id),
-    user: String(c.user),
-    text: String(c.text),
-    timestamp: new Date(c.timestamp).toISOString()
-  }));
-
-const mapColumnToStatus = (column) => {
-  switch (column) {
-    case "todo": return "Pending";
-    case "in-progress": return "In Progress";
-    case "completed": return "Completed";
-    default: return "Pending";
-  }
-};
 
 const mapStatusToColumn = (status) => {
   if (!status) return "todo";
@@ -56,6 +20,21 @@ const mapStatusToColumn = (status) => {
 };
 
 const TaskProgress = () => {
+
+const position = LS.get('position');
+const pos = (position || '').toString().toLowerCase();
+
+if (pos === 'employee') {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only TL and HR can access this page.</p>
+      </div>
+    </div>
+  );
+}
+
   // Utility to always format date as yyyy-mm-dd
   const formatDate = (dateStr) => {
     if (!dateStr) return "";
@@ -82,8 +61,6 @@ const TaskProgress = () => {
   const [expandedEmployees, setExpandedEmployees] = useState(new Set());
   const [selectedEmployeeId, setSelectedEmployeeId] = useState(null);
 
-  // Auto-detect role
-  const userRole = LS.get("role") || "employee"; // fallback to employee
   const userId = LS.get("id");
 
   const statusColumns = [
@@ -319,7 +296,7 @@ const TaskProgress = () => {
   const openTaskDetail = (task) => {
     if (task.verified) {
     }
-    if (LS.get("position") === "TL") {
+    if (pos === "tl") {
       navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
     } else {
        navigate(`/User/Task/TaskProgress/ProgressDetail/${task.taskid}`, { state: { task } });
@@ -327,17 +304,11 @@ const TaskProgress = () => {
   };
 
 const handleAssignTask = () => {
-    if (LS.get("position") === "TL") {
+    if (pos === "tl") {
        navigate(`/User/Task/TaskProgress/TaskAssign/tl-employee`);
     } else {
      navigate(`/User/Task/TaskProgress/TaskAssign/hr-tl`);
     }
-  };
-
-  // Make expansion single-selection: selecting an employee opens its detail in the right pane
-  const toggleEmployeeExpansion = (employeeId) => {
-    setSelectedEmployeeId(prev => prev === employeeId ? null : employeeId);
-    setExpandedEmployees(() => new Set([employeeId]));
   };
 
   // When the filtered employee list changes, ensure there is a sensible default selection
@@ -498,8 +469,8 @@ const handleAssignTask = () => {
       <div ref={headerRef} className="bg-white shadow-sm border-b border-gray-200 p-4 shrink-0">
         <div className="flex justify-between items-center mb-3">
           <div>
-            <h2 className="text-3xl font-bold text-gray-800">{(LS.get("position") === "HR") ? "TeamLead Task Progress" : "Employee Task Progress"}</h2>
-            <p className="text-gray-600 mt-1">Monitor and manage all {(LS.get("position") === "HR")  ? "TeamLead" : "employee"} task progress</p>
+            <h2 className="text-3xl font-bold text-gray-800">{(pos === "hr") ? "TeamLead Task Progress" : "Employee Task Progress"}</h2>
+            <p className="text-gray-600 mt-1">Monitor and manage all {(pos === "hr")  ? "TeamLead" : "employee"} task progress</p>
           </div>
           <div className="flex items-center gap-4">
             <button
@@ -554,7 +525,7 @@ const handleAssignTask = () => {
           {overallStats.totalEmployees}
         </div>
         <div className="text-[11px] font-medium text-blue-600">
-          {(LS.get("position") === "HR") ? "TeamLeads" : "Employees"}
+          {(pos === "hr") ? "TeamLeads" : "Employees"}
         </div>
       </div>
       <div className="bg-blue-50 p-2 rounded-lg border border-gray-200">
@@ -798,7 +769,7 @@ const handleAssignTask = () => {
                       {selected.tasks.length === 0 ? (
                         <div className="text-center py-6 text-gray-500">
                           <FaClipboardList className="text-3xl mx-auto mb-2 opacity-50" />
-                          <p>No tasks for this {(LS.get("position") === "TL")  ? "TeamLead" : "employee"} matching current filters</p>
+                          <p>No tasks for this {(pos === "tl")  ? "TeamLead" : "employee"} matching current filters</p>
                         </div>
                       ) : (
                         <div className="space-y-4 overflow-y-auto pr-2" style={{ maxHeight: 'calc(100vh - var(--tp-header-height) - 80px)' }}>

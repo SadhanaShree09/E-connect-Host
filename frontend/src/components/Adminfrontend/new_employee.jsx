@@ -25,6 +25,8 @@ const AddUser = () => {
   const [options, setOptions] = useState([]);
   const [error, setError] = useState(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [showDeptHint, setShowDeptHint] = useState(false);
+
   const Admin = LS.get('isadmin');
   const Position = LS.get('position');
 
@@ -47,10 +49,19 @@ const AddUser = () => {
       updatedEducation[index][name] = value;
       setFormData({ ...formData, education: updatedEducation });
     } else if (type === "skills") {
-      const updatedSkills = [...formData.skills];
-      updatedSkills[index][name] = value;
-      setFormData({ ...formData, skills: updatedSkills });
-    } else {
+    const updatedSkills = [...formData.skills];
+
+    let newValue = value;
+
+    if (name === "level") {
+      if (value < 0) newValue = 0;
+      if (value > 100) newValue = 100;
+    }
+
+    updatedSkills[index][name] = newValue;
+    setFormData({ ...formData, skills: updatedSkills });
+
+  } else {
       setFormData({ ...formData, [name]: value });
     }
   };
@@ -218,28 +229,48 @@ const AddUser = () => {
               required
             />
           </div>
-          <div>
-            <label className="block mb-1">Position</label>
-            <input
-              type="text"
-              name="position"
-              value={formData.position}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-          </div>
-          <div>
-            <label className="block mb-1">Department</label>
-            <input
-              type="text"
-              name="department"
-              value={formData.department}
-              onChange={handleChange}
-              className="w-full border border-gray-300 rounded px-3 py-2"
-              required
-            />
-          </div>
+         <div>
+          <label className="block mb-1">Position</label>
+          <select
+            name="position"
+            value={formData.position}
+            onChange={handleChange}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          >
+            <option value="" disabled hidden>Select Position</option>
+            <option value="HR">HR</option>
+            <option value="TL">TL</option>
+            <option value="Employee">Employee</option>
+          </select>
+        </div>
+        <div>
+          <label className="block mb-1">Department</label>
+          <input
+            type="text"
+            name="department"
+            value={formData.department}
+            onChange={(e) => {
+              const v = e.target.value;
+              handleChange({
+                target: {
+                  name: "department",
+                  value: v.toLowerCase() === "hr" ? "HR" : v
+                }
+              });
+            }}
+            onFocus={() => setShowDeptHint(true)}
+            onBlur={() => setShowDeptHint(false)}
+            className="w-full border border-gray-300 rounded px-3 py-2"
+            required
+          />
+          {showDeptHint && (
+            <p className="text-xs text-red-500 mt-1">
+              HR department should be entered only as: HR
+            </p>
+          )}
+        </div>
+
           <div>
             <label className="block mb-1">Date of Joining</label>
             <input
@@ -328,9 +359,12 @@ const AddUser = () => {
                   placeholder="Skill Level"
                   value={skill.level}
                   onChange={(e) => handleChange(e, index, "skills")}
+                  min="0"
+                  max="100"
                   className="border border-gray-300 rounded px-3 py-2"
                   required
-                />
+              />
+
               </div>
             ))}
             <button type="button" onClick={addSkill} className="text-blue-500 mt-2">

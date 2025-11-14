@@ -13,6 +13,20 @@ import * as XLSX from 'xlsx';
 import { LS } from "../../Utils/Resuse";
 
 const Timemanagement = () => {
+const position = LS.get('position');
+const pos = (position || '').toString().toLowerCase();
+
+if (pos === 'employee' || pos === 'tl') {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md text-center">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only HR can access this page.</p>
+      </div>
+    </div>
+  );
+}
+
   const [selectedDate, setSelectedDate] = useState(new Date());
   const [attendanceData, setAttendanceData] = useState([]);
   const [filteredData, setFilteredData] = useState([]);
@@ -44,7 +58,7 @@ const Timemanagement = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const [jumpToPage, setJumpToPage] = useState('');
   const itemsPerPage = 5;
-  const Admin = LS.get('isadmin');
+
   const datePickerRef = useRef(null);
   const [selectedEmployees, setSelectedEmployees] = useState([]);
   const [showEmployeeDropdown, setShowEmployeeDropdown] = useState(false);

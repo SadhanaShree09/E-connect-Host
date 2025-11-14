@@ -175,7 +175,21 @@ const Note = ({ empdata, handleDelete, handleEdit }) => (
 
 
 const TaskAssign = ({ assignType }) => {
-  // small client-side injection for thinner scrollbars (WebKit + Firefox)
+
+const position = LS.get('position');
+const pos = (position || '').toString().toLowerCase();
+
+if (pos === 'employee') {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only TL and HR can access this page.</p>
+      </div>
+    </div>
+  );
+}
+
   useEffect(() => {
     if (typeof document === 'undefined') return;
     if (document.getElementById('assigntask-scrollbar-style')) return;

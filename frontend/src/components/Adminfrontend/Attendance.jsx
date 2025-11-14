@@ -555,10 +555,12 @@ const Attendance = () => {
   const renderContent = () => {
     if (!userRole) {
       return (
-        <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-2 rounded-lg shadow-md">
+        <div className="min-h-screen flex items-center justify-center">
+        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
           <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
           <p>Only Admin, TeamLead and HR can access this page.</p>
         </div>
+      </div>
       );
     }
 
@@ -599,7 +601,12 @@ const Attendance = () => {
       <div className="max-w-7xl mx-auto">
         <div className="mb-4">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 mb-3">
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Attendance Dashboard</h1>
+            <div>
+              {userRole && (
+                <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Attendance Dashboard</h1>
+              )}
+            </div>
+
             {userRole && (
               <div className="flex items-center gap-3">
                 <select
@@ -619,7 +626,11 @@ const Attendance = () => {
               </div>
             )}
           </div>
-          <div className="h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full"></div>
+
+          {/* full width divider below the header */}
+          <div className="w-full mt-3">
+            <div className="w-full h-1 bg-gradient-to-r from-blue-500 to-blue-600 rounded-full" />
+          </div>
         </div>
 
         {renderContent()}

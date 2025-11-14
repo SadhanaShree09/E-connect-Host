@@ -4,6 +4,7 @@ import { Link, useParams, useNavigate } from "react-router-dom";
 import { toast } from "react-toastify";
 
 const EmployeeDetails = () => {
+    const [showDeptHint, setShowDeptHint] = useState(false);
     const [error, setError] = useState(null);
     const [employeeData, setEmployeeData] = useState({
         userid: '',
@@ -280,16 +281,20 @@ const EmployeeDetails = () => {
                         />
                     </div>
 
-                    <div>
-                        <label className="block mb-1">Position</label>
-                        <input
-                            type="text"
+                     <div>
+                       <label className="block mb-1">Position</label>
+                        <select
                             name="position"
                             value={employeeData.position}
                             onChange={handlePositionChange}
                             className="w-full border border-gray-300 rounded px-3 py-2"
                             required
-                        />
+                        >
+                            <option value="" disabled hidden>--select Position--</option>
+                            <option value="Employee">Employee</option>
+                            <option value="TL">TL</option>
+                            <option value="HR">HR</option>
+                        </select>
                     </div>
 
                     <div>
@@ -298,10 +303,25 @@ const EmployeeDetails = () => {
                             type="text"
                             name="department"
                             value={employeeData.department}
-                            onChange={handleDepartmentChange}
+                             onChange={(e) => {
+                            const v = e.target.value;
+                            handleDepartmentChange({
+                                target: {
+                                name: "department",
+                                value: v.toLowerCase() === "hr" ? "HR" : v
+                                }
+                            });
+                            }}
+                            onFocus={() => setShowDeptHint(true)}
+                            onBlur={() => setShowDeptHint(false)}
                             className="w-full border border-gray-300 rounded px-3 py-2"
                             required
                         />
+                        {showDeptHint && (
+                    <p className="text-xs text-red-500 mt-1">
+                    HR department should be entered only as: HR
+                    </p>
+                )}
                     </div>
 
                     <div>
@@ -395,14 +415,17 @@ const EmployeeDetails = () => {
                                     onChange={(e) => handleSkillChange(e, index)}
                                     className="border border-gray-300 rounded px-3 py-2"
                                 />
-                                <input
+                               <input
                                     type="number"
                                     name="level"
                                     placeholder="Skill Level"
                                     value={skill.level}
                                     onChange={(e) => handleSkillChange(e, index)}
+                                    min="0"
+                                    max="100"
                                     className="border border-gray-300 rounded px-3 py-2"
                                 />
+
                             </div>
                         ))}
                         <button

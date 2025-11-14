@@ -6,6 +6,19 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 
 const TaskDetailsPage = () => {
+
+if (LS.get('position')?.toLowerCase() === 'hr') {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only Employee and TL can access this page.</p>
+      </div>
+    </div>
+  );
+}
+
+
   const navigate = useNavigate();
   const { taskId } = useParams();
   const location = useLocation();
@@ -131,9 +144,11 @@ const mapStatusToColumn = (status) => {
     setLoading(true);
     
     let endpoint;
-    if (LS.get("position") === "Employee") {
+    const position = (LS.get("position") || "").toString().toLowerCase();
+
+    if (position === "employee") {
       endpoint = `${ipadr}/tasks?role=Employee&userid=${userId}&date=${date}`;
-    } else if (LS.get("position") === "TL") {
+    } else if (position === "tl") {
       endpoint = `${ipadr}/tasks?role=HR&userid=${userId}&date=${date}`;
     }
 

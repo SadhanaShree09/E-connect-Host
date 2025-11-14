@@ -324,16 +324,16 @@ const RemoteDetails = () => {
   const paginate = (pageNumber) => setCurrentPage(pageNumber);
 
   // Access control for users
-  if (userPosition === "user") {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
-          <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
-          <p>Only Admin, TeamLead and HR can access this page.</p>
-        </div>
+  if (userPosition?.toLowerCase() === "employee") {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <div className="bg-red-100 border border-red-400 text-red-700 px-6 py-4 rounded-lg shadow-md">
+        <h1 className="text-xl font-semibold mb-2">Access Denied</h1>
+        <p>Only Admin, TeamLead and HR can access this page.</p>
       </div>
-    );
-  }
+    </div>
+  );
+}
 
   const summaryStats = getSummaryStats();
   const departments = allFilterOptions.departments.length > 0 ? allFilterOptions.departments : getUniqueValues('department');

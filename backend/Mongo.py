@@ -3985,10 +3985,15 @@ async def get_user_manager_id(userid):
 
 async def notify_manager_leave_request(employee_name, employee_id, leave_type, leave_date, manager_id, leave_id=None):
     """Send notification to TL when employee submits leave request"""
+    # Ensure leave_date is a string (not datetime.date)
+    if hasattr(leave_date, 'strftime'):
+        leave_date_str = leave_date.strftime('%d-%m-%Y')
+    else:
+        leave_date_str = str(leave_date)
     return await create_notification_with_websocket(
         userid=manager_id,
         title="New Leave Request Pending Approval",
-        message=f"{employee_name} has submitted a {leave_type} request for {leave_date} requiring your approval",
+        message=f"{employee_name} has submitted a {leave_type} request for {leave_date_str} requiring your approval",
         notification_type="leave_manager_pending",
         priority="high",
         action_url=None,  # Will be determined by role-based system
@@ -3998,7 +4003,7 @@ async def notify_manager_leave_request(employee_name, employee_id, leave_type, l
             "employee_name": employee_name,
             "employee_id": employee_id,
             "leave_type": leave_type,
-            "leave_date": leave_date
+            "leave_date": leave_date_str
         }
     )
 

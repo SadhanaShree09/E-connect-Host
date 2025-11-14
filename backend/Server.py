@@ -262,9 +262,17 @@ async def add_security_headers(request: Request, call_next):
             return response
             
         response = await call_next(request)
-        response.headers["Strict-Transport-Security"] = "max-age=31536000; includeSubDomains"
+        
+        # Security Headers - OWASP Recommended
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
         response.headers["X-Content-Type-Options"] = "nosniff"
         response.headers["X-Frame-Options"] = "DENY"
+        response.headers["X-XSS-Protection"] = "1; mode=block"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+        
+        # Content Security Policy - Allow Google Sign-In and other third-party services
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         
         # Ensure CORS headers are always present
         origin = request.headers.get("origin")
@@ -283,6 +291,14 @@ async def add_security_headers(request: Request, call_next):
             content={"error": "Internal server error", "details": str(e)},
             status_code=500
         )
+        
+        # Add security headers to error responses as well
+        response.headers["Strict-Transport-Security"] = "max-age=63072000; includeSubDomains; preload"
+        response.headers["X-Content-Type-Options"] = "nosniff"
+        response.headers["X-Frame-Options"] = "DENY"
+        response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
+        response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         
         if origin in origins:
             response.headers["Access-Control-Allow-Origin"] = origin
@@ -705,17 +721,20 @@ async def leave_request(item: Item6):
                         # Regular employee leave request - notify TL
                         manager_id = await Mongo.get_user_manager_id(item.userid)
                         if manager_id:
-                            await Mongo.notify_manager_leave_request(
-                                employee_name=item.employeeName,
-                                employee_id=item.userid,
-                                leave_type=item.leaveType,
-                                leave_date=item.selectedDate,
-                                manager_id=manager_id,
-                                leave_id=None
-                            )
-                            print(f"✅ TL notification sent for employee leave approval request")
+                            try:
+                                notify_result = await Mongo.notify_manager_leave_request(
+                                    employee_name=item.employeeName,
+                                    employee_id=item.userid,
+                                    leave_type=item.leaveType,
+                                    leave_date=item.selectedDate,
+                                    manager_id=manager_id,
+                                    leave_id=None
+                                )
+                                # Debug logs removed
+                            except Exception as notify_ex:
+                                pass  # Debug logs removed
                         else:
-                            print(f"⚠️ No TL found for user {item.userid}, skipping TL notification")
+                            pass  # Debug logs removed
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")

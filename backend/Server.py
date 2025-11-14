@@ -721,17 +721,20 @@ async def leave_request(item: Item6):
                         # Regular employee leave request - notify TL
                         manager_id = await Mongo.get_user_manager_id(item.userid)
                         if manager_id:
-                            await Mongo.notify_manager_leave_request(
-                                employee_name=item.employeeName,
-                                employee_id=item.userid,
-                                leave_type=item.leaveType,
-                                leave_date=item.selectedDate,
-                                manager_id=manager_id,
-                                leave_id=None
-                            )
-                            print(f"✅ TL notification sent for employee leave approval request")
+                            try:
+                                notify_result = await Mongo.notify_manager_leave_request(
+                                    employee_name=item.employeeName,
+                                    employee_id=item.userid,
+                                    leave_type=item.leaveType,
+                                    leave_date=item.selectedDate,
+                                    manager_id=manager_id,
+                                    leave_id=None
+                                )
+                                # Debug logs removed
+                            except Exception as notify_ex:
+                                pass  # Debug logs removed
                         else:
-                            print(f"⚠️ No TL found for user {item.userid}, skipping TL notification")
+                            pass  # Debug logs removed
                         
                 except Exception as notification_error:
                     print(f"⚠️ Notification error: {notification_error}")

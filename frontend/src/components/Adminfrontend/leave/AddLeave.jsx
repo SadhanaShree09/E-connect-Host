@@ -46,6 +46,13 @@ const AddLeave = () => {
     return years;
   };
 
+  // Format date from YYYY-MM-DD to dd/mm/yyyy format
+  const formatDate = (dateString) => {
+    if (!dateString) return '';
+    const [year, month, day] = dateString.split('-');
+    return `${day}/${month}/${year}`;
+  };
+
   // Sort holidays by date (January to December)
   const sortHolidays = (holidaysArray) => {
     return [...holidaysArray].sort((a, b) => {
@@ -110,6 +117,13 @@ const AddLeave = () => {
   const addHoliday = async () => {
     if (!newHoliday.date || !newHoliday.name.trim()) {
       toast.error('Please fill in both date and holiday name');
+      return;
+    }
+
+    // Check if holiday already exists for this date
+    const holidayExists = holidays.some(holiday => holiday.date === newHoliday.date);
+    if (holidayExists) {
+      toast.error('This date already has a holiday added!');
       return;
     }
 
@@ -394,7 +408,7 @@ const AddLeave = () => {
               )}
 
               {/* Holiday List - Two Column Layout */}
-              <div className="flex justify-between space-x-6">
+              <div className="flex justify-between space-x-6 max-h-80 overflow-y-auto">
                 <div className="w-1/2">
                   <div className="holiday-list-container">
                     {holidays.slice(0, Math.ceil(holidays.length / 2)).map((holiday, index) => (
@@ -409,7 +423,7 @@ const AddLeave = () => {
                             />
                           )}
                           <div className="flex-1">
-                            <span className="text-sm font-normal mr-2">{holiday.date}</span>
+                            <span className="text-sm font-normal mr-2">{formatDate(holiday.date)}</span>
                             <span className="text-sm font-bold">{holiday.name}</span>
                           </div>
                         </div>
@@ -434,7 +448,7 @@ const AddLeave = () => {
                               />
                             )}
                             <div className="flex-1">
-                              <span className="text-sm font-normal mr-2">{holiday.date}</span>
+                              <span className="text-sm font-normal mr-2">{formatDate(holiday.date)}</span>
                               <span className="text-sm font-bold">{holiday.name}</span>
                             </div>
                           </div>

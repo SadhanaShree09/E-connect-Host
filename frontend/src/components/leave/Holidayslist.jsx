@@ -169,7 +169,7 @@ const Holidayslist = () => {
           <p className="text-gray-500 mb-4 font-poppins">Contact administrator to add holidays for {selectedYear}</p>
         </div>
       ) : (
-        <div className="flex justify-between space-x-6">
+        <div className="flex justify-between space-x-6 max-h-80 overflow-y-auto">
           <div className="w-1/2">
             <div className="holiday-list-container">
               {firstHalf.map((holiday, index) => (

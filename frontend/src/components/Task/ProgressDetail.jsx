@@ -62,7 +62,7 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
       path: String(f.path || ""),                              
       size: Number(f.size || 0),
       type: String(f.type || f.mimeType || ""),
-      uploadedAt: new Date(f.uploadedAt || f.uploaded_at || Date.now()).toISOString(),
+      uploadedAt: new Date(f.uploadedAt || f.uploaded_at || new Date()).toISOString(),
       uploadedBy: String(f.uploadedBy || f.uploaded_by || "Unknown")
     }));
 

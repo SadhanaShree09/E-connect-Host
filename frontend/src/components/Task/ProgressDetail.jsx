@@ -55,16 +55,39 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
   };
 
   const normalizeFiles = (files = []) =>
-    (files || []).map(f => ({
-      id: String(f.id),
-      name: String(f.name || f.filename || ""),
-      stored_name: String(f.stored_name || f.storedName || ""), 
-      path: String(f.path || ""),                              
-      size: Number(f.size || 0),
-      type: String(f.type || f.mimeType || ""),
-      uploadedAt: new Date(f.uploadedAt || f.uploaded_at || new Date()).toISOString(),
-      uploadedBy: String(f.uploadedBy || f.uploaded_by || "Unknown")
-    }));
+    // Robust timestamp handling: seconds, milliseconds, numeric strings, ISO, fallback to now
+    (files || []).map(f => {
+      const raw = f.uploadedAt ?? f.uploaded_at ?? f.createdAt ?? f.created_at ?? f.timestamp;
+      let iso;
+      try {
+        if (raw == null) {
+          iso = new Date().toISOString();
+        } else if (typeof raw === 'number') {
+          const ms = raw < 1e12 ? raw * 1000 : raw;
+          iso = new Date(ms).toISOString();
+        } else if (typeof raw === 'string' && /^\d+$/.test(raw)) {
+          const n = Number(raw);
+          const ms = n < 1e12 ? n * 1000 : n;
+          iso = new Date(ms).toISOString();
+        } else {
+          const parsed = Date.parse(raw);
+          iso = isNaN(parsed) ? new Date().toISOString() : new Date(parsed).toISOString();
+        }
+      } catch (e) {
+        iso = new Date().toISOString();
+      }
+
+      return {
+        id: String(f.id),
+        name: String(f.name || f.filename || ""),
+        stored_name: String(f.stored_name || f.storedName || ""),
+        path: String(f.path || ""),
+        size: Number(f.size || 0),
+        type: String(f.type || f.mimeType || ""),
+        uploadedAt: iso,
+        uploadedBy: String(f.uploadedBy || f.uploaded_by || "Unknown")
+      };
+    });
 
   const normalizeSubtasks = (subtasks = []) =>
     subtasks.map(s => ({
@@ -165,8 +188,8 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
           text: s.text || s.title || "",
           completed: s.completed ?? s.done ?? false
         })),
-        comments: taskData.comments || [],
-        files: taskData.files || [],
+        comments: normalizeComments(taskData.comments || []),
+        files: normalizeFiles(taskData.files || []),
         assignedBy: taskData.assigned_by || "You",
         assignedTo: taskData.assigned_to_name || taskData.employee_name || "Unknown Employee",
         priority: taskData.priority || "medium",

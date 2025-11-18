@@ -109,14 +109,42 @@ const mapStatusToColumn = (status) => {
   const fileInputRef = useRef(null);
 
   const normalizeFiles = (files) =>
-    files.map(f => ({
-      id: String(f.id),
-      name: String(f.name),
-      size: Number(f.size),
-      type: String(f.type),
-      uploadedAt: new Date(f.uploadedAt).toISOString(),
-      uploadedBy: String(f.uploadedBy)
-    }));
+    // Robustly parse various timestamp formats coming from the backend
+    // - numeric (seconds or milliseconds)
+    // - numeric string
+    // - ISO string
+    // - missing/invalid -> fallback to now
+    files.map(f => {
+      const raw = f.uploadedAt ?? f.uploaded_at ?? f.createdAt ?? f.created_at ?? f.timestamp;
+      let iso;
+      try {
+        if (raw == null) {
+          iso = new Date().toISOString();
+        } else if (typeof raw === 'number') {
+          // if it's seconds (10 digits) convert to ms
+          const ms = raw < 1e12 ? raw * 1000 : raw;
+          iso = new Date(ms).toISOString();
+        } else if (typeof raw === 'string' && /^\d+$/.test(raw)) {
+          const n = Number(raw);
+          const ms = n < 1e12 ? n * 1000 : n;
+          iso = new Date(ms).toISOString();
+        } else {
+          const parsed = Date.parse(raw);
+          iso = isNaN(parsed) ? new Date().toISOString() : new Date(parsed).toISOString();
+        }
+      } catch (e) {
+        iso = new Date().toISOString();
+      }
+
+      return {
+        id: String(f.id),
+        name: String(f.name ?? f.filename ?? ""),
+        size: Number(f.size ?? 0),
+        type: String(f.type ?? f.mimeType ?? ""),
+        uploadedAt: iso,
+        uploadedBy: String(f.uploadedBy ?? f.uploaded_by ?? "Unknown")
+      };
+    });
     
   const normalizeSubtasks = (subtasks = []) =>
     subtasks.map(s => ({
@@ -174,7 +202,7 @@ const mapStatusToColumn = (status) => {
           completed: s.completed ?? s.done ?? false
         })),
         comments: foundTask.comments || [],
-        files: foundTask.files || [],
+        files: normalizeFiles(foundTask.files || []),
         assignedBy: foundTask.assigned_by || foundTask.assignedBy || "TeamLead",
         priority: foundTask.priority || "medium",
         verified: foundTask.verified || false,
@@ -340,14 +368,16 @@ const mapStatusToColumn = (status) => {
 
       const uploadedFile = {
         ...data.file,
-        uploadedAt: new Date().toISOString(),     
+        uploadedAt: new Date().toISOString(),
         uploadedBy: `${LS.get("name")} (${LS.get("position")})`
       };
 
+      // Normalize the newly uploaded file so its timestamp format matches existing state
+      const normalizedUploaded = normalizeFiles([uploadedFile])[0];
 
       const updatedTask = {
         ...task,
-        files: [...(task.files || []), uploadedFile]
+        files: [...(task.files || []), normalizedUploaded]
       };
 
       setTask(updatedTask);

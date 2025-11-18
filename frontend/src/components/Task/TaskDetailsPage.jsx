@@ -338,7 +338,12 @@ const mapStatusToColumn = (status) => {
       const data = await res.json();
       if (!res.ok) throw new Error(data.detail);
 
-      const uploadedFile = data.file;
+      const uploadedFile = {
+        ...data.file,
+        uploadedAt: new Date().toISOString(),     
+        uploadedBy: `${LS.get("name")} (${LS.get("position")})`
+      };
+
 
       const updatedTask = {
         ...task,

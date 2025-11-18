@@ -278,7 +278,7 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
     try {
       const formData = new FormData();
       formData.append("file", selectedFile);
-      formData.append("uploaded_by", fileUploadLabel || role);
+      formData.append("uploaded_by", `${LS.get("name")} (${LS.get("position")})`);
       const res = await fetch(`${ipadr}/task/${task.id}/files`, {
         method: "POST",
         body: formData
@@ -755,6 +755,9 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
                       <p className="text-xs text-gray-500">
                         {new Date(file.uploadedAt).toLocaleString()} • {(file.size / 1024).toFixed(1)} KB
                       </p>
+                      <p className="text-xs text-gray-600 mt-1">
+                      Uploaded by: <span className="font-semibold">{file.uploadedBy}</span>
+                    </p>
                     </div>
                   </div>
                   <a 

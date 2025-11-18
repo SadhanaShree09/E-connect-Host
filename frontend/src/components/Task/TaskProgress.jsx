@@ -403,7 +403,7 @@ const handleAssignTask = () => {
         {/* Activity Summary */}
         <div className="flex justify-between items-center text-xs text-gray-500 border-t pt-2">
           <span className="flex items-center gap-1">
-            Created: {new Date(task.createdDate).toLocaleDateString()}
+            Created: {new Date(task.createdDate).toLocaleDateString("en-IN")}
           </span>
           <div className="flex gap-3">
             {task.comments && task.comments.length > 0 && (

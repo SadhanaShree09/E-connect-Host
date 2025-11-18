@@ -109,42 +109,14 @@ const mapStatusToColumn = (status) => {
   const fileInputRef = useRef(null);
 
   const normalizeFiles = (files) =>
-    // Robustly parse various timestamp formats coming from the backend
-    // - numeric (seconds or milliseconds)
-    // - numeric string
-    // - ISO string
-    // - missing/invalid -> fallback to now
-    files.map(f => {
-      const raw = f.uploadedAt ?? f.uploaded_at ?? f.createdAt ?? f.created_at ?? f.timestamp;
-      let iso;
-      try {
-        if (raw == null) {
-          iso = new Date().toISOString();
-        } else if (typeof raw === 'number') {
-          // if it's seconds (10 digits) convert to ms
-          const ms = raw < 1e12 ? raw * 1000 : raw;
-          iso = new Date(ms).toISOString();
-        } else if (typeof raw === 'string' && /^\d+$/.test(raw)) {
-          const n = Number(raw);
-          const ms = n < 1e12 ? n * 1000 : n;
-          iso = new Date(ms).toISOString();
-        } else {
-          const parsed = Date.parse(raw);
-          iso = isNaN(parsed) ? new Date().toISOString() : new Date(parsed).toISOString();
-        }
-      } catch (e) {
-        iso = new Date().toISOString();
-      }
-
-      return {
-        id: String(f.id),
-        name: String(f.name ?? f.filename ?? ""),
-        size: Number(f.size ?? 0),
-        type: String(f.type ?? f.mimeType ?? ""),
-        uploadedAt: iso,
-        uploadedBy: String(f.uploadedBy ?? f.uploaded_by ?? "Unknown")
-      };
-    });
+    files.map(f => ({
+      id: String(f.id),
+      name: String(f.name),
+      size: Number(f.size),
+      type: String(f.type),
+      uploadedAt: new Date(f.uploadedAt).toISOString(),
+      uploadedBy: String(f.uploadedBy)
+    }));
     
   const normalizeSubtasks = (subtasks = []) =>
     subtasks.map(s => ({
@@ -202,7 +174,7 @@ const mapStatusToColumn = (status) => {
           completed: s.completed ?? s.done ?? false
         })),
         comments: foundTask.comments || [],
-        files: normalizeFiles(foundTask.files || []),
+        files: foundTask.files || [],
         assignedBy: foundTask.assigned_by || foundTask.assignedBy || "TeamLead",
         priority: foundTask.priority || "medium",
         verified: foundTask.verified || false,
@@ -348,47 +320,44 @@ const mapStatusToColumn = (status) => {
   }
 }, [task, userId]);
 
-  const handleFileUpload = useCallback(async (event) => {
-    const file = event.target.files[0];
-    if (!file || !task) return;
+   const handleFileSelect = useCallback((event) => {
+    const file = event.target.files?.[0] ?? null;
+    setSelectedFile(file);
+  }, []);
+
+  // explicit upload action (call when user clicks Upload)
+  const uploadSelectedFile = useCallback(async () => {
+    if (!selectedFile || !task) return toast.error("No file selected or task missing");
     if (task.verified) return toast.error('This task is verified and cannot accept new files.');
 
     try {
       const formData = new FormData();
-      formData.append("file", file);
+      formData.append("file", selectedFile);
       formData.append("uploaded_by", `${LS.get("name")} (${LS.get("position")})`);
 
       const res = await fetch(`${ipadr}/task/${task.id}/files`, {
         method: "POST",
         body: formData
       });
-      
       const data = await res.json();
-      if (!res.ok) throw new Error(data.detail);
-
-      const uploadedFile = {
-        ...data.file,
-        uploadedAt: new Date().toISOString(),
-        uploadedBy: `${LS.get("name")} (${LS.get("position")})`
-      };
-
-      // Normalize the newly uploaded file so its timestamp format matches existing state
-      const normalizedUploaded = normalizeFiles([uploadedFile])[0];
+      if (!res.ok) throw new Error(data.detail || "Upload failed");
+       // normalize server response before appending so uploadedAt is consistent
+      const uploadedFile = data.file;
+      const normalized = normalizeFiles([uploadedFile])[0];
 
       const updatedTask = {
         ...task,
-        files: [...(task.files || []), normalizedUploaded]
+        files: [...(task.files || []), normalized]
       };
-
       setTask(updatedTask);
+      setSelectedFile(null);
+      if (fileInputRef.current) fileInputRef.current.value = "";
       toast.success("File uploaded successfully!");
     } catch (err) {
       toast.error(err.message);
       fetchTaskDetails(); // Refresh on error
     }
-
-    event.target.value = "";
-  }, [task]);
+  }, [selectedFile, task, fetchTaskDetails]);
 
   const updateTaskStatus = async (newStatus) => {
   if (!task) return;
@@ -651,9 +620,10 @@ const mapStatusToColumn = (status) => {
                     {file.name}
                   </p>
                   <p className="text-xs text-gray-500">
-                    {new Date(file.uploadedAt).toLocaleString()} •{" "}
+                    {new Date(file.uploadedAt).toLocaleDateString("en-IN")} •{" "}
                     {(file.size / 1024).toFixed(1)} KB
                   </p>
+
                   <span className="text-xs text-blue-600 font-medium">
                     {file.uploadedBy || "Unknown"}
                   </span>
@@ -675,13 +645,36 @@ const mapStatusToColumn = (status) => {
         )}
       </div>
 
-      <input
-        type="file"
-        ref={fileInputRef}
-        onChange={handleFileUpload}
-        disabled={task.verified}
-        className={`w-full p-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${task.verified ? 'bg-gray-50 cursor-not-allowed' : ''}`}
-      />
+       <div className="w-full">
+        <div className="flex items-center gap-2 w-full flex-nowrap">
+        <div className="flex-1 min-w-0">
+        <input
+          type="file"
+          ref={fileInputRef}
+          onChange={handleFileSelect}
+          disabled={task.verified}
+          className={`w-full p-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-300 ${task.verified ? 'bg-gray-50 cursor-not-allowed' : ''}`}
+        />
+
+        {selectedFile && (
+               <div className="flex items-center justify-between mt-2 gap-2">
+                 <p className="text-sm text-gray-600 truncate">
+                   Selected: {selectedFile.name} ({(selectedFile.size / 1024).toFixed(1)} KB)
+                 </p>
+                 <div className="flex-shrink-0">
+                   <button
+                     onClick={uploadSelectedFile}
+                     disabled={task.verified}
+                     className={`px-4 py-2 h-9 rounded-lg ${task.verified ? 'bg-gray-300 text-gray-600 cursor-not-allowed' : 'bg-blue-600 text-white hover:bg-blue-700'}`}
+                   >
+                     Upload
+                   </button>
+                 </div>
+               </div>
+             )}
+        </div>
+      </div>
+      </div>
     </div>
     
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col">
@@ -699,7 +692,7 @@ const mapStatusToColumn = (status) => {
                   {comment.user}
                 </span>
                 <span className="text-xs text-gray-500">
-                  {new Date(comment.timestamp).toLocaleString()}
+                  {new Date(comment.timestamp).toLocaleString("en-IN")}
                 </span>
               </div>
               <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">

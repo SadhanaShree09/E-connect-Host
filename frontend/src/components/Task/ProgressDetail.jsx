@@ -55,39 +55,16 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
   };
 
   const normalizeFiles = (files = []) =>
-    // Robust timestamp handling: seconds, milliseconds, numeric strings, ISO, fallback to now
-    (files || []).map(f => {
-      const raw = f.uploadedAt ?? f.uploaded_at ?? f.createdAt ?? f.created_at ?? f.timestamp;
-      let iso;
-      try {
-        if (raw == null) {
-          iso = new Date().toISOString();
-        } else if (typeof raw === 'number') {
-          const ms = raw < 1e12 ? raw * 1000 : raw;
-          iso = new Date(ms).toISOString();
-        } else if (typeof raw === 'string' && /^\d+$/.test(raw)) {
-          const n = Number(raw);
-          const ms = n < 1e12 ? n * 1000 : n;
-          iso = new Date(ms).toISOString();
-        } else {
-          const parsed = Date.parse(raw);
-          iso = isNaN(parsed) ? new Date().toISOString() : new Date(parsed).toISOString();
-        }
-      } catch (e) {
-        iso = new Date().toISOString();
-      }
-
-      return {
-        id: String(f.id),
-        name: String(f.name || f.filename || ""),
-        stored_name: String(f.stored_name || f.storedName || ""),
-        path: String(f.path || ""),
-        size: Number(f.size || 0),
-        type: String(f.type || f.mimeType || ""),
-        uploadedAt: iso,
-        uploadedBy: String(f.uploadedBy || f.uploaded_by || "Unknown")
-      };
-    });
+    (files || []).map(f => ({
+      id: String(f.id),
+      name: String(f.name || f.filename || ""),
+      stored_name: String(f.stored_name || f.storedName || ""), 
+      path: String(f.path || ""),                              
+      size: Number(f.size || 0),
+      type: String(f.type || f.mimeType || ""),
+      uploadedAt: new Date(f.uploadedAt || f.uploaded_at || Date.now()).toISOString(),
+      uploadedBy: String(f.uploadedBy || f.uploaded_by || "Unknown")
+    }));
 
   const normalizeSubtasks = (subtasks = []) =>
     subtasks.map(s => ({
@@ -188,8 +165,8 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
           text: s.text || s.title || "",
           completed: s.completed ?? s.done ?? false
         })),
-        comments: normalizeComments(taskData.comments || []),
-        files: normalizeFiles(taskData.files || []),
+        comments: taskData.comments || [],
+        files: taskData.files || [],
         assignedBy: taskData.assigned_by || "You",
         assignedTo: taskData.assigned_to_name || taskData.employee_name || "Unknown Employee",
         priority: taskData.priority || "medium",
@@ -707,7 +684,8 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
                       )}
                     </span>
                     <span className="text-xs text-gray-500">
-                      {new Date(comment.timestamp).toLocaleDateString()} {new Date(comment.timestamp).toLocaleTimeString()}
+                      {new Date(comment.timestamp).toLocaleDateString("en-IN")}{" "}
+                      {new Date(comment.timestamp).toLocaleTimeString("en-IN")}
                     </span>
                   </div>
                   <p className="text-sm text-gray-700 break-words whitespace-pre-wrap">
@@ -776,8 +754,9 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
                         )}
                       </p>
                       <p className="text-xs text-gray-500">
-                        {new Date(file.uploadedAt).toLocaleString()} • {(file.size / 1024).toFixed(1)} KB
+                        {new Date(file.uploadedAt).toLocaleDateString("en-IN")} • {(file.size / 1024).toFixed(1)} KB
                       </p>
+
                       <p className="text-xs text-gray-600 mt-1">
                       Uploaded by: <span className="font-semibold">{file.uploadedBy}</span>
                     </p>

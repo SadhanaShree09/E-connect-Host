@@ -102,11 +102,13 @@ const handleGoogleLogin = async (credentialResponse) => {
       toast.success("Welcome Admin!");
       navigate("/admin/time", {
         state: { userid: res._id || res.id, token: res.access_token },
+        replace: true
       });
     } else if (loggedIn && !isAdmin) {
       toast.success("Welcome!");
       navigate("/User/Clockin_int", {
         state: { userid: res._id || res.id, token: res.access_token },
+        replace: true
       });
     } else {
       toast.error("Login failed. Please contact administrator.");

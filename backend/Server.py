@@ -271,8 +271,8 @@ async def add_security_headers(request: Request, call_next):
         response.headers["Referrer-Policy"] = "strict-origin-when-cross-origin"
         response.headers["Permissions-Policy"] = "geolocation=(), microphone=(), camera=(), payment=(), usb=(), magnetometer=(), gyroscope=(), accelerometer=()"
         
-        # Content Security Policy - Allow Google Sign-In and other third-party services
-        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
+        # Content Security Policy - Allow Google Sign-In, Swagger UI CDN and other third-party services
+        response.headers["Content-Security-Policy"] = "default-src 'self'; script-src 'self' 'unsafe-inline' 'unsafe-eval' https://accounts.google.com https://apis.google.com https://cdn.jsdelivr.net; style-src 'self' 'unsafe-inline' https://cdn.jsdelivr.net; img-src 'self' data: https:; font-src 'self'; connect-src 'self' https: wss:; frame-ancestors 'none'; base-uri 'self'; form-action 'self'"
         
         # Ensure CORS headers are always present
         origin = request.headers.get("origin")
@@ -2406,7 +2406,7 @@ async def upload_task_file(
             "name": file.filename,
             "size": len(file_bytes),
             "type": file.content_type,
-            "uploadedAt": datetime.now().isoformat(),
+            "uploadedAt": datetime.utcnow().isoformat() + "Z",
             "uploadedBy": uploaded_by,
             "gridfs_id": str(gridfs_id)
         }

@@ -1817,7 +1817,7 @@ def edit_the_task(
                 "name": f.get("name", base.get("name", "")),
                 "size": int(f.get("size") or base.get("size", 0)),
                 "type": f.get("type") or base.get("type", ""),
-                "uploadedAt": f.get("uploadedAt") or base.get("uploadedAt") or datetime.utcnow().isoformat(),
+                "uploadedAt": f.get("uploadedAt") or base.get("uploadedAt") or datetime.utcnow().isoformat() + "Z",
                 "uploadedBy": f.get("uploadedBy") or base.get("uploadedBy", "Unknown"),
                 "gridfs_id": f.get("gridfs_id") or base.get("gridfs_id", ""),
             }

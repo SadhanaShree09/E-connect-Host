@@ -424,12 +424,17 @@ export default function AdminDocsReview() {
               ) : (
                 <>
                   <div className="border rounded-t-lg bg-[#6d9eeb7a]">
-                    <table className="min-w-full border-collapse">
+                    <table className="w-full">
+                       <colgroup>
+                       <col style={{ width: '50%' }} />
+                       <col style={{ width: '30%' }} />
+                       <col style={{ width: '20%' }} />
+                     </colgroup>
                       <thead className="text-xs font-semibold uppercase text-black">
                         <tr>
-                          <th className="p-3 text-left w-[45%]">Document</th>
-                          <th className="p-3 text-center w-[20%]">Status</th>
-                          <th className="p-3 text-center w-[20%]">Actions</th>
+                          <th className="px-4 py-2 text-center">Document</th>
+                          <th className="px-4 py-2 text-center">Status</th>
+                          <th className="px-4 py-2 text-center">Actions</th>
                         </tr>
                       </thead>
                     </table>
@@ -437,6 +442,11 @@ export default function AdminDocsReview() {
 
                   <div className="overflow-y-auto max-h-[400px] border border-t-0 rounded-b-lg">
                     <table className="min-w-full border-collapse table-fixed">
+                     <colgroup>
+                        <col style={{ width: '50%' }} />
+                        <col style={{ width: '30%' }} />
+                        <col style={{ width: '20%' }} />
+                      </colgroup>
                       <tbody className="text-sm divide-y divide-gray-100">
                         {filterDocsByStatus(assignedDocs[reviewUser.userId] || []).length === 0 ? (
                           <tr>
@@ -450,14 +460,21 @@ export default function AdminDocsReview() {
                             .reverse()
                             .map((doc) => (
                               <tr key={doc.docName} className="hover:bg-blue-50 transition-colors">
-                                <td className="p-3 align-middle w-[45%]">
-                                  <div className="flex items-center gap-2 text-gray-800">
-                                    <FileText size={18} className="text-blue-500 flex-shrink-0" />
-                                    <span className="font-medium truncate">{doc.docName}</span>
+                                 <td className="p-3 align-middle overflow-hidden">
+                                 <div className="flex items-center gap-5 text-gray-800">
+                                    <FileText size={16} className="text-blue-500 flex-shrink-0" />
+                                  <span
+                                     className="font-medium block truncate max-w-full"
+                                     title={doc.docName}
+                                   >
+                                     {doc.docName && doc.docName.length > 50
+                                       ? `${doc.docName.slice(0, 50)}.....`
+                                       : doc.docName}
+                                   </span>
                                   </div>
                                 </td>
 
-                                <td className="p-3 text-center align-middle w-[20%]">
+                                <td className="p-3 text-center align-middle">
                                   <div className="flex justify-center gap-4">
                                     {doc.status === "verified" ? (
                                       <div className="text-green-600" title="Verified">
@@ -475,38 +492,56 @@ export default function AdminDocsReview() {
                                   </div>
                                 </td>
 
-                                <td className="p-3 text-center align-middle w-[20%]">
-                                  <div className="flex justify-center gap-4">
-                                    {doc.fileUrl && (
-                                      <a
-                                        href={`${ipadr}${doc.fileUrl}`}
-                                        target="_blank"
-                                        rel="noreferrer"
-                                        className="text-blue-600 hover:text-blue-800 transition"
-                                        title="View Document"
-                                      >
-                                        <Eye size={18} />
-                                      </a>
-                                    )}
+                                                          <td className="px-2 py-3 text-center align-middle">
+                              <div className="flex justify-center items-center gap-x-4">
 
-                                    {doc.fileUrl && doc.status !== "verified" && (
-                                      <button
-                                        onClick={() => handleVerify(reviewUser.userId, doc.docName)}
-                                        className="text-green-600 hover:text-green-800 transition"
-                                        title="Verify Document"
-                                      >
-                                        <Check size={18} />
-                                      </button>
-                                    )}
-                                    <button
-                                      onClick={() => handleDelete(reviewUser.userId, doc.docName)}
-                                      className="text-red-600 hover:text-red-800 transition"
-                                      title="Delete Document"
+                                {/* Eye */}
+                                <div className="w-6 flex justify-center">
+                                  {doc.fileUrl ? (
+                                    <a
+                                      href={`${ipadr}${doc.fileUrl}`}
+                                      target="_blank"
+                                      rel="noreferrer"
+                                      className="text-blue-600 hover:text-blue-800 transition"
+                                      title="View Document"
                                     >
-                                      <Trash2 size={18} />
+                                      <Eye size={18} />
+                                    </a>
+                                  ) : (
+                                    <span />
+                                  )}
+                                </div>
+
+                                {/* Tick */}
+                                <div className="w-6 flex justify-center">
+                                  {doc.fileUrl && doc.status !== "verified" ? (
+                                    <button
+                                      onClick={() => handleVerify(reviewUser.userId, doc.docName)}
+                                      className="text-green-600 hover:text-green-800 transition"
+                                      title="Verify Document"
+                                    >
+                                      <Check size={18} />
                                     </button>
-                                  </div>
-                                </td>
+                                  ) : (
+                                    <span />
+                                  )}
+                                </div>
+
+                                {/* Delete */}
+                                <div className="w-6 flex justify-center">
+                                  <button
+                                    onClick={() => handleDelete(reviewUser.userId, doc.docName)}
+                                    className="text-red-600 hover:text-red-800 transition"
+                                    title="Delete Document"
+                                  >
+                                    <Trash2 size={18} />
+                                  </button>
+                                </div>
+
+                              </div>
+                            </td>
+
+
                               </tr>
                             ))
                         )}
@@ -551,9 +586,22 @@ export default function AdminDocsReview() {
                   placeholder="Search employees..."
                   value={modalSearchTerm}
                   onChange={(e) => setModalSearchTerm(e.target.value)}
-                  className="w-full border border-gray-300 rounded-md px-3 py-2 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+                  className="w-full border border-gray-300 rounded-md px-3 py-2 pr-10 text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
                 />
-                <Search size={16} className="absolute right-3 top-2.5 text-gray-400" />
+
+                {modalSearchTerm ? (
+                  <button
+                    onClick={() => setModalSearchTerm("")}
+                    className="absolute right-3 top-2.5 text-gray-400 hover:text-gray-600"
+                  >
+                    <X size={16} />
+                  </button>
+                ) : (
+                  <Search
+                    size={16}
+                    className="absolute right-3 top-2.5 text-gray-400"
+                  />
+                )}
               </div>
 
               <div className="max-h-60 overflow-y-auto border rounded-md p-2">
@@ -704,7 +752,7 @@ export default function AdminDocsReview() {
 
       <div className="p-4 text-center">
         <p className="text-gray-700 text-sm mb-4">
-          Are you sure you want to delete <strong>{deleteInfo.docName}</strong>?
+          Are you sure you want to delete ? <strong className="line-clamp-3 text-center px-4 break-words">{deleteInfo.docName}</strong>
         </p>
         <div className="flex justify-center gap-3">
           <button

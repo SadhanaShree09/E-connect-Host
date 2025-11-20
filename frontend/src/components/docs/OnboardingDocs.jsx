@@ -9,8 +9,10 @@ import {
   FileClock,
   FileCheck,
   FileUp,
-   Clock, 
-   
+  Clock,
+  ArrowUpDown,
+  ArrowUp,
+  ArrowDown,
 } from "lucide-react";
 import { toast, ToastContainer } from "react-toastify";
 import "react-toastify/dist/ReactToastify.css";
@@ -27,6 +29,15 @@ export default function EmployeeDashboard() {
   const [searchTerm, setSearchTerm] = useState("");
   const [loading, setLoading] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+
+  const [sortConfig, setSortConfig] = useState({ column: null, direction: "asc" });
+  const toggleSort = (column) => {
+    setSortConfig((prev) => {
+      const dir = prev.column === column && prev.direction === "asc" ? "desc" : "asc";
+      return { column, direction: dir };
+    });
+    setCurrentPage(1);
+  };
 
   const [openUploader, setOpenUploader] = useState(false);
   const [selectedDoc, setSelectedDoc] = useState(null);
@@ -124,7 +135,6 @@ export default function EmployeeDashboard() {
     return () => clearInterval(interval);
   }, [fetchAssignedDocs]);
 
-  /** Filter documents by search */
  /** Filter documents by search + status */
 const filteredDocs = useMemo(() => {
   let docs = assignedDocs;
@@ -148,8 +158,16 @@ const filteredDocs = useMemo(() => {
     });
   }
 
+  if (sortConfig.column === "assignedAt") {
+    docs = [...docs].sort((a, b) => {
+      const ta = a.assignedAt ? new Date(a.assignedAt.endsWith('Z') ? a.assignedAt : a.assignedAt + 'Z').getTime() : 0;
+      const tb = b.assignedAt ? new Date(b.assignedAt.endsWith('Z') ? b.assignedAt : b.assignedAt + 'Z').getTime() : 0;
+      return sortConfig.direction === "asc" ? ta - tb : tb - ta;
+    });
+  }
+
   return docs;
-}, [assignedDocs, searchTerm, statusFilter]);
+}, [assignedDocs, searchTerm, statusFilter, sortConfig]);
 
 
   /** Pagination */
@@ -286,12 +304,18 @@ const filteredDocs = useMemo(() => {
         My Documentation
       </h1>
       <button
-        onClick={fetchAssignedDocs}
+        onClick={() => {
+          setSearchTerm('');
+          setStatusFilter('all');
+          setSortConfig({ column: null, direction: 'asc' });
+          setCurrentPage(1);
+          fetchAssignedDocs();
+        }}
         disabled={loading || !userid}
         className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg shadow hover:bg-blue-700 disabled:opacity-50 transition-colors"
       >
         <RefreshCcw size={18} className={loading ? "animate-spin" : ""} />
-        {loading ? "Refreshing..." : "Refresh"}
+        {loading ? "Working..." : "Reset"}
       </button>
     </div>
 
@@ -350,7 +374,20 @@ const filteredDocs = useMemo(() => {
             <th className="p-2 text-center w-[28%]">Document</th>
             <th className="p-2 text-center w-[18%]">Status</th>
             <th className="p-2 text-center w-[22%]">Actions</th>
-            <th className="p-2 text-center w-[32%]">Assigned At</th>
+            <th className="p-2 text-center w-[32%]">
+              <button
+                onClick={() => toggleSort("assignedAt")}
+                className="inline-flex items-center gap-2"
+                title="Sort by Assigned At"
+              >
+                Assigned At
+                {sortConfig.column === "assignedAt" ? (
+                  sortConfig.direction === "asc" ? <ArrowUp size={14} /> : <ArrowDown size={14} />
+                ) : (
+                  <ArrowUpDown size={14} />
+                )}
+              </button>
+            </th>
           </tr>
         </thead>
         <tbody className="text-sm divide-y divide-gray-100">

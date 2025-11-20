@@ -150,14 +150,20 @@ const Note = ({ empdata, handleDelete, handleEdit }) => (
 
     <div className="flex justify-end gap-2 mt-3">
       <button
-        onClick={() => {
-          if (empdata.verified) return toast.error('This task is verified and cannot be edited.');
-          handleEdit(empdata.taskid || empdata._id || empdata.id);
-        }}
-        className={`p-2 rounded-lg ${empdata.verified ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-50 hover:bg-green-100 text-green-700'} transition`}
-      >
-        <AiOutlineEdit className="text-xl" />
-      </button>
+      title="Edit"
+      onClick={() => {
+        if (empdata.verified) return toast.error('This task is verified and cannot be edited.');
+        handleEdit(empdata.taskid || empdata._id || empdata.id);
+      }}
+      className={`p-2 rounded-lg ${
+        empdata.verified
+          ? 'bg-gray-100 text-gray-400 cursor-not-allowed'
+          : 'bg-green-50 hover:bg-green-100 text-green-700'
+      } transition`}
+    >
+      <AiOutlineEdit className="text-xl" />
+    </button>
+
       <button
         onClick={() => {
           if (empdata.verified) return toast.error('This task is verified and cannot be deleted.');

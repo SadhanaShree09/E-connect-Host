@@ -203,6 +203,7 @@ const LeaveDetails = () => {
     setSortConfig({ column: null, direction: 'asc' });
     setShowDatePicker(false);
     setFilteredData(leaveData.leave_details || []);
+    fetchLeaveData();
   };
 
   // Toggle sort
@@ -222,32 +223,52 @@ const LeaveDetails = () => {
 
   // Get filtered and searched records
   const getFilteredRecords = () => {
-    let records = filteredData;
+      let records = Array.isArray(filteredData) ? [...filteredData] : [];
 
     // Apply search filter
     if (searchTerm.trim()) {
+      const q = searchTerm.toLowerCase();
       records = records.filter(record =>
-        record.employeeName?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.email?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.leaveType?.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        record.reason?.toLowerCase().includes(searchTerm.toLowerCase())
+        record.employeeName?.toLowerCase().includes(q) ||
+        record.email?.toLowerCase().includes(q) ||
+        record.leaveType?.toLowerCase().includes(q) ||
+        record.reason?.toLowerCase().includes(q)
       );
     }
 
-    // Apply sorting
+    // Apply sorting if requested
     if (sortConfig.column) {
+      const col = sortConfig.column;
+      const dir = sortConfig.direction === 'asc' ? 1 : -1;
+
       records.sort((a, b) => {
-        let aValue = a[sortConfig.column];
-        let bValue = b[sortConfig.column];
-        
-        if (sortConfig.column === 'requestDate' || sortConfig.column === 'selectedDate') {
-          aValue = new Date(convertDateFormat(aValue));
-          bValue = new Date(convertDateFormat(bValue));
+        let va = a?.[col];
+        let vb = b?.[col];
+
+        // normalize date columns (dd-mm-yyyy -> ISO)
+        if (col === 'requestDate' || col === 'selectedDate') {
+          const ta = va ? new Date(convertDateFormat(va)).getTime() : 0;
+          const tb = vb ? new Date(convertDateFormat(vb)).getTime() : 0;
+          return (ta - tb) * dir;
         }
-        
-        if (aValue < bValue) return sortConfig.direction === 'asc' ? -1 : 1;
-        if (aValue > bValue) return sortConfig.direction === 'asc' ? 1 : -1;
-        return 0;
+        // normalize status: treat missing status as 'Pending'
+        if (col === 'status') {
+          const sa = (va || 'Pending').toString().toLowerCase();
+          const sb = (vb || 'Pending').toString().toLowerCase();
+          return sa.localeCompare(sb) * dir;
+        }
+
+        // numeric compare when both values are numbers
+        const na = Number(va);
+        const nb = Number(vb);
+        if (!isNaN(na) && !isNaN(nb)) {
+          return (na - nb) * dir;
+        }
+
+        // fallback to case-insensitive string compare
+        const sa = va ? va.toString().toLowerCase() : '';
+        const sb = vb ? vb.toString().toLowerCase() : '';
+        return sa.localeCompare(sb) * dir;
       });
     }
 

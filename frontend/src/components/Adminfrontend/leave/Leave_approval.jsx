@@ -140,7 +140,11 @@ const Leaveapproval = () => {
       let responseData = response.data && Array.isArray(response.data.user_leave_requests)
         ? response.data.user_leave_requests
         : [];
-
+      
+       if (sortConfig.column) {
+        responseData = sortData(responseData, sortConfig.column, sortConfig.direction);
+      }
+      
       setLeaveData(responseData);
       
       // Fetch attendance data for all employees
@@ -205,6 +209,52 @@ const Leaveapproval = () => {
       return `${year}-${month}-${day}`;
     };
 
+    const sortData = (data = [], column, direction = 'asc') => {
+   const getVal = (row) => {
+      if (!row) return '';
+      if (column === 'date') return row.selectedDate || row.requestDate || '';
+      if (column === 'fromDate') return row.selectedDate || row.FromDate || row.requestDate || '';
+      if (column === 'toDate') return row.ToDate || '';
+      if (column === 'timeSlot') return row.timeSlot || '';
+      return row[column] ?? '';
+    };
+
+    const parseIfDate = (v) => {
+      if (!v) return 0;
+      // if format is dd-mm-yyyy convert to iso
+      if (v.includes('-') && v.split('-').length === 3) {
+        const iso = convertDateFormat(v);
+        const d = new Date(iso);
+        return isNaN(d) ? 0 : d.getTime();
+      }
+      const d = new Date(v);
+      return isNaN(d) ? 0 : d.getTime();
+    };
+
+    return [...data].sort((a, b) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+       
+        if (['date', 'fromDate', 'toDate'].includes(column)) {
+        const na = parseIfDate(va);
+        const nb = parseIfDate(vb);
+        return direction === 'asc' ? na - nb : nb - na;
+      }
+
+      const naNum = Number(va);
+      const nbNum = Number(vb);
+      if (!isNaN(naNum) && !isNaN(nbNum)) {
+        return direction === 'asc' ? naNum - nbNum : nbNum - naNum;
+      }
+
+      return direction === 'asc'
+        ? String(va).localeCompare(String(vb))
+        : String(vb).localeCompare(String(va));
+    });
+  };
+
+    
+
   const handleDateRangeChange = (ranges) => {
     const { startDate, endDate } = ranges.selection;
     setDateRange([ranges.selection]);
@@ -223,10 +273,13 @@ const Leaveapproval = () => {
   };
 
   const toggleSort = (column) => {
-    setSortConfig(prevConfig => ({
-      column,
-      direction: prevConfig.column === column && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-    }));
+     setSortConfig((prevConfig) => {
+      const newDirection = prevConfig.column === column && prevConfig.direction === 'asc' ? 'desc' : 'asc';
+      const newConfig = { column, direction: newDirection };
+      // apply sort immediately to displayed data
+      setFilteredData((current) => sortData(current, column, newDirection));
+      return newConfig;
+    });
   };
 
   const onApprove = async (leave_id) => {

@@ -79,6 +79,9 @@ const Wfh = () => {
       console.error("Error fetching data:", error);
       setLeaveData([]);
       setFilteredData([]);
+      const finalData = sortConfig.column ? sortData(remoteWorkData, sortConfig.column, sortConfig.direction) : remoteWorkData;
+      setLeaveData(remoteWorkData);
+      setFilteredData(finalData);
     }
   };
 
@@ -119,10 +122,10 @@ const Wfh = () => {
           });
         });
     
-        const sortedData = sortConfig.column 
-          ? sortData(filtered, sortConfig.column) 
+        const sortedData = sortConfig.column
+          ? sortData(filtered, sortConfig.column, sortConfig.direction)
           : filtered;
-        
+
         setFilteredData(sortedData);
         setCurrentPage(1);
       };
@@ -132,6 +135,47 @@ const Wfh = () => {
         return `${year}-${month}-${day}`;
       };
 
+   const sortData = (data = [], column, direction = 'asc') => {
+    const getVal = (row) => {
+      if (!row) return '';
+      if (column === 'fromDate') return row.fromDate || row.selectedDate || row.requestDate || '';
+      if (column === 'toDate') return row.toDate || '';
+      return row[column] ?? '';
+    };
+
+    const parseIfDate = (v) => {
+      if (!v) return 0;
+      // if format is dd-mm-yyyy convert to iso
+      if (typeof v === 'string' && v.includes('-') && v.split('-').length === 3) {
+        const iso = convertDateFormat(v);
+        const d = new Date(iso);
+        return isNaN(d) ? 0 : d.getTime();
+      }
+      const d = new Date(v);
+      return isNaN(d) ? 0 : d.getTime();
+    };
+
+    return [...data].sort((a, b) => {
+      const va = getVal(a);
+      const vb = getVal(b);
+       if (['fromDate', 'toDate'].includes(column)) {
+        const na = parseIfDate(va);
+        const nb = parseIfDate(vb);
+        return direction === 'asc' ? na - nb : nb - na;
+      }
+
+      const naNum = Number(va);
+      const nbNum = Number(vb);
+      if (!isNaN(naNum) && !isNaN(nbNum)) {
+        return direction === 'asc' ? naNum - nbNum : nbNum - naNum;
+      }
+
+      return direction === 'asc'
+        ? String(va).localeCompare(String(vb))
+        : String(vb).localeCompare(String(va));
+    });
+  };
+
   const handleDateRangeChange = (ranges) => {
     const { startDate, endDate } = ranges.selection;
     setDateRange([ranges.selection]);
@@ -139,10 +183,12 @@ const Wfh = () => {
   };
 
   const toggleSort = (column) => {
-    setSortConfig(prevConfig => ({
-      column,
-      direction: prevConfig.column === column && prevConfig.direction === 'asc' ? 'desc' : 'asc'
-    }));
+   setSortConfig(prevConfig => {
+      const newDirection = prevConfig.column === column && prevConfig.direction === 'asc' ? 'desc' : 'asc';
+      // apply sort immediately to displayed data
+      setFilteredData((current) => sortData(current, column, newDirection));
+      return { column, direction: newDirection };
+    });
   };
 
   const renderSortIcon = (column) => {
@@ -152,6 +198,18 @@ const Wfh = () => {
     return sortConfig.direction === 'asc' 
       ? <ArrowUp className="inline ml-1 w-4 h-4" />
       : <ArrowDown className="inline ml-1 w-4 h-4" />;
+  };
+
+  const handleReset = () => {
+    setDateRange([{
+      startDate: null,
+      endDate: null,
+      key: "selection"
+    }]);
+    setFilteredData(leaveData);
+    setCurrentPage(1);
+    setSortConfig({ column: null, direction: 'asc' });
+    setShowDatePicker(false);
   };
 
   const updateStatus = async (userid, status,id) => {
@@ -191,17 +249,7 @@ const Wfh = () => {
     }
   };
 
-  const handleReset = () => {
-    setDateRange([{
-      startDate: null,
-      endDate: null,
-      key: "selection"
-    }]);
-    setFilteredData(filteredData);
-    setCurrentPage(1);
-    setSortConfig({ column: null, direction: 'asc' });
-    setShowDatePicker(false);
-  };
+
 console.log("filter data:",filteredData);
   const indexOfLastItem = currentPage * itemsPerPage;
   const indexOfFirstItem = indexOfLastItem - itemsPerPage;

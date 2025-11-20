@@ -208,7 +208,8 @@ const RemoteDetails = () => {
     setCurrentPage(1);
     setSortConfig({ column: null, direction: 'asc' });
     setShowDatePicker(false);
-    setFilteredData(remoteData.remote_work_details || []);
+    setFilteredData([]);
+    fetchRemoteData();
   };
 
   // Toggle sort

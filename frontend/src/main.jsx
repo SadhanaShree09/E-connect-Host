@@ -8,7 +8,6 @@ import App from "./App";
 import Clockin from "./components/clock/Clockin";
 import Sidebar from "./components/Sidebar";
 import Checkauth from "./Utils/Checkauth";
-import Setting from "./components/welcome/Setting";
 import Clockdashboard from "./components/clock/Clockdashboard";
 import Clockin_int from "./components/clock/Clockin_int";
 import Leave from "./components/leave/Leave";
@@ -27,7 +26,6 @@ import AdminProfile from "./components/Adminfrontend/Adminprofile";
 import AddUser from "./components/Adminfrontend/new_employee";
 import EmployeeDetails from "./components/Adminfrontend/EmployeeDetails";
 import LoginPage from "./components/login/Loginpage";
-import Navbar from "./components/welcome/Navbar";
 import ProgressDetail from './components/Task/ProgressDetail';
 import TaskAssign from './components/Task/TaskAssign';
 import TaskDetailsPage from "./components/Task/TaskDetailsPage";
@@ -36,8 +34,6 @@ import TaskProgress from "./components/Task/TaskProgress";
 import ToDoList from "./components/Task/Todo";
 import NotificationDashboard from "./components/notifications/NotificationDashboard";
 import AdminAuth from "./Utils/AdminAuth";
-
-
 import Attendance from "./components/Adminfrontend/Attendance";
 import AddLeave from "./components/Adminfrontend/leave/AddLeave";
 import AttendanceStats from "./components/profile/AttendanceStats";
@@ -46,10 +42,8 @@ import RemoteDetails from "./components/Adminfrontend/leave/RemoteDetails";
 import Chat from './components/Chat';
 import OnboardingDocs from './components/docs/OnboardingDocs';
 import AdminDocsReview from './components/Adminfrontend/AdminDocsReview';
-
 import Fileuploader from './components/docs/file/Fileuploader';
 import GlobalNotificationToast from './components/notifications/GlobalNotificationToast';
-
 
 
 // Create a simple dashboard home component for admin
@@ -70,7 +64,6 @@ const DashboardPage = () => (
       >
         <Outlet />
       </div>
-      {/* Global Toast Notifications */}
       <GlobalNotificationToast />
     </div>
   </Checkauth>
@@ -82,234 +75,101 @@ const AdminDashboardPage = () => (
   </AdminAuth>
 );
 
-/*const rou = [];
-const tempdata = [
-  rou.map((item) => {
-    return item;
-  }),
-];*/
-
-
 
 const router = createBrowserRouter([
+  // Public routes
   {
     path: "/",
     element: <App />,
     children: [
-     { index: true, element: <LoginPage /> }, 
-  ],
+      { index: true, element: <LoginPage /> },
+    ],
   },
   {
     path: "/Login",
     element: <LoginPage />,
   },
-  // {path:"Login",
-  // element:<LoginPage />
-  // },
+
+  // User routes
   {
     path: "/User",
     element: <DashboardPage />,
     children: [
-      { path: "", element: <></> },
+      { index: true, element: <></> },
+      { path: "profile", element: <UserProfile /> },
+      { path: "notifications", element: <NotificationDashboard /> },
+      { path: "chat", element: <Chat /> },
+      { path: "timemanage", element: <Timemanagement /> },
+      { path: "individualStats", element: <AttendanceStats /> },
+
+      // Clock-in
       {
         path: "Clockin_int",
         element: <Clockin_int />,
         children: [
-          { path: "", element: <Clockin /> },
+          { index: true, element: <Clockin /> },
           { path: "Clockdashboard", element: <Clockdashboard /> },
         ],
       },
-      {
-        path: "Setting",
-        element: <Setting />,
-      },
-      {
-        path: "profile",
-        element: <UserProfile />,
-      },
-        {
-      path: "Task/Todo",
-      element: <ToDoList />,
-    },
-    {
-      path: "Task/Todo/TaskPage",
-      element: <TaskPage />,
-    },
-    {
-      path: "Task/Todo/TaskPage/TaskDetailsPage/:taskId",
-      element: <TaskDetailsPage />,
-    },
-      {
-        path: "Leave",
-        element: <Leave />,
-      },
-      {
-        path: "Leave/Leaverequest",
-        element: <Leaverequest />,
-      },
-      {
-        path: "Leave/LeaveHistory",
-        element: <LeaveHistory />,
-      },
-      {
-        path: "Leave/Holidaylist",
-        element: <Holidaylist />,
-      },
-      {
-        path: "Leave/Workfromhome",
-        element: <Workfromhome />,
-      },
-      {
-        path: "Leave/LeaveHistory/Remote_details",
-        element: <Remote_details />,
-      },
-      {
-        path: "notifications",
-        element: <NotificationDashboard />,
-      },
-      
-{
-  path: "LeaveManage",
-  element: <Leavemanagement />,
-},
-{
-  path: "newUser",
-  element: <AddUser />,
-},
-{
-  path: "LeaveManage/leaveapproval",
-  element: <Leaveapproval />,
-},
-{
-  path: "LeaveManage/wfh",
-  element: <Wfh />,
-},
-{
-  path: 'chat',
-  element: <Chat />, 
-},
-{
-        path: "timemanage",
-        element: <Timemanagement />,
-      },
-    {
-      path: "Task/TaskProgress",
-      element: <TaskProgress/>,
-    },
-    {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
-      element:<ProgressDetail role="tl" dashboardRoute="/User/Task/TaskProgress" commentLabel="TeamLead" fileUploadLabel="TeamLead" />, 
-    },
-    {path:"/User/Task/TaskProgress/ProgressDetail/:taskId",
-      element:<ProgressDetail role="hr" dashboardRoute="/User/Task/TaskProgress" commentLabel="HR" fileUploadLabel="HR" />, 
-    },
-    {
-      path: "Task/TaskProgress/TaskAssign/tl-employee",
-      element: <TaskAssign assignType="TL-to-employee" />
-    },
-    {
-      path: "Task/TaskProgress/TaskAssign/hr-tl",
-      element: <TaskAssign assignType="hr-to-TL" />
-    },
- {
-        path:'docs/my-documents',
-        element:<OnboardingDocs/>,
-        
-      },
-      {
-          path: 'docs/file/fileuploader',
-          element:<Fileuploader/>,
-        },
-{ path: "LeaveManage/leave_details", element: <LeaveDetails /> },
-{ path: "LeaveManage/leave_details/wfh_details", element: <RemoteDetails />},
-{ path: "LeaveManage/attendance", element: <Attendance />},
-{ path: "individualStats", element: <AttendanceStats />},
+
+      // Task routes
+      { path: "Task/Todo", element: <ToDoList /> },
+      { path: "Task/Todo/TaskPage", element: <TaskPage /> },
+      { path: "Task/Todo/TaskPage/TaskDetailsPage/:taskId", element: <TaskDetailsPage /> },
+      { path: "Task/TaskProgress", element: <TaskProgress /> },
+      { path: "Task/TaskProgress/TaskAssign/tl-employee", element: <TaskAssign assignType="TL-to-employee" /> },
+      { path: "Task/TaskProgress/TaskAssign/hr-tl", element: <TaskAssign assignType="hr-to-TL" /> },
+      { path: "Task/TaskProgress/ProgressDetail/:taskId", element: <ProgressDetail role="tl" dashboardRoute="/User/Task/TaskProgress" commentLabel="TeamLead" fileUploadLabel="TeamLead" /> },
+      { path: "Task/TaskProgress/ProgressDetail/:taskId", element: <ProgressDetail role="hr" dashboardRoute="/User/Task/TaskProgress" commentLabel="HR" fileUploadLabel="HR" /> },
+
+      // Leave routes
+      { path: "Leave", element: <Leave /> },
+      { path: "Leave/Leaverequest", element: <Leaverequest /> },
+      { path: "Leave/LeaveHistory", element: <LeaveHistory /> },
+      { path: "Leave/Holidaylist", element: <Holidaylist /> },
+      { path: "Leave/Workfromhome", element: <Workfromhome /> },
+      { path: "Leave/LeaveHistory/Remote_details", element: <Remote_details /> },
+
+      // Leave management
+      { path: "LeaveManage", element: <Leavemanagement /> },
+      { path: "LeaveManage/leaveapproval", element: <Leaveapproval /> },
+      { path: "LeaveManage/wfh", element: <Wfh /> },
+      { path: "LeaveManage/leave_details", element: <LeaveDetails /> },
+      { path: "LeaveManage/leave_details/wfh_details", element: <RemoteDetails /> },
+      { path: "LeaveManage/attendance", element: <Attendance /> },
+
+      // User management
+      { path: "newUser", element: <AddUser /> },
+
+      // Docs
+      { path: "docs/my-documents", element: <OnboardingDocs /> },
+      { path: "docs/file/fileuploader", element: <Fileuploader /> },
     ],
   },
+
+  // Admin routes
   {
     path: "/admin",
     element: <AdminDashboardPage />,
     children: [
-      {
-        path: "",
-        element: <></>,
-      },
-      {
-        path: "LeaveManage",
-        element: <Leavemanagement />,
-      },
-      {
-        path: 'chat',
-        element: <Chat />, // your Slack-like chat component
-      },
-      {
-        path: "time",
-        element: <Timemanagement />,
-      },
-      {
-        path: "employee",
-        element: <Employeelist />,
-        // children:[{
-        //   path:':id',
-        //   element:<EmployeeDetails/>
-        // },],
-      },
-      {
-        path: "LeaveManage/leaveapproval",
-        element: <Leaveapproval />,
-      },
-      {
-        path: "LeaveManage/wfh",
-        element: <Wfh />,
-      },
-      {
-        path: "profile",
-        element: <AdminProfile />,
-      },
-      {
-        path: "newUser",
-        element: <AddUser />,
-      },
-      {
-        path: "task",
-        element: <TaskPage />,
-      },
-      {
-        path: "notifications",
-        element: <NotificationDashboard />,
-      },
-      // {
-      //   path: "enhanced-notifications",
-      //   element: <EnhancedNotificationDashboard />,
-      // },
-      {
-        path:':id',
-        element:<EmployeeDetails/>
-      },
-      {
-        path: 'review-docs',
-        element: <AdminDocsReview />,
-      },
-      {
-  path: 'chat',
-  element: <Chat />, 
-},
-      
-      
-      { index: true, element: <DashboardHome /> }, // default admin page
-      { path: "Leave", element: <Leavemanagement /> },
+      { index: true, element: <DashboardHome /> },
+      { path: "profile", element: <AdminProfile /> },
+      { path: "notifications", element: <NotificationDashboard /> },
+      { path: "chat", element: <Chat /> },
       { path: "time", element: <Timemanagement /> },
       { path: "employee", element: <Employeelist /> },
       { path: "employee/:id", element: <EmployeeDetails /> },
+      { path: "LeaveManage", element: <Leavemanagement /> },
       { path: "LeaveManage/leaveapproval", element: <Leaveapproval /> },
       { path: "LeaveManage/leave_details", element: <LeaveDetails /> },
+      { path: "LeaveManage/leave_details/wfh_details", element: <RemoteDetails /> },
       { path: "LeaveManage/wfh", element: <Wfh /> },
-      { path: "LeaveManage/leave_details/wfh_details", element: <RemoteDetails />},
-      { path: "profile", element: <AdminProfile /> },
-      { path: "LeaveManage/attendance", element: <Attendance />},
+      { path: "LeaveManage/attendance", element: <Attendance /> },
       { path: "newUser", element: <AddUser /> },
       { path: "addLeave", element: <AddLeave /> },
+      { path: "review-docs", element: <AdminDocsReview /> },
     ],
-  }, // Fixed: Added missing comma here
+  },
 ]);
 
 const MainApp = () => {

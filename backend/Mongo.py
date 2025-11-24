@@ -157,7 +157,9 @@ def admin_signin(checkuser, password, email):
         raise HTTPException(status_code=300, detail="Given Email does not exist")
 
 def Gsignin(client_name, email):
-    checkuser = Users.find_one({'email': email})
+    # checkuser = Users.find_one({'email': email})
+    checkuser = Users.find_one({'email': email},{"assigned_docs": 0})
+
     checkadmin = admin.find_one({'email': email})
     checkmanager = Managers.find_one({'email': email})
     selected_date = date.today().strftime("%d-%m-%Y")
@@ -1644,8 +1646,9 @@ def Permission_History_Details(userid):
 
 def get_all_users():
         # Fetch all users from the Users collection
-        users = list(Users.find({}, {"password": 0}))  # Exclude the password field
-        
+        # users = list(Users.find({}, {"password": 0}))  # Exclude the password field
+        users = list(Users.find({}, {"password": 0, "assigned_docs": 0}))
+
         # Also fetch admins from the admin collection
         admins = list(admin.find({}, {"password": 0}))  # Exclude the password field
         
@@ -2927,7 +2930,7 @@ def edit_an_employee(employee_data):
         raise HTTPException(status_code=500, detail=f"Internal server error: {str(e)}")
 
 def get_managers() :
-    users = list(Users.find({"position": "TL"}, {"_id":0}))
+    users = list(Users.find({"position": "TL"}, {"_id":0, "assigned_docs": 0}))
     return users
 
 from datetime import datetime
@@ -3183,7 +3186,7 @@ def get_user_by_position(position):
     return result
 
 def get_team_members(TL):
-    team_members = list(Users.find({"TL":TL}, {"_id":0}))
+    team_members = list(Users.find({"TL":TL}, {"_id":0, "assigned_docs": 0}))
     return team_members
 
 def get_public_ip():

@@ -2508,7 +2508,8 @@ def get_user(userid: str):
 
     try:
         # First, try to find in Users collection
-        user = Users.find_one({"_id": obj_id}, {"password": 0})
+        # user = Users.find_one({"_id": obj_id}, {"password": 0})
+        user = Users.find_one({"_id": obj_id}, {"password": 0, "assigned_docs": 0})
         
         if user:
             user = serialize_mongo_doc(user)
@@ -3743,19 +3744,6 @@ async def assign_docs(payload: AssignPayload, assigned_by: str = "HR"):
 
     return {"message": f'"{payload.docName}" assigned to {count} user(s)'}
 
-@app.get("/assign_docs")
-def get_assigned_docs(userId: str = Query(...)):
-    """
-    Return all assigned documents for a given userId.
-    """
-    user = Users.find_one({"userId": userId}, {"assigned_docs": 1, "_id": 0})
-    if not user:
-        raise HTTPException(status_code=404, detail="User not found")
-    
-    assigned_docs = user.get("assigned_docs", [])
-    # Optional: sort by assignedAt descending
-    assigned_docs.sort(key=lambda d: d["assignedAt"], reverse=True)
-    return assigned_docs
 
 # ------------------ Fetch Assigned Documents ------------------
 @app.get("/documents/assigned/{userId}")

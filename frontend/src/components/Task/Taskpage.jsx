@@ -706,7 +706,7 @@ const TaskPage = () => {
           return (
             <div
               key={column.id}
-              className={`${column.color} ${column.borderColor} border-2 border-dashed rounded-xl p-4 min-w-[320px] flex-1 shadow-sm`}
+              className={`${column.color} ${column.borderColor} border-2 border-dashed rounded-xl p-4 min-w-[320px] flex-1 shadow-sm hover-show-scrollbar`}
               onDragOver={handleDragOver}
               onDrop={(e) => handleDrop(e, column.id)}
             >
@@ -717,7 +717,7 @@ const TaskPage = () => {
                 </span>
               </div>
             
-              <div className="space-y-3 overflow-y-auto max-h-[calc(95vh-300px)]">
+              <div className="space-y-3 overflow-y-auto max-h-[calc(95vh-300px)] custom-scrollbar-hidden hover:custom-scrollbar-visible">
                 {colTasks.length === 0 ? (
                   <div className="text-center text-gray-500 py-8">
                     <p className="text-lg">No tasks in {column.title.toLowerCase()}</p>

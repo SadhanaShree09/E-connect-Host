@@ -606,7 +606,7 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
               <FaCheckCircle className="text-blue-600" />
               Subtasks Progress
             </h3>
-            <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
+            <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px] custom-scrollbar-hidden hover:custom-scrollbar-visible">
               {task.subtasks.map((subtask, index) => (
                 <div key={`subtask-${subtask.id}-${index}`} className="flex items-start justify-between gap-3 p-3 bg-gray-50 rounded-lg">
                   <div className="flex gap-3 flex-1 min-w-0">
@@ -661,7 +661,7 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
               <FaComments className="text-red-600" />
               Task Discussion
             </h3>
-            <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
+            <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px] custom-scrollbar-hidden hover:custom-scrollbar-visible">
               {task.comments.map((comment, index) => (
                 <div key={`comment-${comment.id}-${index}`} className={`p-3 rounded-lg ${
                   comment.isTL || comment.user.toLowerCase().includes('TL') || comment.user.toLowerCase().includes('hr')
@@ -729,7 +729,7 @@ const ProgressDetail = ({ role = "TL", dashboardRoute, commentLabel, fileUploadL
               Files & References
             </h3>
             {/* Existing Files */}
-            <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
+            <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px] custom-scrollbar-hidden hover:custom-scrollbar-visible">
               {task.files.map((file, index) => (
                 <div key={`file-${file.id}-${index}`} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg border">
                   <div className="flex items-center gap-3">

@@ -3,6 +3,49 @@
 @tailwind components;
 @tailwind utilities;
 
+/* Professional, minimal custom scrollbar for task columns */
+
+/* Scrollbar hidden by default, visible on hover */
+.custom-scrollbar-hidden {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.custom-scrollbar-hidden::-webkit-scrollbar {
+  width: 0;
+  background: transparent;
+}
+
+/* Visible scrollbar on hover */
+.custom-scrollbar-hidden:hover,
+.custom-scrollbar-visible {
+  scrollbar-width: thin;
+  scrollbar-color: rgba(150, 160, 180, 0.35) transparent;
+}
+.custom-scrollbar-hidden:hover::-webkit-scrollbar,
+.custom-scrollbar-visible::-webkit-scrollbar {
+  width: 5px;
+  background: transparent;
+}
+.custom-scrollbar-hidden:hover::-webkit-scrollbar-button,
+.custom-scrollbar-visible::-webkit-scrollbar-button {
+  display: none; /* Hide top and bottom arrow buttons */
+}
+.custom-scrollbar-hidden:hover::-webkit-scrollbar-button:start:decrement,
+.custom-scrollbar-hidden:hover::-webkit-scrollbar-button:end:increment,
+.custom-scrollbar-visible::-webkit-scrollbar-button:start:decrement,
+.custom-scrollbar-visible::-webkit-scrollbar-button:end:increment {
+  display: none;
+}
+.custom-scrollbar-hidden:hover::-webkit-scrollbar-thumb,
+.custom-scrollbar-visible::-webkit-scrollbar-thumb {
+  background: rgba(150, 160, 180, 0.35);
+  border-radius: 8px;
+}
+.custom-scrollbar-hidden:hover::-webkit-scrollbar-track,
+.custom-scrollbar-visible::-webkit-scrollbar-track {
+  background: transparent;
+}
+
 ::-webkit-scrollbar {
   width: 7px;
   color: black;

@@ -132,7 +132,7 @@ const Note = ({ empdata, handleDelete, handleEdit }) => (
       {empdata.subtasks?.length > 0 && (
         <div className="mt-2 border-t pt-2">
           <p className="font-medium text-gray-800 text-sm mb-1">Subtasks:</p>
-          <ul className="text-xs text-gray-600 max-h-24 overflow-y-auto assigntask-thin-scrollbar space-y-1">
+          <ul className="text-xs text-gray-600 max-h-24 overflow-y-auto custom-scrollbar-hidden hover:custom-scrollbar-visible space-y-1">
             {empdata.subtasks.map((sub, i) => (
               <li key={i} className="flex items-center gap-1">
                 <span className={`${sub.completed ? 'text-green-500' : 'text-gray-400'}`}>

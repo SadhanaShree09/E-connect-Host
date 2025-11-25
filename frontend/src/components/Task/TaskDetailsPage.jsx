@@ -440,7 +440,6 @@ const mapStatusToColumn = (status) => {
         pauseOnHover
       />
 
-      {/* Header */}
      {/* Header */}
 <div className="bg-white border-b border-gray-200 p-2 sticky top-0 z-10 min-h-[70px]">
   <div className="flex items-start justify-between gap-4 w-full">
@@ -535,7 +534,7 @@ const mapStatusToColumn = (status) => {
         <FaCheckCircle className="text-blue-600" /> Subtasks
       </h2>
 
-      <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
+      <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px] custom-scrollbar-hidden hover:custom-scrollbar-visible">
         {task.subtasks.length ? (
           task.subtasks.map((subtask, index) => (
             <div
@@ -606,7 +605,7 @@ const mapStatusToColumn = (status) => {
         <FaPaperclip className="text-green-600" /> Files & References
       </h2>
 
-      <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
+      <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px] custom-scrollbar-hidden hover:custom-scrollbar-visible">
         {(task.files || []).length ? (
           task.files.map((file, index) => (
             <div
@@ -680,7 +679,7 @@ const mapStatusToColumn = (status) => {
     <div className="bg-white rounded-lg shadow-sm border border-gray-200 p-6 flex flex-col">
       <h2 className="text-xl font-semibold mb-4 flex items-center gap-2">💬 Discussion</h2>
 
-      <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px]">
+      <div className="flex-1 space-y-3 mb-4 overflow-y-auto max-h-[350px] custom-scrollbar-hidden hover:custom-scrollbar-visible">
         {task.comments.length ? (
           task.comments.map((comment, index) => (
             <div

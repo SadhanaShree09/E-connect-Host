@@ -37,6 +37,7 @@ const formatTime = (isoString, withDate = false) => {
 };
 
 export default function Chat() {
+    const [memberSearch, setMemberSearch] = useState('');
   const [showScrollToBottom, setShowScrollToBottom] = useState(false);
   const chatContainerRef = useRef(null);
   const [messages, setMessages] = useState({});
@@ -56,7 +57,7 @@ export default function Chat() {
   const [selectedUsers, setSelectedUsers] = useState([]);
   const [groupName, setGroupName] = useState("");
   const [groups, setGroups] = useState([]);
-  const [editingGroup, setEditingGroup] = useState(null); 
+  const [editingGroup, setEditingGroup] = useState(null);
   const [showGroupMembers, setShowGroupMembers] = useState(false);
   const [currentGroupMembers, setCurrentGroupMembers] = useState([]);
   const [currentGroupName, setCurrentGroupName] = useState("");
@@ -66,7 +67,7 @@ export default function Chat() {
   const ws = useRef(null);
   const typingTimers = useRef({});
   const [typingUsers, setTypingUsers] = useState({});
-  
+ 
   // New state for delete functionality
   const [showDeleteModal, setShowDeleteModal] = useState(false);
   const [messageToDelete, setMessageToDelete] = useState(null);
@@ -91,7 +92,7 @@ export default function Chat() {
     }
   });
   const [lastMessageTime, setLastMessageTime] = useState({});
-  
+ 
   const resetUnread = (chatId) => {
     setUnread((prev) => {
       const updated = { ...prev, [chatId]: 0 };
@@ -99,14 +100,14 @@ export default function Chat() {
       return updated;
     });
   };
-  
+ 
   const updateLastMessageTime = (chatId) => {
     setLastMessageTime((prev) => ({
       ...prev,
       [chatId]: Date.now(),
     }));
   };
-  
+ 
   const username = LS.get("username");
   const isAdmin = LS.get("isadmin");
 
@@ -122,7 +123,7 @@ export default function Chat() {
     const groups = {};
     messages.forEach((msg) => {
       const dateObj = new Date(msg.timestamp);
-      const dateKey = dateObj.toDateString(); 
+      const dateKey = dateObj.toDateString();
       if (!groups[dateKey]) groups[dateKey] = [];
       groups[dateKey].push(msg);
     });
@@ -151,11 +152,11 @@ export default function Chat() {
             ? "Message deleted for everyone"
             : "Message deleted for you"
         );
-        
+       
         setMessages((prev) => {
           const chatData = prev[activeChat.chatId];
           if (!chatData) return prev;
-          
+         
           return {
             ...prev,
             [activeChat.chatId]: {
@@ -172,7 +173,7 @@ export default function Chat() {
       console.error("Error deleting message:", err);
       toast.error("Failed to delete message");
     }
-    
+   
     setShowDeleteModal(false);
     setMessageToDelete(null);
     setActiveMessageMenu(null);
@@ -200,7 +201,7 @@ export default function Chat() {
             ? "Reply deleted for everyone"
             : "Reply deleted for you"
         );
-        
+       
         const threadKey = `thread:${selectedThread.id}`;
         setMessages((prev) => {
           const threadMessages = prev[threadKey] || [];
@@ -217,7 +218,7 @@ export default function Chat() {
       console.error("Error deleting thread message:", err);
       toast.error("Failed to delete reply");
     }
-    
+   
     setShowDeleteModal(false);
     setMessageToDelete(null);
     setActiveMessageMenu(null);
@@ -237,7 +238,7 @@ export default function Chat() {
         setActiveMessageMenu(null);
       }
     };
-    
+   
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [activeMessageMenu]);
@@ -340,18 +341,18 @@ export default function Chat() {
       const res = await fetch(url);
       if (res.ok) {
         const older = await res.json();
-        
+       
         const statusMap = {};
         older.forEach(msg => {
           if (msg.id && msg.status) {
-            statusMap[msg.id] = { 
-              status: msg.status, 
-              time: msg.status_updated_at || msg.timestamp 
+            statusMap[msg.id] = {
+              status: msg.status,
+              time: msg.status_updated_at || msg.timestamp
             };
           }
         });
         setMessageStatus(prev => ({ ...prev, ...statusMap }));
-        
+       
         setMessages((prev) => {
           const prevMsgs = prev[chatId]?.messages || [];
           const newMsgs = [...older, ...prevMsgs];
@@ -415,15 +416,15 @@ export default function Chat() {
     ws.current.onmessage = (event) => {
       try {
         const payload = JSON.parse(event.data);
-        
+       
         // Handle message deletion events
         if (payload.type === "message_deleted") {
           const { messageId, deleteType, chatId } = payload;
-          
+         
           setMessages((prev) => {
             const chatData = prev[chatId];
             if (!chatData) return prev;
-            
+           
             return {
               ...prev,
               [chatId]: {
@@ -439,7 +440,7 @@ export default function Chat() {
         if (payload.type === "thread_deleted") {
           const { messageId, rootId } = payload;
           const threadKey = `thread:${rootId}`;
-          
+         
           setMessages((prev) => {
             const threadMessages = prev[threadKey] || [];
             return {
@@ -449,7 +450,7 @@ export default function Chat() {
           });
           return;
         }
-        
+       
         if (payload.type === "presence_list") {
           try {
             const list = Array.isArray(payload.users) ? payload.users : [];
@@ -507,11 +508,11 @@ export default function Chat() {
           }
           return;
         }
-        
+       
         if (activeChat.chatId === chatId) {
           resetUnread(chatId);
         }
-        
+       
         if (payload.type === "message_status") {
           const { messageId, status, timestamp } = payload;
           setMessageStatus((prev) => ({
@@ -532,19 +533,19 @@ export default function Chat() {
           if (!payload.text || !payload.text.trim()) {
             return;
           }
-          
+         
           const threadKey = `thread:${payload.rootId}`;
           setMessages((prev) => {
             const arr = prev[threadKey] || [];
             const idx = arr.findIndex((m) => m.tempId === payload.tempId || m.id === payload.id);
             if (idx > -1) {
-              arr[idx] = payload; 
+              arr[idx] = payload;
               return { ...prev, [threadKey]: [...arr] };
             }
-            
+           
             const updatedMessages = { ...prev };
             const rootId = payload.rootId;
-            
+           
             Object.keys(updatedMessages).forEach((chatKey) => {
               if (!chatKey.startsWith('thread:')) {
                 const chatData = updatedMessages[chatKey];
@@ -561,11 +562,11 @@ export default function Chat() {
                 }
               }
             });
-            
+           
             updatedMessages[threadKey] = [...arr, payload];
             return updatedMessages;
           });
-          return; 
+          return;
         }
 
         let msgChatId =
@@ -601,7 +602,7 @@ export default function Chat() {
             },
           };
         });
-        
+       
         if (payload.tempId && payload.id && payload.tempId !== payload.id) {
           setMessageStatus((prev) => {
             const tempStatus = prev[payload.tempId];
@@ -615,18 +616,18 @@ export default function Chat() {
             }
             return {
               ...prev,
-              [payload.id]: { 
-                status: payload.status || 'delivered', 
-                time: payload.status_updated_at || payload.timestamp 
+              [payload.id]: {
+                status: payload.status || 'delivered',
+                time: payload.status_updated_at || payload.timestamp
               },
             };
           });
         } else if (payload.id && payload.status) {
           setMessageStatus((prev) => ({
             ...prev,
-            [payload.id]: { 
-              status: payload.status, 
-              time: payload.status_updated_at || payload.timestamp 
+            [payload.id]: {
+              status: payload.status,
+              time: payload.status_updated_at || payload.timestamp
             },
           }));
         }
@@ -701,23 +702,23 @@ export default function Chat() {
             oldestId: history.length > 0 ? history[0].id : null,
           },
         }));
-        
+       
         const statusMap = {};
         history.forEach(msg => {
           if (msg.id && msg.status) {
-            statusMap[msg.id] = { 
-              status: msg.status, 
-              time: msg.status_updated_at || msg.timestamp 
+            statusMap[msg.id] = {
+              status: msg.status,
+              time: msg.status_updated_at || msg.timestamp
             };
           }
         });
         setMessageStatus(prev => ({ ...prev, ...statusMap }));
-        
+       
         setTimeout(() => {
           if (ws.current?.readyState === WebSocket.OPEN) {
-            const unreadMessages = history.filter(msg => 
-              msg.from_user === employeeId && 
-              msg.id && 
+            const unreadMessages = history.filter(msg =>
+              msg.from_user === employeeId &&
+              msg.id &&
               (!msg.status || msg.status !== 'read')
             );
             unreadMessages.forEach(msg => {
@@ -743,15 +744,15 @@ export default function Chat() {
   // Group click
   const handleGroupClick = async (group) => {
     const groupChatId = `group_${group._id}`;
-    setActiveChat({ 
-      id: group._id, 
-      name: group.name, 
-      chatId: groupChatId, 
-      type: "group" 
+    setActiveChat({
+      id: group._id,
+      name: group.name,
+      chatId: groupChatId,
+      type: "group"
     });
     resetUnread(groupChatId);
     openWebSocket("group", groupChatId, group._id);
-    
+   
     try {
       const res = await fetch(`${ipadr}/group_history/${group._id}?limit=${MESSAGES_PAGE_SIZE}&user_id=${userid}`);
       if (res.ok) {
@@ -765,23 +766,23 @@ export default function Chat() {
             oldestId: history.length > 0 ? history[0].id : null,
           },
         }));
-        
+       
         const statusMap = {};
         history.forEach(msg => {
           if (msg.id && msg.status) {
-            statusMap[msg.id] = { 
-              status: msg.status, 
-              time: msg.status_updated_at || msg.timestamp 
+            statusMap[msg.id] = {
+              status: msg.status,
+              time: msg.status_updated_at || msg.timestamp
             };
           }
         });
         setMessageStatus(prev => ({ ...prev, ...statusMap }));
-        
+       
         setTimeout(() => {
           if (ws.current?.readyState === WebSocket.OPEN) {
-            const unreadMessages = history.filter(msg => 
-              msg.from_user !== userid && 
-              msg.id && 
+            const unreadMessages = history.filter(msg =>
+              msg.from_user !== userid &&
+              msg.id &&
               (!msg.status || msg.status !== 'read')
             );
             unreadMessages.forEach(msg => {
@@ -885,7 +886,7 @@ export default function Chat() {
       id: tempId,
       tempId,
       from_user: userid,
-      to_user: 
+      to_user:
       activeChat.type === "group"
         ? undefined
         : selectedThread.from_user === userid
@@ -1374,12 +1375,12 @@ export default function Chat() {
 
             const statusObj = messageStatus[msgId];
             const isUnread = !isSender && statusObj?.status !== 'read';
-            
+           
             const prevStatus = prev && messageStatus[prev.id || prev.tempId];
             const prevIsSender = prev && prev.from_user === userid;
             const prevIsUnread = prev && !prevIsSender && prevStatus?.status !== 'read';
             const isFirstUnreadInGroup = isUnread && !prevIsUnread;
-            
+           
             return (
               <>
                 {isFirstUnreadInGroup && (
@@ -1448,13 +1449,13 @@ export default function Chat() {
                           {threadCount} {threadCount === 1 ? "reply" : "replies"}
                         </div>
                       )}
-                      
+                     
                       {isSender && (() => {
                         const statusObj = messageStatus[msgId];
                         const status = statusObj?.status || 'sent';
                         let tooltip = "Sent";
                         let icon = null;
-                        
+                       
                         if (status === "sent") {
                           tooltip = `Sent${statusObj?.time ? ` at ${formatTime(statusObj.time, true)}` : ""}`;
                           icon = <FiCheck className="text-gray-400" size={14} />;
@@ -1478,7 +1479,7 @@ export default function Chat() {
                           tooltip = `Failed${statusObj?.time ? ` at ${formatTime(statusObj.time, true)}` : ""}`;
                           icon = <FiAlertCircle className="text-red-500" size={14} />;
                         }
-                        
+                       
                         return (
                           <span className="ml-auto flex items-center gap-1 text-xs" title={tooltip} style={{ cursor: "pointer" }}>
                             {icon}
@@ -1760,48 +1761,178 @@ export default function Chat() {
 
       {/* Group Modal */}
 {showGroupModal && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
-    <div className="bg-gradient-to-b from-white to-gray-50 p-6 rounded-2xl w-96 shadow-2xl border border-gray-200">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">
-        {editingGroup ? "Edit Group" : "Create Group"}
-      </h2>
-
-      <input
-        type="text"
-        placeholder="Group Name"
-        className="w-full border border-gray-200 bg-gray-50 rounded-lg px-4 py-2.5 mb-4 focus:outline-none focus:ring-2 focus:ring-blue-200 text-gray-800 placeholder-gray-400"
-        value={groupName}
-        onChange={(e) => setGroupName(e.target.value)}
-      />
-
-      <div className="max-h-64 overflow-y-auto border border-gray-200 rounded-lg p-3 mb-4 space-y-2 bg-blue-50/30">
-        {validGroupUsers.map((user) => (
-          <label
-            key={user.id}
-            className="flex items-center gap-3 cursor-pointer p-2 rounded-lg hover:bg-blue-50 transition-colors"
-          >
-            <input
-              type="checkbox"
-              value={user.id}
-              checked={selectedUsers.includes(user.id)}
-              onChange={(e) => {
-                const uid = e.target.value;
-                setSelectedUsers((prev) =>
-                  prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
-                );
-              }}
-              className="w-4 h-4 text-blue-500 border-gray-300 rounded focus:ring-blue-200"
-            />
-            <span className="text-gray-800">
-              {user.name} {user.id === userid && <span className="text-gray-500 text-xs">(You)</span>}
-            </span>
-          </label>
-        ))}
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-50 p-4">
+    <div className="bg-white rounded-2xl shadow-2xl w-full max-w-2xl max-h-[90vh] overflow-hidden flex flex-col border border-gray-100">
+      {/* Premium Header */}
+      <div className="relative overflow-hidden bg-gradient-to-br from-blue-600 via-blue-700 to-blue-800 px-3 py-2 flex-shrink-0">
+        <div className="absolute inset-0 opacity-10">
+          <svg className="w-full h-full" viewBox="0 0 100 100" preserveAspectRatio="none">
+            <defs>
+              <pattern id="grid" width="20" height="20" patternUnits="userSpaceOnUse">
+                <path d="M 20 0 L 0 0 0 20" fill="none" stroke="white" strokeWidth="0.5"/>
+              </pattern>
+            </defs>
+            <rect width="100" height="100" fill="url(#grid)" />
+          </svg>
+        </div>
+        <div className="relative">
+          <div className="flex items-center gap-2 mb-1">
+            <div className="w-6 h-6 rounded-full bg-white/20 flex items-center justify-center backdrop-blur-sm border border-white/30">
+              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4.354a4 4 0 110 8.646 4 4 0 010-8.646M12 14H5.373A4.627 4.627 0 003 17.627V20a1 1 0 001 1h16a1 1 0 001-1v-2.373A4.627 4.627 0 0018.627 14H12z" />
+              </svg>
+            </div>
+            <div>
+              <h2 className="text-sm font-bold text-white">
+                {editingGroup ? "Edit Group" : "Create New Group"}
+              </h2>
+              <p className="text-[9px] text-blue-100">Organize your team collaboration</p>
+            </div>
+          </div>
+        </div>
       </div>
 
-      <div className="flex justify-end gap-3">
+      {/* Content */}
+      <div className="flex-1 overflow-y-auto flex flex-col">
+        <div className="p-6 space-y-6">
+          {/* Group Name Input */}
+          <div className="space-y-1">
+            <label className="block text-xs font-semibold text-gray-800">
+              <span className="flex items-center gap-1">
+                <span className="w-1 h-1 rounded-full bg-blue-600"></span>
+                Group Name
+              </span>
+            </label>
+            <div className="relative">
+              <input
+                type="text"
+                placeholder="e.g., Marketing Team, Q4 Project, HR Department"
+                className="w-full border border-gray-300 bg-white rounded px-2 py-1 focus:outline-none focus:ring-0 focus:border-blue-600 text-gray-800 placeholder-gray-400 transition-all duration-300 font-medium text-xs"
+                value={groupName}
+                onChange={(e) => setGroupName(e.target.value)}
+                maxLength={50}
+              />
+              <span className="absolute right-2 top-1/2 transform -translate-y-1/2 text-[9px] text-gray-400">
+                {groupName.length}/50
+              </span>
+            </div>
+          </div>
+
+          {/* Members Selection Header */}
+          <div className="flex justify-between items-center">
+            <label className="block text-sm font-semibold text-gray-800">
+              <span className="flex items-center gap-2">
+                <span className="w-1.5 h-1.5 rounded-full bg-green-500"></span>
+                Select Team Members
+              </span>
+            </label>
+            <div className="inline-flex items-center gap-2 bg-gradient-to-r from-blue-50 to-blue-100 px-3 py-1.5 rounded-full border border-blue-200">
+              <div className="w-2 h-2 rounded-full bg-blue-600 animate-pulse"></div>
+              <span className="text-xs font-semibold text-blue-700">
+                {selectedUsers.length + 1} members
+              </span>
+            </div>
+          </div>
+
+          {/* Members Grid */}
+          <div className="space-y-3">
+            {/* Search/filter bar */}
+            <div className="flex items-center gap-2 mb-2">
+              <input
+                type="text"
+                placeholder="Search employees..."
+                className="w-full px-3 py-2 rounded-lg border border-blue-100 bg-blue-50 text-gray-700 focus:outline-none focus:ring-2 focus:ring-blue-200 focus:bg-white transition"
+                value={memberSearch || ''}
+                onChange={e => setMemberSearch(e.target.value)}
+              />
+              <svg className="w-5 h-5 text-blue-300 -ml-8 pointer-events-none" fill="none" stroke="currentColor" viewBox="0 0 24 24"><circle cx="11" cy="11" r="8" strokeWidth="2"/><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-3.5-3.5"/></svg>
+            </div>
+            <div className="border border-blue-100 rounded-xl overflow-hidden bg-gradient-to-r from-blue-50/60 to-white">
+              <div className="divide-y divide-blue-50 max-h-64 overflow-y-auto scrollbar-thin">
+                {/* Creator (no checkbox, always included) */}
+                <div className="flex items-center gap-3 px-4 py-3 bg-gradient-to-r from-blue-50/80 to-white">
+                  <div className="w-10 h-10 rounded-full bg-gradient-to-br from-blue-200 to-blue-400 flex items-center justify-center text-white font-bold text-base shadow-sm">
+                    {username?.[0]?.toUpperCase()}
+                  </div>
+                  <div className="flex-1 min-w-0">
+                    <p className="font-semibold text-blue-700">{username} <span className="text-xs text-blue-300 font-normal">(You)</span></p>
+                    <p className="text-xs text-blue-300">{isTL || "Employee"}</p>
+                  </div>
+                  <span className="inline-block text-xs font-semibold text-blue-700 bg-blue-100 px-3 py-1 rounded-full border border-blue-200">Included</span>
+                </div>
+                {/* Other employees with checkboxes */}
+                {contacts && contacts.length > 0 ? (
+                  contacts.filter(user => user.id !== userid && (!memberSearch || user.name.toLowerCase().includes(memberSearch.toLowerCase()))).length > 0 ? (
+                    contacts.filter(user => user.id !== userid && (!memberSearch || user.name.toLowerCase().includes(memberSearch.toLowerCase()))).map((user) => (
+                      <label
+                        key={user.id}
+                        className="flex items-center gap-3 cursor-pointer px-4 py-3 hover:bg-blue-100/60 transition-all duration-200 group"
+                      >
+                        <input
+                          type="checkbox"
+                          value={user.id}
+                          checked={selectedUsers.includes(user.id)}
+                          onChange={(e) => {
+                            const uid = e.target.value;
+                            setSelectedUsers((prev) =>
+                              prev.includes(uid) ? prev.filter((id) => id !== uid) : [...prev, uid]
+                            );
+                          }}
+                          className="w-5 h-5 text-blue-400 border-2 border-blue-200 rounded focus:ring-2 focus:ring-blue-200 focus:ring-offset-0 cursor-pointer accent-blue-400"
+                        />
+                        <div className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-100 to-blue-300 flex items-center justify-center text-blue-700 font-semibold text-xs">
+                          {user.name?.[0]?.toUpperCase()}
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-blue-900 truncate">{user.name}</p>
+                          <p className="text-xs text-blue-300">{user.position || "Employee"}</p>
+                        </div>
+                        {selectedUsers.includes(user.id) && (
+                          <svg className="w-5 h-5 text-blue-400 flex-shrink-0" fill="currentColor" viewBox="0 0 20 20">
+                            <path fillRule="evenodd" d="M16.707 5.293a1 1 0 010 1.414l-8 8a1 1 0 01-1.414 0l-4-4a1 1 0 011.414-1.414L8 12.586l7.293-7.293a1 1 0 011.414 0z" clipRule="evenodd" />
+                          </svg>
+                        )}
+                      </label>
+                    ))
+                  ) : (
+                    <div className="text-center py-8 text-blue-200">
+                      <svg className="w-10 h-10 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM9 20H4v-2a6 6 0 0112 0v2H9z" />
+                      </svg>
+                      <p className="text-sm font-medium">No matching team members</p>
+                    </div>
+                  )
+                ) : (
+                  <div className="text-center py-8 text-blue-200">
+                    <svg className="w-10 h-10 mx-auto mb-2 opacity-30" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM9 20H4v-2a6 6 0 0112 0v2H9z" />
+                    </svg>
+                    <p className="text-sm font-medium">No team members available</p>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+
+          {/* Info Message */}
+          <div className="relative bg-gradient-to-br from-green-50 to-green-50/50 border border-green-200 rounded p-1 flex gap-1 mt-2">
+            <svg className="w-3 h-3 text-green-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
+              <path fillRule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zm3.707-9.293a1 1 0 00-1.414-1.414L9 10.586 7.707 9.293a1 1 0 00-1.414 1.414l2 2a1 1 0 001.414 0l4-4z" clipRule="evenodd" />
+            </svg>
+            <div className="flex-1">
+              <p className="text-[10px] font-semibold text-green-900 mb-0.5">Team Setup Complete</p>
+              <p className="text-[9px] text-green-800 leading-relaxed">
+                You're automatically added to this group. Selected members will be notified and can start collaborating.
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Footer with Actions */}
+      <div className="flex gap-2 p-2 bg-gradient-to-r from-gray-50 to-blue-50 border-t-2 border-gray-200 flex-shrink-0">
         <button
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
+          className="flex-1 px-1.5 py-1.5 bg-gray-300 hover:bg-gray-400 text-gray-800 font-semibold rounded transition-all duration-200 text-xs"
           onClick={() => {
             setShowGroupModal(false);
             setGroupName("");
@@ -1812,11 +1943,11 @@ export default function Chat() {
           Cancel
         </button>
         <button
-          className="px-4 py-2 bg-blue-500 text-white rounded-lg hover:bg-blue-600 transition-colors shadow-md"
+          className="flex-1 px-1.5 py-1.5 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-semibold rounded transition-all duration-200 text-xs shadow-lg hover:shadow-xl flex items-center justify-center gap-1"
           onClick={async () => {
             const validMembers = Array.from(new Set([...selectedUsers.filter((id) => id), userid]));
             if (!groupName.trim() || validMembers.length === 0) {
-              toast.error("Enter group name and select valid users");
+              toast.error("Please enter a group name and select at least one member");
               return;
             }
 
@@ -1832,7 +1963,7 @@ export default function Chat() {
                   setGroups((prev) =>
                     prev.map((g) => (g._id === editingGroup._id ? { ...g, name: groupName, members: validMembers } : g))
                   );
-                  toast.success("Group updated!");
+                  toast.success("Group updated successfully!");
                 } else toast.error(data?.detail || "Failed to update group");
               } else {
                 const res = await fetch(`${ipadr}/create_group`, {
@@ -1843,7 +1974,7 @@ export default function Chat() {
                 const data = await res.json();
                 if (res.ok || data.status === "success") {
                   setGroups((prev) => [...prev, { _id: data.group_id, name: groupName, members: validMembers }]);
-                  toast.success("Group created!");
+                  toast.success("Group created successfully!");
                 } else toast.error("Failed to create group");
               }
 
@@ -1857,7 +1988,10 @@ export default function Chat() {
             }
           }}
         >
-          {editingGroup ? "Save" : "Create"}
+          <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
+          </svg>
+          {editingGroup ? "Save Changes" : "Create Group"}
         </button>
       </div>
     </div>
@@ -1865,31 +1999,82 @@ export default function Chat() {
 )}
 
 {showGroupMembers && (
-  <div className="fixed inset-0 bg-black/40 backdrop-blur-sm flex justify-center items-center z-50">
-    <div className="bg-white p-6 rounded-2xl w-80 shadow-2xl border border-gray-200">
-      <h2 className="text-xl font-bold mb-4 text-gray-800">
-        Members of "{currentGroupName}"
-      </h2>
-
-      <ul className="space-y-2 max-h-64 overflow-y-auto">
-        {currentGroupMembers.map((memberId) => {
-          const user = validGroupUsers.find((u) => u.id === memberId);
-          return (
-            <li key={memberId} className="text-gray-800">
-              {user ? user.name : memberId}
-              {memberId === userid && <span className="text-gray-500 text-xs"> (You)</span>}
-            </li>
-          );
-        })}
-      </ul>
-
-      <div className="flex justify-end mt-4">
+  <div className="fixed inset-0 bg-black/50 backdrop-blur-md flex justify-center items-center z-50 p-4">
+    <div className="bg-blue-50 p-8 rounded-3xl w-full max-w-lg shadow-2xl border border-blue-200 animate-bounce-in">
+      {/* Header Section */}
+      <div className="flex items-center justify-between mb-6">
+        <div>
+          <h2 className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+            {currentGroupName}
+          </h2>
+          <p className="text-sm text-gray-500 mt-1">
+            {currentGroupMembers.length} {currentGroupMembers.length === 1 ? 'member' : 'members'} in this group
+          </p>
+        </div>
         <button
-          className="px-4 py-2 bg-gray-200 text-gray-700 rounded-lg hover:bg-gray-300 transition-colors"
           onClick={() => setShowGroupMembers(false)}
+          className="p-2 hover:bg-red-100/50 rounded-full transition-all duration-200 text-gray-600 hover:text-red-600"
+          aria-label="Close modal"
         >
-          Close
+          <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M6 18L18 6M6 6l12 12" />
+          </svg>
         </button>
+      </div>
+
+      {/* Members List */}
+      <div className="space-y-3 max-h-96 overflow-y-auto pr-2 custom-scrollbar">
+        {currentGroupMembers.length > 0 ? (
+          currentGroupMembers.map((memberId) => {
+            let user = contacts.find((u) => u.id === memberId) || validGroupUsers.find((u) => u.id === memberId);
+            const isCurrentUser = memberId === userid;
+            const displayName = user?.name?.trim() ? user.name : (isCurrentUser ? username : "Unknown User");
+            const displayInitial = displayName[0]?.toUpperCase() || "?";
+            const displayRole = user?.position || (isCurrentUser ? (isTL || isDepart || isAdmin ? (isTL || isDepart || "Admin") : "Employee") : "Employee");
+            return (
+              <div
+                key={memberId}
+                className="flex items-center gap-4 p-4 rounded-xl bg-blue-50 hover:bg-blue-100 border border-blue-200 transition-all duration-200 group"
+                style={{ minHeight: 64 }}
+              >
+                {/* Avatar */}
+                <div className="flex-shrink-0">
+                  <div className={`w-12 h-12 rounded-full flex items-center justify-center font-bold text-white shadow text-lg border-2 border-blue-200 ${
+                    isCurrentUser
+                      ? 'bg-blue-600'
+                      : 'bg-blue-400'
+                  }`}>
+                    {displayInitial}
+                  </div>
+                </div>
+
+                {/* Member Info */}
+                <div className="flex-1 min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className="font-poppins font-semibold text-base text-gray-800 truncate">
+                      {displayName}
+                    </span>
+                    {isCurrentUser && (
+                      <span className="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold bg-blue-200 text-blue-900 border border-blue-300 ml-1">
+                        You
+                      </span>
+                    )}
+                  </div>
+                  <span className="text-xs text-blue-700 font-medium tracking-wide">
+                    {displayRole}
+                  </span>
+                </div>
+              </div>
+            );
+          })
+        ) : (
+          <div className="text-center py-12">
+            <svg className="w-16 h-16 mx-auto text-gray-300 mb-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.5} d="M17 20h5v-2a3 3 0 00-5.856-1.487M15 10a3 3 0 11-6 0 3 3 0 016 0zM6 20h12a6 6 0 00-6-6 6 6 0 00-6 6z" />
+            </svg>
+            <p className="text-gray-500 font-medium">No members to display</p>
+          </div>
+        )}
       </div>
     </div>
   </div>
@@ -1944,7 +2129,7 @@ export default function Chat() {
         >
           Cancel
         </button>
-        
+       
         {/* Only show one delete button, label/action based on intended delete type */}
         <button
           className="flex-1 px-4 py-2.5 bg-red-500 text-white rounded-lg hover:bg-red-600 transition-colors shadow-md font-medium"
